@@ -40,14 +40,17 @@
   });
   let readerTheme = null;
   try { readerTheme = localStorage.getItem('archify-theme'); } catch (_) { /* Opaque embeds have no storage. */ }
-  // A standalone reader's explicit theme choice takes precedence on reopening.
-  if ((window.parent !== window || !readerTheme) && document.documentElement.dataset.theme !== manifest.preferences.theme) Archify.theme.toggle();
+  const requestedTheme = new URLSearchParams(window.location.search).get('theme');
+  const hasExplicitTheme = requestedTheme === 'light' || requestedTheme === 'dark';
+  // An explicit viewer request wins; otherwise embedded readers and first opens
+  // use the saved view theme, while standalone readers retain their own choice.
+  if (!hasExplicitTheme && (window.parent !== window || !readerTheme) && document.documentElement.dataset.theme !== manifest.preferences.theme) Archify.theme.toggle();
   // A visible offline disclosure and machine-readable manifest preserve provenance.
-  const footer = document.createElement('p');
-  footer.className = 'codecanopy-provenance';
-  footer.textContent = 'CodeCanopy · Repository structure · ' + manifest.graph.entities.length +
+  const disclosure = document.createElement('p');
+  disclosure.className = 'codecanopy-provenance';
+  disclosure.textContent = 'CodeCanopy · Repository structure · ' + manifest.graph.entities.length +
     ' entities in this view · source code not included · Archify 9e35d2b · ' +
     'View labels and groups are user preferences, not source changes. ' +
     'Not connected: ' + manifest.deferred_capabilities.join(', ') + '.';
-  document.body.appendChild(footer);
+  document.querySelector('.header')?.appendChild(disclosure);
 })();

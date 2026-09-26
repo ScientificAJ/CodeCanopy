@@ -19,7 +19,7 @@ function Inner() {
   usePanelFocus(drawer, expandSource)
   const base = `/p/${projectId}/s/${snapshotId}`
   useEffect(() => {void ensureSession().then(() => ws.loadWorkspace(projectId, snapshotId))}, [projectId, snapshotId, ws.loadWorkspace])
-  useEffect(() => {let live = true; ensureSession().then(listProjects).then(items => {if (live) setProjects(items)}).catch(() => {}); return () => {live = false}}, [projectId])
+  useEffect(() => {let live = true; ensureSession().then(listProjects).then(items => {if (live) setProjects(items)}).catch(() => {}); return () => {live = false}}, [])
   useEffect(() => {
     function key(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {event.preventDefault(); setDrawer('files'); setTimeout(() => search.current?.focus(), 0)}

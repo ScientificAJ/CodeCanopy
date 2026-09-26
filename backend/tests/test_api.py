@@ -77,6 +77,7 @@ def test_project_analyze_returns_structured_python_results(tmp_path, monkeypatch
             "functions": [{"name": "login", "file": "src/auth.py", "line_start": 4, "line_end": 5}],
             "classes": [],
             "imports": ["database"],
+            "call_sites": [{"callee_name": "connect", "file": "src/auth.py", "line_start": 5, "line_end": 5}],
         }
     ]
 

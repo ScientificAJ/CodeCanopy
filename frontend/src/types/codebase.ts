@@ -33,3 +33,17 @@ export interface Relationship {
   target: string
   type: string
 }
+
+export interface ReusableGroup {
+  function_name: string
+  defined_in: string
+  defined_line_start: number
+  defined_line_end: number
+  called_from: string[]
+}
+
+export interface ReusableFunctionResult {
+  snapshot_id: string
+  groups: ReusableGroup[]
+  total_reusable: number
+}

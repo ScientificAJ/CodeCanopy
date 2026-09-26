@@ -11,12 +11,13 @@ Frontend code MUST NOT treat these as empty-success responses.
 """
 from __future__ import annotations
 
+from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel
 
 
-class SlotStatus(str):
+class SlotStatus(str, Enum):
     NOT_CONNECTED = "NOT_CONNECTED"
     NOT_IMPLEMENTED = "NOT_IMPLEMENTED"
     UNAVAILABLE = "UNAVAILABLE"
@@ -31,7 +32,7 @@ class IntegrationSlotResponse(BaseModel):
 
     schema_version: Literal["1.0"] = "1.0"
     slot: str          # e.g. "summaries.context-panel"
-    status: str        # one of SlotStatus constants
+    status: SlotStatus
     title: str
     description: str
     integration_path: str | None = None  # import path of the slot module
@@ -94,7 +95,7 @@ SLOT_UNUSED = IntegrationSlotResponse(
         "Integration slot: put the unused-code review feature here.  "
         "Not connected yet."
     ),
-    integration_path="app.features.duplicate_detection",
+    integration_path="app.features.unused_code",
 )
 
 SLOT_ASK = IntegrationSlotResponse(

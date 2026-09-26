@@ -17,10 +17,10 @@ it('mounts an isolated future feature and adapter with canonical source navigati
   expect(selectEntity).toHaveBeenCalledWith({entityId:'canonical',fileId:'canonical',path:'src/app.py',kind:'file',lineRange:{start:3,end:5}})
   expect(load.mock.calls.length).toBeGreaterThan(0)
   unregister()
-  await waitFor(() => expect(screen.getByText('Not connected')).toBeDefined())
+  await waitFor(() => expect(screen.getByText('Dependencies & change impact')).toBeDefined())
 })
 it('does not call an unavailable feature adapter', () => {
   const load = vi.fn(); const unregister = registerSlot('ask.workspace',{Component:() => <p>Should not render</p>,availability:'unavailable',load})
   render(<MemoryRouter><SlotMount id="ask.workspace"/></MemoryRouter>)
-  expect(screen.getByText('Not connected')).toBeDefined(); expect(load).not.toHaveBeenCalled(); unregister()
+  expect(screen.getByText('Ask CodeCanopy')).toBeDefined(); expect(load).not.toHaveBeenCalled(); unregister()
 })

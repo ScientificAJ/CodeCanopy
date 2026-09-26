@@ -40,3 +40,6 @@ export const getGraph = (p: string, s: string, max = 12, signal?: AbortSignal) =
 export const getPreferences = (p: string, s: string, signal?: AbortSignal) => request<ViewPreferences>(snapshotPath(p, s) + '/view', { signal })
 export const savePreferences = (p: string, s: string, body: ViewPreferences) => request<ViewPreferences>(snapshotPath(p, s) + '/view', {...json(body), method: 'PATCH'})
 export const renderMap = (p: string, s: string, focus: string, cursor = 0, signal?: AbortSignal) => request<MapArtifact>(snapshotPath(p, s) + '/map', json({ focus, cursor }, signal))
+import type { ReusableFunctionResult } from '../../types/codebase'
+export const getReusableFunctions = (p: string, s: string, minCallers = 1, signal?: AbortSignal) =>
+  request<ReusableFunctionResult>(`${snapshotPath(p, s)}/reusable-functions?min_callers=${minCallers}`, { signal })

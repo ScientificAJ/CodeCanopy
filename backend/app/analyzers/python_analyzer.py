@@ -2,7 +2,7 @@ import ast
 from pathlib import Path
 
 from app.analyzers.base import SourceAnalyzer
-from app.models.codebase import Class, File, Function
+from app.models.codebase import CallSite, Class, File, Function
 
 
 class PythonAnalyzer(SourceAnalyzer):
@@ -14,18 +14,10 @@ class PythonAnalyzer(SourceAnalyzer):
         functions: list[Function] = []
         classes: list[Class] = []
         imports: list[str] = []
+        call_sites: list[CallSite] = []
         file_size = size if size is not None else len(source.encode("utf-8"))
 
-        relevant_nodes = (
-            node
-            for node in ast.walk(module)
-            if isinstance(
-                node,
-                (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Import, ast.ImportFrom),
-            )
-        )
-        nodes = sorted(relevant_nodes, key=lambda node: (node.lineno, node.col_offset))
-        for node in nodes:
+        for node in ast.walk(module):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 functions.append(
                     Function(
@@ -48,6 +40,20 @@ class PythonAnalyzer(SourceAnalyzer):
                 imports.extend(alias.name for alias in node.names)
             elif isinstance(node, ast.ImportFrom):
                 imports.append(f"{'.' * node.level}{node.module or ''}")
+            elif isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name):
+                    callee = node.func.id
+                elif isinstance(node.func, ast.Attribute):
+                    callee = node.func.attr
+                else:
+                    callee = None
+                if callee:
+                    call_sites.append(CallSite(
+                        callee_name=callee,
+                        file=path,
+                        line_start=node.lineno,
+                        line_end=getattr(node, 'end_lineno', None) or node.lineno,
+                    ))
 
         return File(
             path=path,
@@ -57,4 +63,5 @@ class PythonAnalyzer(SourceAnalyzer):
             functions=functions,
             classes=classes,
             imports=imports,
+            call_sites=call_sites,
         )

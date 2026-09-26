@@ -3,4 +3,4 @@
  * import './dependencies/register'
  * No renderer, shell or shared source-viewer edits are needed.
  */
-export {}
+import './reusable_functions/register'

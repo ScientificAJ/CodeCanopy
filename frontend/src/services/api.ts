@@ -1,56 +1,33 @@
 import type { HealthResponse, ProjectUploadResponse } from '../types/api'
 import type { File as CodebaseFile, Project } from '../types/codebase'
+import { ApiError } from './v1/api'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+const apiBase = `${import.meta.env.VITE_API_BASE_URL ?? `${window.location.protocol}//${window.location.hostname}:8000`}/api`
 
-async function apiError(response: Response): Promise<Error> {
-  const payload: unknown = await response.json().catch(() => null)
-  const detail =
-    typeof payload === 'object' && payload !== null && 'detail' in payload && typeof payload.detail === 'string'
-      ? payload.detail
-      : `API returned ${response.status}`
-  return new Error(detail)
+async function legacyRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(apiBase + path, { ...init, credentials: 'include' })
+  const body = await response.json().catch(() => null)
+  if (!response.ok) throw new ApiError(response.status, typeof body?.detail === 'string' ? body.detail : `API returned ${response.status}`)
+  return body as T
 }
 
 export async function getHealth(signal: AbortSignal): Promise<HealthResponse> {
-  const response = await fetch(`${apiBaseUrl}/api/health`, { signal })
-  if (!response.ok) {
-    throw new Error(`API returned ${response.status}`)
-  }
-  return response.json() as Promise<HealthResponse>
+  return legacyRequest<HealthResponse>('/health', { signal })
 }
 
 export async function uploadProject(file: File): Promise<ProjectUploadResponse> {
-  const formData = new FormData()
-  formData.append('file', file)
-
-  const response = await fetch(`${apiBaseUrl}/api/projects`, {
-    method: 'POST',
-    body: formData,
-  })
-
-  if (!response.ok) {
-    throw await apiError(response)
-  }
-
-  return response.json() as Promise<ProjectUploadResponse>
+  const body = new FormData()
+  body.append('file', file)
+  return legacyRequest<ProjectUploadResponse>('/projects', { method: 'POST', body })
 }
 
 export async function getProject(projectId: string): Promise<Project> {
-  const response = await fetch(`${apiBaseUrl}/api/projects/${encodeURIComponent(projectId)}`)
-  if (!response.ok) {
-    throw await apiError(response)
-  }
-  return response.json() as Promise<Project>
+  return legacyRequest<Project>(`/projects/${encodeURIComponent(projectId)}`)
 }
 
 export async function analyzeProject(projectId: string): Promise<CodebaseFile[]> {
-  const response = await fetch(
-    `${apiBaseUrl}/api/projects/${encodeURIComponent(projectId)}/analyze`,
+  return legacyRequest<CodebaseFile[]>(
+    `/projects/${encodeURIComponent(projectId)}/analyze`,
     { method: 'POST' },
   )
-  if (!response.ok) {
-    throw await apiError(response)
-  }
-  return response.json() as Promise<CodebaseFile[]>
 }

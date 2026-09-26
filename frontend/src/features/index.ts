@@ -3,4 +3,5 @@
  * import './dependencies/register'
  * No renderer, shell or shared source-viewer edits are needed.
  */
+import './ask/register'
 export {}

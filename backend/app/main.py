@@ -1,3 +1,10 @@
+from dotenv import load_dotenv
+from pathlib import Path
+# Search upward for .env so it works whether uvicorn is started from
+# backend/ or from the repo root (e.g. e:\CodeCanopy\.env)
+load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env')
+load_dotenv()  # also pick up backend/.env if present
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

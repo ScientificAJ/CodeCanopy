@@ -1,0 +1,220 @@
+/**
+ * Minimal markdown renderer for AI chat responses.
+ * Handles: headings, bold, inline code, fenced code blocks, lists, tables, horizontal rules.
+ * No external dependencies.
+ */
+
+interface Token {
+  type: 'fence' | 'heading' | 'hr' | 'li' | 'table' | 'blank' | 'text'
+  raw: string
+  level?: number        // 1–6 as written; rendered level clamped to 1–3
+  ordered?: boolean
+  lang?: string
+  // table-specific
+  headers?: string[]
+  rows?: string[][]
+}
+
+/** Split a pipe-delimited table row into trimmed cells, ignoring leading/trailing pipes. */
+function splitRow(line: string): string[] {
+  return line.replace(/^\||\|$/g, '').split('|').map(c => c.trim())
+}
+
+/** Return true if every cell in the row is a separator like `---`, `:---`, `---:` */
+function isSeparatorRow(cells: string[]): boolean {
+  return cells.length > 0 && cells.every(c => /^:?-{2,}:?$/.test(c.trim()))
+}
+
+function tokenize(md: string): Token[] {
+  const lines = md.split('\n')
+  const tokens: Token[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Fenced code block
+    if (/^```/.test(line)) {
+      const lang = line.slice(3).trim()
+      const body: string[] = []
+      i++
+      while (i < lines.length && !/^```/.test(lines[i])) {
+        body.push(lines[i])
+        i++
+      }
+      tokens.push({ type: 'fence', raw: body.join('\n'), lang })
+      i++
+      continue
+    }
+
+    // Table: pipe line, then separator line, then data rows
+    if (/\|/.test(line)) {
+      const headerCells = splitRow(line)
+      const nextLine = lines[i + 1] ?? ''
+      const sepCells = splitRow(nextLine)
+      if (headerCells.length > 0 && isSeparatorRow(sepCells)) {
+        // confirmed table — collect all following pipe rows
+        const rows: string[][] = []
+        i += 2 // skip header + separator
+        while (i < lines.length && /\|/.test(lines[i])) {
+          rows.push(splitRow(lines[i]))
+          i++
+        }
+        tokens.push({ type: 'table', raw: line, headers: headerCells, rows })
+        continue
+      }
+    }
+
+    // Heading — support all 6 levels; renderer clamps 4-6 → h3 styling
+    const hm = line.match(/^(#{1,6})\s+(.*)$/)
+    if (hm) {
+      tokens.push({ type: 'heading', raw: hm[2], level: hm[1].length })
+      i++
+      continue
+    }
+
+    // Horizontal rule — must not be a table separator (already handled above)
+    if (/^---+$/.test(line.trim())) {
+      tokens.push({ type: 'hr', raw: line })
+      i++
+      continue
+    }
+
+    // Ordered list item
+    const olm = line.match(/^\d+\.\s+(.*)$/)
+    if (olm) {
+      tokens.push({ type: 'li', raw: olm[1], ordered: true })
+      i++
+      continue
+    }
+
+    // Unordered list item
+    const ulm = line.match(/^[-*]\s+(.*)$/)
+    if (ulm) {
+      tokens.push({ type: 'li', raw: ulm[1], ordered: false })
+      i++
+      continue
+    }
+
+    // Blank line
+    if (line.trim() === '') {
+      tokens.push({ type: 'blank', raw: '' })
+      i++
+      continue
+    }
+
+    tokens.push({ type: 'text', raw: line })
+    i++
+  }
+  return tokens
+}
+
+/** Apply inline formatting: **bold**, `code`, *italic* */
+function inline(text: string): React.ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**'))
+      return <strong key={i}>{part.slice(2, -2)}</strong>
+    if (part.startsWith('`') && part.endsWith('`'))
+      return <code key={i} className="md-inline-code">{part.slice(1, -1)}</code>
+    if (part.startsWith('*') && part.endsWith('*'))
+      return <em key={i}>{part.slice(1, -1)}</em>
+    return part
+  })
+}
+
+export function renderMarkdown(md: string): React.ReactNode {
+  const tokens = tokenize(md)
+  const nodes: React.ReactNode[] = []
+  let i = 0
+
+  while (i < tokens.length) {
+    const t = tokens[i]
+
+    if (t.type === 'fence') {
+      nodes.push(
+        <pre key={i} className="md-fence">
+          <code className={t.lang ? `md-lang-${t.lang}` : ''}>{t.raw}</code>
+        </pre>
+      )
+      i++
+      continue
+    }
+
+    if (t.type === 'table') {
+      nodes.push(
+        <div key={i} className="md-table-wrap">
+          <table className="md-table">
+            <thead>
+              <tr>{(t.headers ?? []).map((h, hi) => <th key={hi}>{inline(h)}</th>)}</tr>
+            </thead>
+            <tbody>
+              {(t.rows ?? []).map((row, ri) => (
+                <tr key={ri}>
+                  {row.map((cell, ci) => <td key={ci}>{inline(cell)}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+      i++
+      continue
+    }
+
+    if (t.type === 'heading') {
+      // clamp h4/h5/h6 down to h3 so we always use a valid HTML tag + style
+      const renderLevel = Math.min(t.level ?? 2, 3) as 1 | 2 | 3
+      const Tag = `h${renderLevel}` as 'h1' | 'h2' | 'h3'
+      nodes.push(<Tag key={i} className={`md-h${renderLevel}`}>{inline(t.raw)}</Tag>)
+      i++
+      continue
+    }
+
+    if (t.type === 'hr') {
+      nodes.push(<hr key={i} className="md-hr" />)
+      i++
+      continue
+    }
+
+    if (t.type === 'blank') {
+      i++
+      continue
+    }
+
+    // Collect consecutive list items of same type
+    if (t.type === 'li') {
+      const ordered = t.ordered
+      const items: React.ReactNode[] = []
+      while (i < tokens.length && tokens[i].type === 'li' && tokens[i].ordered === ordered) {
+        items.push(<li key={i}>{inline(tokens[i].raw)}</li>)
+        i++
+      }
+      const ListTag = ordered ? 'ol' : 'ul'
+      nodes.push(<ListTag key={`list-${i}`} className="md-list">{items}</ListTag>)
+      continue
+    }
+
+    // Plain text paragraph — collect consecutive text lines
+    if (t.type === 'text') {
+      const lines: string[] = []
+      while (i < tokens.length && tokens[i].type === 'text') {
+        lines.push(tokens[i].raw)
+        i++
+      }
+      nodes.push(
+        <p key={`p-${i}`} className="md-p">
+          {lines.flatMap((line, li) => [
+            ...inline(line),
+            li < lines.length - 1 ? <br key={`br-${li}`} /> : null,
+          ])}
+        </p>
+      )
+      continue
+    }
+
+    i++
+  }
+
+  return <>{nodes}</>
+}

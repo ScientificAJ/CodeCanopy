@@ -12,3 +12,6 @@ v1_router.include_router(slots_router)
 
 from app.api.v1.session import router as session_router
 v1_router.include_router(session_router)
+
+from app.api.v1.ask import router as ask_router
+v1_router.include_router(ask_router)

@@ -1,8 +1,8 @@
-# RepoLens
+# Grepo
 
 ### See the structure. Understand the code. Find what matters.
 
-**RepoLens** is a proposed AI-powered repository explorer that turns a GitHub repository into an understandable map of its files, folders, dependencies, and functions. Instead of opening dozens of files to work out how a project fits together, developers can explore its structure, read contextual summaries, and ask questions grounded in the code.
+**Grepo** is a proposed AI-powered repository explorer that turns a GitHub repository into an understandable map of its files, folders, dependencies, and functions. Instead of opening dozens of files to work out how a project fits together, developers can explore its structure, read contextual summaries, and ask questions grounded in the code.
 
 > **Project idea for IBM BOB · Status: planning / pre-MVP**  
 > This repository currently contains the project brief and roadmap, not a working application. All application features described below are planned. Technology choices and any IBM BOB integration are still to be decided.

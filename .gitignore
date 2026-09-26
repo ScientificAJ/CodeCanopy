@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.next/
+coverage/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Repository uploads and generated analysis
+uploads/
+.repo-cache/
+.analysis-cache/
+
+# Local files
+.DS_Store
+*.log

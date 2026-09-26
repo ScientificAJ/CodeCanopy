@@ -119,6 +119,55 @@ export interface CapabilityReport {
   limitations: string[]
 }
 
+export interface FunctionEvidence {
+  id: string
+  name: string
+  file_id: string
+  path: string
+  line_start: number
+  line_end: number
+}
+
+export interface DuplicateCandidate {
+  id: string
+  functions: FunctionEvidence[]
+  structural_similarity: number
+  semantic_similarity?: number | null
+  confidence: 'high' | 'medium' | 'low'
+  review_recommended: boolean
+  method: string
+}
+
+export interface PotentiallyUnusedFunction {
+  id: string
+  function: FunctionEvidence
+  status: 'potentially_unused'
+  method: string
+  explanation: string
+}
+
+export interface FindingsCoverage {
+  inventoried_files: number
+  parsed_files: number
+  analyzed_functions: number
+  unresolved_references: number
+  limitations: string[]
+}
+
+export interface DuplicateDetectionResult {
+  schema_version: '1.0'
+  snapshot_id: string
+  candidates: DuplicateCandidate[]
+  coverage: FindingsCoverage
+}
+
+export interface UnusedDetectionResult {
+  schema_version: '1.0'
+  snapshot_id: string
+  findings: PotentiallyUnusedFunction[]
+  coverage: FindingsCoverage
+}
+
 // ── Graph ──────────────────────────────────────────────────────────────────
 export type EntityKind = 'repository' | 'folder' | 'file' | 'virtual_group'
 export type RelationKind = 'groups' | 'contains' | 'imports' | 'calls' | 'declares_dependency'

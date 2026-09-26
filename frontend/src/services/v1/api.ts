@@ -1,5 +1,5 @@
 /** One authenticated, abortable API client for every v1 feature. */
-import type { AnalysisRun, CapabilityReport, FilePage, GitHubImportRequest, Graph, GraphEntity, ImportAccepted, MapArtifact, Snapshot, SourceSlice, V1Project, ViewPreferences } from '../../types/v1'
+import type { AnalysisRun, CapabilityReport, DuplicateDetectionResult, FilePage, GitHubImportRequest, Graph, GraphEntity, ImportAccepted, MapArtifact, Snapshot, SourceSlice, UnusedDetectionResult, V1Project, ViewPreferences } from '../../types/v1'
 const base = `${import.meta.env.VITE_API_BASE_URL ?? `${window.location.protocol}//${window.location.hostname}:8000`}/api/v1`
 export class ApiError extends Error {
   constructor(public readonly status: number, message: string, public readonly code?: string) { super(message); this.name = 'ApiError' }
@@ -40,3 +40,5 @@ export const getGraph = (p: string, s: string, max = 12, signal?: AbortSignal) =
 export const getPreferences = (p: string, s: string, signal?: AbortSignal) => request<ViewPreferences>(snapshotPath(p, s) + '/view', { signal })
 export const savePreferences = (p: string, s: string, body: ViewPreferences) => request<ViewPreferences>(snapshotPath(p, s) + '/view', {...json(body), method: 'PATCH'})
 export const renderMap = (p: string, s: string, focus: string, cursor = 0, signal?: AbortSignal) => request<MapArtifact>(snapshotPath(p, s) + '/map', json({ focus, cursor }, signal))
+export const getDuplicateFindings = (p: string, s: string, signal?: AbortSignal) => request<DuplicateDetectionResult>(snapshotPath(p, s) + '/findings/duplicates', { signal })
+export const getUnusedFindings = (p: string, s: string, signal?: AbortSignal) => request<UnusedDetectionResult>(snapshotPath(p, s) + '/findings/unused', { signal })

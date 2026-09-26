@@ -1,0 +1,1 @@
+"""Independent feature contracts; implementations are intentionally deferred."""

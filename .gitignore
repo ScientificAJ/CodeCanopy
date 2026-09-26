@@ -5,6 +5,13 @@ build/
 .next/
 coverage/
 
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
 # Local environment and credentials
 .env
 .env.*
@@ -20,3 +27,8 @@ uploads/
 # Local files
 .DS_Store
 *.log
+Thumbs.db
+
+# Local session data
+bob_sessions/*
+!bob_sessions/.gitkeep

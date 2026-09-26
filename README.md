@@ -2,16 +2,61 @@
 
 ### See the structure. Understand the code. Find what matters.
 
-**Grepo** is a proposed AI-powered repository explorer that turns a GitHub repository into an understandable map of its files, folders, dependencies, and functions. Instead of opening dozens of files to work out how a project fits together, developers can explore its structure, read contextual summaries, and ask questions grounded in the code.
+**Grepo** is a developer onboarding and codebase exploration tool that turns a software repository into an understandable map of its files, folders, and code. Developers can browse a project, inspect basic metadata, and view structured Python analysis.
 
-> **Project idea for IBM BOB · Status: planning / pre-MVP**  
-> This repository currently contains the project brief and roadmap, not a working application. All application features described below are planned. Technology choices and any IBM BOB integration are still to be decided.
+> **Project status: working foundation; advanced analysis is planned.** Grepo currently includes a React dashboard, safe ZIP upload and extraction, file inventory, and Python AST analysis. It does not include AI features or an IBM BOB integration.
+
+## Technology stack
+
+- Frontend: React 19, TypeScript 5.7, Vite 6
+- Backend: Python 3.10+, FastAPI, Pydantic, Uvicorn
+- Python analysis: standard-library `ast`
+- API: REST with JSON and multipart ZIP upload
+- Storage: temporary/project filesystem; no database
+
+## Installation and running
+
+Prerequisites are Python 3.10+ and Node.js 18+ with npm. Run backend and frontend in separate PowerShell terminals from the Grepo repository root.
+
+Backend setup and launch:
+
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+Frontend setup and launch:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Vite normally serves the UI at `http://localhost:5173`; the API is at `http://localhost:8000` and its interactive docs are at `/docs`. Set `VITE_API_BASE_URL` to change the API origin. Uploaded projects default to the system temporary directory under `grepo/projects`; set `GREPO_PROJECTS_DIR` to select another server-controlled location.
+
+## API overview
+
+All routes are prefixed with `/api`:
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Health status |
+| `POST` | `/api/projects` | Upload a ZIP in multipart field `file` |
+| `GET` | `/api/projects/{project_id}` | Project metadata and file inventory |
+| `GET` | `/api/projects/{project_id}/files` | File inventory for the dashboard |
+| `POST` | `/api/projects/{project_id}/analyze` | Structured Python AST analysis |
+
+ZIP uploads are limited to 50 MiB, with a 25 MiB per-file extraction limit, 250 MiB total extracted data, and 10,000 entries. Unsafe paths, symlinks, special files, and unsupported compression are rejected. `.git`, `node_modules`, `__pycache__`, `.venv`, `dist`, and `build` directories are skipped. Uploaded source is never executed.
 
 ---
 
 ## The idea
 
-Connect a GitHub repository or upload an exported repository archive. RepoLens analyzes the project and presents an interactive workspace explaining what each part does, how the parts relate, and where improvements may be worth investigating.
+The long-term vision is to connect a GitHub repository or upload an exported archive, then explain what each part does and how it relates. The current foundation accepts ZIP uploads; GitHub integration and advanced explanations remain future work.
 
 The goal is to help developers answer three questions:
 
@@ -56,7 +101,7 @@ Answers should distinguish facts found in the repository from inferences and rep
 5. **Review findings.** Compare reuse opportunities, possible duplicates, and potentially unused functions against the source.
 6. **Ask questions.** Retrieve relevant evidence and generate an answer linked to the analyzed repository snapshot.
 
-## Proposed architecture
+## Long-term architecture vision
 
 ```mermaid
 flowchart TD
@@ -90,18 +135,20 @@ flowchart TD
 
 ## MVP scope
 
-The proposed first version will focus on JavaScript and TypeScript repositories. Other languages can appear in the file inventory, but language-specific analysis must clearly indicate when a language is unsupported.
+The working foundation supports local ZIP ingestion, file inventory, and basic Python AST analysis. JavaScript and TypeScript files appear in the inventory but are not parsed yet.
 
-- [ ] Import a public GitHub repository or ZIP archive with size and file-count limits.
-- [ ] Build a navigable file and folder explorer.
-- [ ] Extract supported symbols, exports, and import relationships.
-- [ ] Generate source-grounded summaries for supported files and folders.
-- [ ] Display an internal dependency graph and declared external dependencies.
-- [ ] Highlight shared or reusable functions with their observed references.
-- [ ] Surface basic exact or structural duplicate candidates.
+- [x] Upload a local ZIP with archive size, extracted size, and file-count limits.
+- [x] Browse the project tree and basic file metadata in the dashboard.
+- [x] Extract Python function, class, and import information with line ranges.
+- [x] Show upload, loading, error, and empty states.
+- [ ] Import a public GitHub repository.
+- [ ] Add JavaScript and TypeScript analyzers.
+- [ ] Generate source-grounded summaries for files and folders.
+- [ ] Display internal and external dependency relationships.
+- [ ] Highlight reusable functions and their references.
+- [ ] Surface exact or structural duplicate candidates.
 - [ ] Flag potentially unused functions with explicit scope and limitations.
 - [ ] Answer repository questions with source references.
-- [ ] Provide progress, failure, skipped-file, and partial-analysis states.
 
 ### Suggested demo
 
@@ -111,32 +158,35 @@ Import a small sample repository containing a shared utility, two similar functi
 
 Potential extensions include private-repository authorization, more programming languages, commit-to-commit analysis, incremental re-indexing, shareable reports, team annotations, and explicitly approved refactoring suggestions.
 
-## Proposed implementation layout
-
-The following is a **suggested future layout**, not a list of files that already exist:
+## Project structure
 
 ```text
-repolens/
-├── apps/
-│   ├── web/                  # Repository explorer, graph, findings, and chat UI
-│   └── api/                  # Import, analysis, and query endpoints
-├── packages/
-│   ├── analyzer/             # Language parsing and static-analysis passes
-│   ├── ai/                   # Summary generation and model-provider adapters
-│   └── shared/               # Shared types and analysis result schemas
-├── fixtures/                 # Sample repositories for evaluation
-├── tests/                    # Ingestion, analysis, and Q&A checks
-├── docs/                     # Architecture decisions and implementation notes
-└── README.md
+grepo/
+├── backend/
+│   ├── app/api/              # FastAPI routes
+│   ├── app/analyzers/        # Language-neutral analyzer contract and Python AST parser
+│   ├── app/features/         # Independent future-feature contracts
+│   ├── app/models/           # Shared Pydantic codebase models
+│   ├── app/services/         # Archive, storage, inventory, and analysis services
+│   └── tests/                # API, upload, model, and analyzer tests
+├── frontend/src/
+│   ├── components/           # Upload, project tree, and status UI
+│   ├── pages/                # Dashboard
+│   ├── services/             # Centralized REST client
+│   └── types/                # TypeScript API and codebase contracts
+├── docs/architecture.md
+├── bob_sessions/             # Local session artifacts
+├── README.md
+└── .gitignore
 ```
 
 ## Safety and privacy requirements
 
-These are design requirements for implementation, not claims about protections already built:
+The current upload path enforces archive size and entry limits, rejects traversal paths and links, filters selected generated/dependency directories, and never executes uploaded code. The following are additional privacy requirements for future work, not claims that those protections exist:
 
 - Analyze repositories as data; do not execute uploaded code, install its dependencies, or run its scripts during ingestion.
 - Enforce archive size, extracted size, path, symlink, and file-count checks before processing uploads.
-- Exclude secrets, environment files, private keys, generated artifacts, binaries, and dependency directories by default. Treat filtering as a precaution rather than a guarantee that no secrets remain.
+- Add secret scanning and exclusion for environment files and private keys before supporting private repositories. Current directory filtering is only a precaution, not a guarantee that uploads contain no secrets.
 - Make AI-provider data sharing explicit. Send only the selected, necessary source content and keep authorization tokens out of prompts and logs.
 - Treat instructions inside source files and documentation as untrusted repository content, not commands for the analysis system.
 - Limit analysis and findings to the selected repository snapshot. State when dynamic behavior, generated code, external callers, or unsupported syntax could affect conclusions.
@@ -145,17 +195,17 @@ These are design requirements for implementation, not claims about protections a
 
 ## How we will evaluate the MVP
 
-Use small, inspectable fixtures with known expected results. Check that summaries match the code, import edges resolve correctly, and findings point to the right locations. Include counterexamples such as exported library functions, callbacks, dynamically selected handlers, and intentional duplicates.
+Use small, inspectable fixtures with known expected results. The current suite covers upload safety, project inventory, shared models, and Python AST results. As summaries and findings are added, include counterexamples such as exported library functions, callbacks, dynamically selected handlers, and intentional duplicates.
 
 Track correctness and false positives separately. Validate that answers actually support their cited sources and that unsupported questions produce an honest limitation rather than a confident guess.
 
 ## Getting started
 
-There is no runnable app or installation command yet. Start by agreeing on the MVP, choosing the implementation stack, and adding a sample repository with expected analysis results. Build the ingestion and parser pipeline before connecting generated summaries and chat.
+The app can be run locally using the commands in [Installation and running](#installation-and-running). Backend tests can be run from the repository root with `backend/.venv/Scripts/python.exe -m pytest backend/tests -q` after installing `backend/requirements-dev.txt`.
 
 ## Contributing
 
-Early contributions can focus on interface sketches, architecture decisions, sample repositories, parser experiments, analysis rules, and evaluation cases. For a proposed analysis feature, include the source example, expected finding, and at least one case where it should **not** produce a finding.
+Keep routes thin, place backend behavior in the relevant service or `backend/app/features/<feature>/` package, and route all frontend requests through `frontend/src/services/api.ts`. Mirror public response shapes in the frontend types and add focused tests. For proposed analysis findings, include an example where the finding should **not** appear.
 
 ## License
 
@@ -163,4 +213,4 @@ A project license has not been selected yet.
 
 ---
 
-**RepoLens — understand the repository before you change it.**
+**Grepo — understand the repository before you change it.**

@@ -79,6 +79,112 @@ def test_expiry_and_wrong_project(client):
     assert client.get(path).status_code == 410
 
 
+def test_duplicate_and_potentially_unused_findings(client):
+    source = '''def validate_email(value):
+    return "@" in value
+
+def is_valid_email(address):
+    return "@" in address
+
+def check_email(candidate):
+    return "@" in candidate
+
+def send_email(address):
+    return validate_email(address)
+
+def orphaned_helper(value):
+    return value.strip()
+'''
+    path, _, _ = import_files(client, {'src/validators.py': source})
+
+    duplicates = client.get(path + '/findings/duplicates')
+    assert duplicates.status_code == 200, duplicates.text
+    payload = duplicates.json()
+    assert payload['candidates']
+    candidate_names = {function['name'] for function in payload['candidates'][0]['functions']}
+    assert candidate_names <= {'validate_email', 'is_valid_email', 'check_email'}
+    assert payload['candidates'][0]['structural_similarity'] == 1
+    assert any('Semantic comparison is not configured' in item for item in payload['coverage']['limitations'])
+
+    unused = client.get(path + '/findings/unused')
+    assert unused.status_code == 200, unused.text
+    findings = unused.json()['findings']
+    orphan = next(item for item in findings if item['function']['name'] == 'orphaned_helper')
+    assert orphan['status'] == 'potentially_unused'
+    assert 'potentially' in orphan['status']
+    assert all(item['function']['name'] != 'validate_email' for item in findings)
+
+
+def test_duplicate_findings_use_configured_semantic_provider(client, monkeypatch):
+    from app.features.duplicate_detection import analysis
+
+    class StubProvider:
+        cache_key = 'test-provider:model'
+
+        async def score_pairs(self, pairs):
+            assert len(pairs) == 1
+            assert 'return "@" in value' in pairs[0]['code_a']
+            return [0.94]
+
+    monkeypatch.setattr(analysis, 'configured_provider', StubProvider)
+    source = 'def validate_email(value):\n    return "@" in value\n\ndef is_valid_email(address):\n    return "@" in address\n'
+    path, _, _ = import_files(client, {'src/validators.py': source})
+
+    response = client.get(path + '/findings/duplicates')
+
+    assert response.status_code == 200, response.text
+    candidate = response.json()['candidates'][0]
+    assert candidate['semantic_similarity'] == 0.94
+    assert candidate['method'] == 'normalized_ast_structure_and_ai_semantic_comparison'
+
+
+def test_findings_cover_javascript_and_go_repositories(client):
+    javascript = '''function validateEmail(value) { return value.includes("@"); }
+function isValidEmail(address) { return address.includes("@"); }
+function normalizeEmail(value) { return value.trim(); }
+function callNormalize(value) { return normalizeEmail(value); }
+function orphanedJs(value) { return value.toLowerCase(); }
+function callback(isValidEmail) { return true; }
+'''
+    go = '''package validation
+func validateEmail(value string) bool { return strings.Contains(value, "@") }
+func isValidEmail(address string) bool { return strings.Contains(address, "@") }
+func normalizeValue(value string) string { return strings.TrimSpace(value) }
+func callNormalize(value string) string { return normalizeValue(value) }
+func orphanedGo(value string) string { return strings.ToLower(value) }
+'''
+    sql = '''CREATE FUNCTION numeric_helper(value INT) RETURNS INT AS $$ SELECT value + 1; $$ LANGUAGE SQL;
+CREATE FUNCTION used_sql(value INT) RETURNS INT AS $$ SELECT numeric_helper(value); $$ LANGUAGE SQL;
+CREATE FUNCTION orphanedSql(value INT) RETURNS INT AS $$ SELECT value + 2; $$ LANGUAGE SQL;
+'''
+    path, _, _ = import_files(client, {
+        'src/validate.js': javascript,
+        'src/validate.go': go,
+        'src/helpers.sql': sql,
+    })
+
+    duplicates = client.get(path + '/findings/duplicates')
+    assert duplicates.status_code == 200, duplicates.text
+    payload = duplicates.json()
+    assert payload['coverage']['parsed_files'] == 3
+    assert any('javascript' in limitation and 'go' in limitation and 'sql' in limitation for limitation in payload['coverage']['limitations'])
+    capabilities = client.get(path + '/capabilities').json()
+    assert {item['parser_name'] for item in capabilities['files'] if item['syntax_extraction']} == {'tree-sitter'}
+    candidate_names = [
+        {function['name'] for function in candidate['functions']}
+        for candidate in payload['candidates']
+    ]
+    assert {'validateEmail', 'isValidEmail'} in candidate_names
+
+    unused = client.get(path + '/findings/unused')
+    assert unused.status_code == 200, unused.text
+    names = {finding['function']['name'] for finding in unused.json()['findings']}
+    assert {'orphanedJs', 'orphanedGo', 'isValidEmail', 'orphanedSql'} <= names
+    assert 'normalizeEmail' not in names
+    assert 'normalizeValue' not in names
+    assert 'numeric_helper' not in names
+
+
 def test_archify_export_and_view_isolation(client):
     path, run, _ = import_files(client, {'a/a.py': 'x=1', 'b/b.js': 'x=2', 'c/c.txt': 'three', 'd.txt': 'four'})
     inventory = client.get(path + '/files').json()

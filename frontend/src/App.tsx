@@ -22,6 +22,7 @@ import OpportunitiesPage from './pages/workspace/OpportunitiesPage'
 import AskPage from './pages/workspace/AskPage'
 import { SlotMount } from './components/slots/SlotMount'
 import ProposalsPage from './pages/workspace/ProposalsPage'
+import './features/duplicate_detection'
 import './styles.css'
 
 export default function App() {

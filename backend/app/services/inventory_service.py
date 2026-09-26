@@ -10,6 +10,7 @@ import os
 import tokenize
 from pathlib import Path
 
+from app.analyzers.tree_sitter_analyzer import parser_language
 from app.models.v1.snapshot import FileRecord, RunDiagnostic
 from app.services.project_archive import IGNORED_DIRECTORIES
 
@@ -83,14 +84,14 @@ def build_inventory(snapshot_id: str, source: Path, destination: Path, check_can
             target.chmod(0o444)
             if text is None:
                 diagnostics.append(RunDiagnostic(file_path=path, stage='inventory', message='Binary or unsupported text encoding; metadata only.'))
-            elif language == 'python':
+            elif language == 'python' or parser_language(language, path) is not None:
                 if len(data) > MAX_PARSE_BYTES:
-                    diagnostics.append(RunDiagnostic(file_path=path, stage='parse', message='Python syntax extraction skipped above 1 MiB; source remains browsable.'))
+                    diagnostics.append(RunDiagnostic(file_path=path, stage='parse', message='Syntax extraction skipped above 1 MiB; source remains browsable.'))
                 else:
                     try:
-                        result = subprocess.run([sys.executable, '-I', str(Path(__file__).with_name('syntax_worker.py'))], input=json.dumps({'text': text, 'path': path, 'size': len(data)}), capture_output=True, text=True, timeout=4, check=True)
+                        result = subprocess.run([sys.executable, '-I', str(Path(__file__).with_name('syntax_worker.py'))], input=json.dumps({'text': text, 'path': path, 'size': len(data), 'language': language}), capture_output=True, text=True, timeout=10, check=True)
                         parsed[record.id] = json.loads(result.stdout)
                     except (ValueError, OSError, subprocess.SubprocessError):
-                        diagnostics.append(RunDiagnostic(file_path=path, stage='parse', message='Python syntax extraction failed or exceeded its resource budget; original text remains browsable.'))
+                        diagnostics.append(RunDiagnostic(file_path=path, stage='parse', message='Syntax extraction failed or exceeded its resource budget; original text remains browsable.'))
     return sorted(records, key=lambda r: r.path), parsed, diagnostics
 

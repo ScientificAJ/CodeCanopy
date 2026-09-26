@@ -4,7 +4,22 @@ from pathlib import Path
 import zipfile
 files = {
     'README.md': '# Synthetic verification fixture\nNot a live repository analysis.\n',
-    'src/main.py': '# Synthetic fixture; never execute imported code.\n' + ''.join(f'value_{i} = {i}\n' for i in range(2, 451)),
+    'src/main.py': '# Synthetic fixture; never execute imported code.\n' + ''.join(f'value_{i} = {i}\n' for i in range(2, 451)) + '''
+def validate_email(value):
+    return "@" in value
+
+def is_valid_email(address):
+    return "@" in address
+
+def check_email(candidate):
+    return "@" in candidate
+
+def send_email(address):
+    return validate_email(address)
+
+def orphaned_helper(value):
+    return value.strip()
+''',
     'src/unknown.custom': '<script>globalThis.sourceExecuted = true</script>\nSafe unknown-language text.\n',
     'docs/guide.md': '# Guide\nSynthetic file.\n',
     'assets/binary.bin': b'\x00\x01\x02',

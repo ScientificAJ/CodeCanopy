@@ -32,3 +32,11 @@ Thumbs.db
 # Local session data
 bob_sessions/*
 !bob_sessions/.gitkeep
+
+# Reference material: PRD package and bulk extraction (keep original ZIP out of git)
+Grepo_PRD_Complete_Package.zip
+.grepo-reference/
+
+# Local browser verification artifacts
+frontend/test-results/
+frontend/playwright-report/

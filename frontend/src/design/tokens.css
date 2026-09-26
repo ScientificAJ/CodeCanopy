@@ -1,0 +1,50 @@
+/* CodeCanopy design tokens v1.0 — imported from PRD design/tokens.css */
+:root {
+  /* Core palette */
+  --codecanopy-canvas:        #FAFBF7;
+  --codecanopy-surface:       #FFFFFF;
+  --codecanopy-surface-muted: #F3F5F0;
+  --codecanopy-ink:           #172019;
+  --codecanopy-text-secondary:#526057;
+  --codecanopy-line:          #DFE5DA;
+  --codecanopy-lime:          #C6F84A;
+  --codecanopy-lemon:         #F2F85B;
+  --codecanopy-green-strong:  #28643A;
+  --codecanopy-caution:       #7A5200;
+  --codecanopy-error:         #A33232;
+  --codecanopy-focus:         #365A21;
+
+  /* Typography */
+  --codecanopy-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --codecanopy-font-mono: ui-monospace, "Cascadia Code", "Liberation Mono", Consolas, monospace;
+
+  /* Spacing (8px base) */
+  --codecanopy-space-1:  4px;
+  --codecanopy-space-2:  8px;
+  --codecanopy-space-3: 12px;
+  --codecanopy-space-4: 16px;
+  --codecanopy-space-6: 24px;
+  --codecanopy-space-8: 32px;
+
+  /* Shape */
+  --codecanopy-radius-control: 12px;
+  --codecanopy-radius-card:    20px;
+  --codecanopy-shadow-card:    0 6px 24px rgba(23,32,25,.055);
+
+  /* Motion */
+  --codecanopy-duration-fast:   120ms;
+  --codecanopy-duration-normal: 180ms;
+
+  /* Layout targets (derived from PRD §25.2) */
+  --codecanopy-topbar-h:     72px;
+  --codecanopy-nav-w:        224px;
+  --codecanopy-tree-w:       260px;
+  --codecanopy-panel-w:      340px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --codecanopy-duration-fast:   0ms;
+    --codecanopy-duration-normal: 0ms;
+  }
+}

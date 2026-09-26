@@ -1,216 +1,173 @@
-# Grepo
+# CodeCanopy
 
-### See the structure. Understand the code. Find what matters.
+**See the structure. Find your path through the code.**
 
-**Grepo** is a developer onboarding and codebase exploration tool that turns a software repository into an understandable map of its files, folders, and code. Developers can browse a project, inspect basic metadata, and view structured Python analysis.
+CodeCanopy imports a public GitHub repository or ZIP into a read-only snapshot,
+then connects a searchable file tree, an interactive structure map, and bounded
+source previews. Organize your view with labels and virtual groups, and export
+that view as an interactive, offline HTML file.
 
-> **Project status: working foundation; advanced analysis is planned.** Grepo currently includes a React dashboard, safe ZIP upload and extraction, file inventory, and Python AST analysis. It does not include AI features or an IBM BOB integration.
+This is the **structure visualization and shared UI slice**. AI summaries,
+dependency/impact analysis, reuse, duplicates, unused-code findings, Ask,
+proposals and generated documents have intentional extension slots. Those
+engines are not implemented. No model credentials or AI calls are needed.
 
-## Technology stack
+## Run locally
 
-- Frontend: React 19, TypeScript 5.7, Vite 6
-- Backend: Python 3.10+, FastAPI, Pydantic, Uvicorn
-- Python analysis: standard-library `ast`
-- API: REST with JSON and multipart ZIP upload
-- Storage: temporary/project filesystem; no database
+Requirements: Linux/macOS, Python 3.11+ and Node.js 22+ with npm. Tested with
+Python 3.14 and Node 24. The bounded Python parser uses POSIX resource limits;
+on Windows use WSL for this slice. The legacy API remains available separately.
 
-## Installation and running
-
-Prerequisites are Python 3.10+ and Node.js 18+ with npm. Run backend and frontend in separate PowerShell terminals from the Grepo repository root.
-
-Backend setup and launch:
-
-```powershell
+```bash
 cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Frontend setup and launch:
+In another terminal:
 
-```powershell
+```bash
 cd frontend
-npm install
-npm run dev
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Vite normally serves the UI at `http://localhost:5173`; the API is at `http://localhost:8000` and its interactive docs are at `/docs`. Set `VITE_API_BASE_URL` to change the API origin. Uploaded projects default to the system temporary directory under `grepo/projects`; set `GREPO_PROJECTS_DIR` to select another server-controlled location.
+Open **http://127.0.0.1:5173**. Use the same hostname for frontend and backend
+(`localhost` also works). The frontend defaults to port 8000 on its own host;
+`VITE_API_BASE_URL` can override it. API documentation is at
+http://127.0.0.1:8000/docs. These are the two existing development services;
+there are no additional feature servers.
 
-## API overview
+The API needs Node on PATH to run the vendored renderer. Set `CODECANOPY_NODE`
+to an absolute Node executable if necessary. No installation inside
+`vendor/archify` is needed.
 
-All routes are prefixed with `/api`:
+## Explore a repository
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/health` | Health status |
-| `POST` | `/api/projects` | Upload a ZIP in multipart field `file` |
-| `GET` | `/api/projects/{project_id}` | Project metadata and file inventory |
-| `GET` | `/api/projects/{project_id}/files` | File inventory for the dashboard |
-| `POST` | `/api/projects/{project_id}/analyze` | Structured Python AST analysis |
+1. Enter an HTTPS public GitHub URL, optionally with a branch/tag/commit, or
+   upload a ZIP. GitHub refs resolve to a full immutable commit before download.
+2. Wait for the import run. It can be cancelled; warnings produce a partial
+   result with per-file diagnostics, not fabricated success.
+3. Search the tree (Ctrl/Cmd+K), expand folders, and select a file. Double-click
+   a folder or use its map-list arrow to drill down. Map selection and source
+   inspection share canonical snapshot-scoped IDs.
+4. Use Customize view to change labels, order, theme or virtual groups. These
+   preferences never modify imported source paths or bytes.
+5. Export HTML for the current map chapter. The export contains the graph,
+   provenance and view preferences, plus Archify's offline interactions. Source
+   contents are **not included**. It is a structural view, not an AI report or
+   dependency analysis.
 
-ZIP uploads are limited to 50 MiB, with a 25 MiB per-file extraction limit, 250 MiB total extracted data, and 10,000 entries. Unsafe paths, symlinks, special files, and unsupported compression are rejected. `.git`, `node_modules`, `__pycache__`, `.venv`, `dist`, and `build` directories are skipped. Uploaded source is never executed.
+Each map chapter shows its focus entity and at most three children for
+readability. Sibling paging, folder drilldown, the searchable full tree and the
+accessible map list reach the remaining inventory. No invented architectural
+roles or semantic edges are added.
 
----
+## Storage and bounds
 
-## The idea
+- ZIP: 50 MiB upload, 25 MiB per file, 250 MiB extracted, 10,000 entries.
+  Traversal, unsafe Windows names, symlinks, special files and unsupported
+  compression are rejected. Generated/dependency directories are skipped.
+- GitHub: unauthenticated public HTTPS only. Requests and redirects are checked
+  against `github.com`, `api.github.com`, and `codeload.github.com` **before**
+  following them. Metadata and archive downloads are bounded. No git hooks or
+  repository installation scripts run.
+- New workspace data: `CODECANOPY_SNAPSHOTS_DIR`, default
+  `<system-temp>/codecanopy/snapshots`. The HttpOnly SameSite=Strict browser
+  cookie scopes v1 access. This is a local, single-process workspace model,
+  not a multi-user production identity service. Clearing the cookie loses
+  access to that workspace.
+- Source access expires after 24 hours. Cleanup runs every minute while the API
+  is running and at startup; source/render bytes are removed then. Brief
+  metadata tombstones and terminal runs are removed after two days. Use
+  Snapshot storage → Delete imported repository for immediate deletion.
+- Known secret filenames and private-key material are excluded. This is **not
+  complete secret detection**; inspect archives before importing sensitive data.
+- Valid UTF-8 text of any language is browsable; Python also honors encoding
+  declarations. Binary/unsupported encodings have metadata only. Python syntax
+  extraction reuses the existing analyzer, isolated to 1 MiB input, 384 MiB
+  address space, 2 CPU seconds and a 4-second wall timeout per file. It never
+  executes repository code. Other languages are honestly marked text-only.
+- Source previews verify the full content hash and return at most 2,000 lines
+  and 256 KiB. UI pages use 200 lines. Two imports run concurrently with four
+  admitted jobs; processing has a three-minute deadline. Run status is durable;
+  interrupted runs report failure after a server restart. Run **one** API worker.
+- HTML runs in an opaque sandboxed iframe. A checked source-window, nonce,
+  snapshot, view and entity bridge synchronizes selection. Export CSP prohibits
+  network connections. No provider keys belong in browser code.
 
-The long-term vision is to connect a GitHub repository or upload an exported archive, then explain what each part does and how it relates. The current foundation accepts ZIP uploads; GitHub integration and advanced explanations remain future work.
+The legacy `/api/projects` API keeps its original storage, contracts and Python
+analysis behavior (`CODECANOPY_PROJECTS_DIR`, default system-temp/codecanopy/projects).
+Its original routes are not the session-scoped v1 service; keep this development
+server on loopback. The v1 UI does not load old legacy uploads or old-name local
+workspace sessions automatically.
 
-The goal is to help developers answer three questions:
+## APIs and teammate integration
 
-- **What is here?** Understand the project layout and the responsibilities of individual files and folders.
-- **How does it work together?** Follow dependencies, shared utilities, and relationships between functions.
-- **What should I look at next?** Find reusable code, investigate possible duplication, and review potentially unused functions.
+All new behavior is under `/api/v1`:
 
-## Planned features
-
-| Feature | What it will do |
+| Route | Purpose |
 | --- | --- |
-| **Project structure explorer** | Visualize the repository as an expandable file tree and a connected architecture view. Group files by folder, feature, or responsibility without changing the original repository. |
-| **AI-generated file and folder summaries** | Explain the purpose of each supported source file and directory, including important functions, exports, and connections to surrounding code. Show unsupported or skipped files explicitly. |
-| **Dependency visualization** | Show internal imports and module relationships, alongside external packages declared in supported manifests. Separate confirmed connections from relationships that could not be resolved. |
-| **Reusable and shared-function discovery** | Highlight exported functions, shared utilities, and broadly referenced helpers. Show where they are defined and used, and suggest reuse opportunities without assuming they are safe to move. |
-| **Potential duplicate detection** | Surface identical or structurally similar functions for comparison, with source locations and an explanation of the match. |
-| **Potentially unused-function detection** | Flag functions for which no references were found within the analyzed scope. Treat findings as review candidates, not proof that code can be deleted. |
-| **Ask questions about the repository** | Answer natural-language questions using relevant code and summaries, with file paths and line references where available. |
+| `POST /session` | Establish the browser workspace cookie |
+| `POST /imports/zip`, `/imports/github` | Return HTTP 202 with a durable run ID |
+| `GET /runs/{id}`, `POST /runs/{id}/cancel` | Status, diagnostics and cancellation |
+| `GET /projects`, `GET/DELETE /projects/{id}` | Workspace-owned imports |
+| `GET /projects/{p}/snapshots` | Available snapshots |
+| `GET …/snapshots/{s}` | Immutable revision and expiry |
+| `GET …/{s}/files`, `/entities`, `/capabilities` | Inventory and honest coverage |
+| `GET …/{s}/source/{file_id}` | Validated bounded line ranges |
+| `GET …/{s}/graph` | Bounded observed containment graph |
+| `GET/PATCH …/{s}/view` | View-only preferences |
+| `POST …/{s}/map` | Validated Archify HTML, graph, hashes and receipt |
 
-### Organizing a project does not mean silently rewriting it
+Deferred backend endpoints return HTTP **501**, with a machine-readable
+`NOT_CONNECTED` response. The UI's unregistered slots make no feature requests.
+See [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md),
+[contract notes](contracts/README.md), [scope](docs/SCOPE.md), and the
+[verification record](docs/VERIFICATION.md).
 
-The initial product will organize the **view of the repository**: searchable groups, tags, maps, and navigation. Moving files, changing imports, merging functions, or deleting code is outside the initial MVP. Any future refactoring workflow should require a preview and explicit approval.
+Future work should stay in independent feature packages, reuse these IDs and
+source access, and keep provider calls server-side. Preserve the starter's
+`backend/app/features` contracts. The registry accepts a component and optional
+abortable adapter; its test-only example is not shipped as a feature.
 
-## Example questions
+## Verify
 
-- “What does this project do, and where should I start reading?”
-- “Where is authentication implemented?”
-- “Which files depend on this module?”
-- “Is there already a helper for validating email addresses?”
-- “What is the difference between these two similar functions?”
-- “Why was this function flagged as potentially unused?”
-- “Which parts of the project would be affected by changing this utility?”
-
-Answers should distinguish facts found in the repository from inferences and report when the evidence is insufficient.
-
-## Planned user journey
-
-1. **Import a repository.** Start with a public GitHub URL or a ZIP archive. Add authorized private-repository access in a later phase.
-2. **Choose the analysis scope.** Select a branch or revision where supported, review exclusions, and confirm which files may be sent to an AI provider.
-3. **Build the project map.** Inventory files, identify supported languages, extract symbols, and resolve imports and references where possible.
-4. **Explore the workspace.** Navigate folders, select files, read summaries, and inspect dependency relationships.
-5. **Review findings.** Compare reuse opportunities, possible duplicates, and potentially unused functions against the source.
-6. **Ask questions.** Retrieve relevant evidence and generate an answer linked to the analyzed repository snapshot.
-
-## Long-term architecture vision
-
-```mermaid
-flowchart TD
-    A[GitHub URL or repository ZIP] --> B[Safe ingestion and filtering]
-    B --> C[File inventory and language detection]
-    C --> D[Syntax parsing and symbol extraction]
-    D --> E[Imports, references, and dependency graph]
-    D --> F[Reuse, duplication, and unused-code candidates]
-    C --> G[Selected source and metadata]
-    E --> H[Repository index]
-    F --> H
-    G --> I[AI file and folder summaries]
-    I --> H
-    H --> J[Interactive repository workspace]
-    H --> K[Evidence retrieval]
-    K --> L[Repository Q&A with source references]
-    L --> J
+```bash
+cd backend
+.venv/bin/python -m pytest -q
+cd ../frontend
+npm run contracts
+npm run lint
+npm run build
+npm test
 ```
 
-### Analysis approach
+For browser checks (the test runner starts both local servers when needed):
 
-**Static analysis first.** Use language-aware parsing for supported languages to collect files, symbols, exports, imports, and references. Keep observed facts separate from AI-generated explanations.
-
-**Contextual summaries.** Generate file summaries from source and extracted metadata, then produce folder summaries from the responsibilities of their contents. Record the analyzed commit or archive identifier so results can be tied to a specific snapshot.
-
-**Evidence-backed findings.** Each reuse, duplication, or unused-code candidate should include its location, supporting evidence, scope, and limitations. Prefer “no references found in the analyzed files” over “safe to delete.”
-
-**Grounded Q&A.** Retrieve relevant source passages and analysis results before generating an answer. Cite source locations, distinguish inference from observation, and acknowledge incomplete coverage.
-
-**Provider-neutral AI layer.** Keep model access behind an adapter so the team can choose the provider and explore an IBM BOB-related workflow without implying an integration already exists.
-
-## MVP scope
-
-The working foundation supports local ZIP ingestion, file inventory, and basic Python AST analysis. JavaScript and TypeScript files appear in the inventory but are not parsed yet.
-
-- [x] Upload a local ZIP with archive size, extracted size, and file-count limits.
-- [x] Browse the project tree and basic file metadata in the dashboard.
-- [x] Extract Python function, class, and import information with line ranges.
-- [x] Show upload, loading, error, and empty states.
-- [ ] Import a public GitHub repository.
-- [ ] Add JavaScript and TypeScript analyzers.
-- [ ] Generate source-grounded summaries for files and folders.
-- [ ] Display internal and external dependency relationships.
-- [ ] Highlight reusable functions and their references.
-- [ ] Surface exact or structural duplicate candidates.
-- [ ] Flag potentially unused functions with explicit scope and limitations.
-- [ ] Answer repository questions with source references.
-
-### Suggested demo
-
-Import a small sample repository containing a shared utility, two similar functions, and a function with no obvious references. Show the structure, open a file summary, follow a dependency, compare the flagged functions, and ask where a specific behavior is implemented.
-
-## Future directions
-
-Potential extensions include private-repository authorization, more programming languages, commit-to-commit analysis, incremental re-indexing, shareable reports, team annotations, and explicitly approved refactoring suggestions.
-
-## Project structure
-
-```text
-grepo/
-├── backend/
-│   ├── app/api/              # FastAPI routes
-│   ├── app/analyzers/        # Language-neutral analyzer contract and Python AST parser
-│   ├── app/features/         # Independent future-feature contracts
-│   ├── app/models/           # Shared Pydantic codebase models
-│   ├── app/services/         # Archive, storage, inventory, and analysis services
-│   └── tests/                # API, upload, model, and analyzer tests
-├── frontend/src/
-│   ├── components/           # Upload, project tree, and status UI
-│   ├── pages/                # Dashboard
-│   ├── services/             # Centralized REST client
-│   └── types/                # TypeScript API and codebase contracts
-├── docs/architecture.md
-├── bob_sessions/             # Local session artifacts
-├── README.md
-└── .gitignore
+```bash
+cd frontend
+npx playwright install chromium
+npm run test:e2e
 ```
 
-## Safety and privacy requirements
+The browser test uses an explicitly synthetic ZIP, exercises real endpoints,
+and checks selection, source pagination, organization, deferred pages, responsive
+access and offline export. Screenshots and receipts stay in ignored
+`bob_sessions/browser-evidence`. The container test configuration uses
+`--no-sandbox`; normal desktop Chromium can use its own sandbox.
 
-The current upload path enforces archive size and entry limits, rejects traversal paths and links, filters selected generated/dependency directories, and never executes uploaded code. The following are additional privacy requirements for future work, not claims that those protections exist:
+## Archify and licenses
 
-- Analyze repositories as data; do not execute uploaded code, install its dependencies, or run its scripts during ingestion.
-- Enforce archive size, extracted size, path, symlink, and file-count checks before processing uploads.
-- Add secret scanning and exclusion for environment files and private keys before supporting private repositories. Current directory filtering is only a precaution, not a guarantee that uploads contain no secrets.
-- Make AI-provider data sharing explicit. Send only the selected, necessary source content and keep authorization tokens out of prompts and logs.
-- Treat instructions inside source files and documentation as untrusted repository content, not commands for the analysis system.
-- Limit analysis and findings to the selected repository snapshot. State when dynamic behavior, generated code, external callers, or unsupported syntax could affect conclusions.
-- Provide deletion controls and a documented retention policy before accepting private code.
-- Never automatically delete or merge functions based on a generated finding.
+Structure maps use the **complete, unmodified** `archify/` package from
+[tt-a1i/archify](https://github.com/tt-a1i/archify/tree/9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993/archify),
+pinned to `9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993`.
+`vendor/archify.lock.json` records every file hash. CodeCanopy's compiler and
+bridge are separate. No fallback diagram renderer is used. See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-## How we will evaluate the MVP
-
-Use small, inspectable fixtures with known expected results. The current suite covers upload safety, project inventory, shared models, and Python AST results. As summaries and findings are added, include counterexamples such as exported library functions, callbacks, dynamically selected handlers, and intentional duplicates.
-
-Track correctness and false positives separately. Validate that answers actually support their cited sources and that unsupported questions produce an honest limitation rather than a confident guess.
-
-## Getting started
-
-The app can be run locally using the commands in [Installation and running](#installation-and-running). Backend tests can be run from the repository root with `backend/.venv/Scripts/python.exe -m pytest backend/tests -q` after installing `backend/requirements-dev.txt`.
-
-## Contributing
-
-Keep routes thin, place backend behavior in the relevant service or `backend/app/features/<feature>/` package, and route all frontend requests through `frontend/src/services/api.ts`. Mirror public response shapes in the frontend types and add focused tests. For proposed analysis findings, include an example where the finding should **not** appear.
-
-## License
-
-A project license has not been selected yet.
-
----
-
-**Grepo — understand the repository before you change it.**
+Archify is MIT licensed, copyright tt-a1i and Cocoon AI; its license and bundled
+font notices are retained. A license for the project's original application
+code has not yet been selected. The supplied gecko image master is preserved
+byte-for-byte; CSS viewports show the gecko beside the CodeCanopy wordmark.

@@ -20,8 +20,8 @@ class ProjectNotFoundError(LookupError):
 
 
 def _projects_root() -> Path:
-    configured_root = os.environ.get("GREPO_PROJECTS_DIR")
-    root = Path(configured_root) if configured_root else Path(tempfile.gettempdir()) / "grepo" / "projects"
+    configured_root = os.environ.get("CODECANOPY_PROJECTS_DIR")
+    root = Path(configured_root) if configured_root else Path(tempfile.gettempdir()) / "codecanopy" / "projects"
     return root.expanduser().resolve()
 
 

@@ -17,7 +17,7 @@ def test_health_returns_expected_payload() -> None:
 
 
 def test_project_upload_endpoint_extracts_zip(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("GREPO_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setenv("CODECANOPY_PROJECTS_DIR", str(tmp_path))
     archive = BytesIO()
     with zipfile.ZipFile(archive, "w") as project_zip:
         project_zip.writestr("demo/main.py", "print('data only')\n")
@@ -52,7 +52,7 @@ def test_project_upload_endpoint_extracts_zip(tmp_path, monkeypatch) -> None:
 
 
 def test_project_analyze_returns_structured_python_results(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("GREPO_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setenv("CODECANOPY_PROJECTS_DIR", str(tmp_path))
     archive = BytesIO()
     auth_source = "import database\n\n\ndef login():\n    return database.connect()\n"
     with zipfile.ZipFile(archive, "w") as project_zip:

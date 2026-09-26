@@ -24,7 +24,7 @@ def make_upload(content: bytes) -> UploadFile:
 
 
 def test_upload_skips_unnecessary_directories(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("GREPO_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setenv("CODECANOPY_PROJECTS_DIR", str(tmp_path))
     archive = make_archive(
         {
             "src/main.py": b"def main(): pass\n",
@@ -52,7 +52,7 @@ def test_upload_skips_unnecessary_directories(tmp_path, monkeypatch) -> None:
     ["../escape.txt", "C:/escape.txt", r"..\escape.txt", "src/invalid?.py"],
 )
 def test_upload_rejects_path_traversal(tmp_path, monkeypatch, unsafe_path: str) -> None:
-    monkeypatch.setenv("GREPO_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setenv("CODECANOPY_PROJECTS_DIR", str(tmp_path))
 
     with pytest.raises(ProjectUploadError, match="path"):
         asyncio.run(store_project_archive(make_upload(make_archive({unsafe_path: b"blocked"}))))
@@ -61,7 +61,7 @@ def test_upload_rejects_path_traversal(tmp_path, monkeypatch, unsafe_path: str) 
 
 
 def test_upload_rejects_symbolic_links(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("GREPO_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setenv("CODECANOPY_PROJECTS_DIR", str(tmp_path))
     archive_bytes = BytesIO()
     link = zipfile.ZipInfo("link")
     link.create_system = 3
@@ -76,7 +76,7 @@ def test_upload_rejects_symbolic_links(tmp_path, monkeypatch) -> None:
 
 
 def test_upload_rejects_non_zip_content(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("GREPO_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setenv("CODECANOPY_PROJECTS_DIR", str(tmp_path))
 
     with pytest.raises(ProjectUploadError, match="valid supported ZIP"):
         asyncio.run(store_project_archive(make_upload(b"not a ZIP archive")))
@@ -85,7 +85,7 @@ def test_upload_rejects_non_zip_content(tmp_path, monkeypatch) -> None:
 
 
 def test_upload_enforces_compressed_size_limit(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("GREPO_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setenv("CODECANOPY_PROJECTS_DIR", str(tmp_path))
     monkeypatch.setattr(project_archive, "MAX_UPLOAD_BYTES", 10)
 
     with pytest.raises(ProjectUploadTooLargeError):
@@ -95,7 +95,7 @@ def test_upload_enforces_compressed_size_limit(tmp_path, monkeypatch) -> None:
 
 
 def test_upload_rejects_file_directory_collisions(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("GREPO_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setenv("CODECANOPY_PROJECTS_DIR", str(tmp_path))
 
     with pytest.raises(ProjectUploadError, match="conflicts with a directory"):
         asyncio.run(store_project_archive(make_upload(make_archive({"src": b"file", "src/main.py": b"code"}))))

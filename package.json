@@ -1,6 +1,18 @@
 {
   "name": "grepo-deployment",
   "private": true,
-  "engines": { "node": "24.x" },
-  "scripts": { "build": "node scripts/build-vercel.mjs" }
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "build": "node scripts/build-vercel.mjs",
+    "test:upload": "node --test tests/upload.test.mjs"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.8.0"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "24.19.0"
+  }
 }

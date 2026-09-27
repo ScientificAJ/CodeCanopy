@@ -21,6 +21,27 @@ export const deleteProject = (p: string) => request<void>(`/projects/${encodeURI
 export const listSnapshots = (p: string, signal?: AbortSignal) => request<Snapshot[]>(`/projects/${encodeURIComponent(p)}/snapshots`, { signal })
 export const getSnapshot = (p: string, s: string, signal?: AbortSignal) => request<Snapshot>(snapshotPath(p, s), { signal })
 export async function importZip(file: File): Promise<ImportAccepted> {
+  if (import.meta.env.VITE_HOSTED === 'true') {
+    if (!file.name.toLowerCase().endsWith('.zip')) throw new ApiError(400, 'Choose a ZIP archive.', 'INVALID_ARCHIVE')
+    if (file.size <= 0 || file.size > 1024 ** 3) throw new ApiError(413, 'Choose a ZIP archive up to 1 GiB.', 'UPLOAD_TOO_LARGE')
+    await ensureSession()
+    const response = await fetch('/api/upload', {
+      ...json({ type: 'grepo.prepare-upload', name: file.name, size: file.size }),
+      credentials: 'include',
+    })
+    const prepared = await response.json().catch(() => null)
+    if (!response.ok || typeof prepared?.pathname !== 'string') {
+      throw new ApiError(response.status, typeof prepared?.error === 'string' ? prepared.error : 'Private upload could not be prepared.', prepared?.code)
+    }
+    const { upload } = await import('@vercel/blob/client')
+    const uploaded = await upload(prepared.pathname, file, {
+      access: 'private',
+      handleUploadUrl: '/api/upload',
+      contentType: 'application/zip',
+      multipart: true,
+    })
+    return request('/imports/blob', json({ pathname: uploaded.pathname, name: file.name }))
+  }
   const body = new FormData(); body.append('file', file)
   return request('/imports/zip', { method: 'POST', body })
 }

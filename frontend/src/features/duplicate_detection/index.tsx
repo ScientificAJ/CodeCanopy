@@ -46,10 +46,12 @@ function UnusedFindings(props: SlotProps<UnusedDetectionResult>) {
 
 registerFeature('duplicates.compare', {
   Component: DuplicateFindings,
+  loadKey: () => 'snapshot',
   load: (context, signal) => getDuplicateFindings(context.projectId, context.snapshotId, signal),
 })
 
 registerFeature('unused.review', {
   Component: UnusedFindings,
+  loadKey: () => 'snapshot',
   load: (context, signal) => getUnusedFindings(context.projectId, context.snapshotId, signal),
 })

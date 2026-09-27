@@ -18,6 +18,8 @@ export interface SlotRegistration {
   Component: ComponentType<SlotProps>
   availability?: FeatureAvailability
   load?: (context: SlotContext, signal: AbortSignal) => Promise<unknown>
+  /** Include every input used by load. Unkeyed extensions retain context-based reloads. */
+  loadKey?: (context: SlotContext) => string
 }
 const registry = new Map<SlotId, SlotRegistration>()
 const listeners = new Set<() => void>()

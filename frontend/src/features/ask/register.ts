@@ -5,6 +5,7 @@ import type { AskResponse } from '../../types/v1/chat'
 
 registerFeature('ask.workspace', {
   Component: CodeChat,
+  loadKey: () => 'snapshot',
   load: (context, signal) => request<AskResponse>(
     snapshotPath(context.projectId, context.snapshotId) + '/ask', { signal },
   ),

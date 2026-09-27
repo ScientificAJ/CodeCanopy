@@ -1,3 +1,4 @@
+import { brandLogo } from '../assets'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { cancelRun, ensureSession, getRun, importGitHub, importZip, listProjects, listSnapshots } from '../services/v1/api'
@@ -63,9 +64,9 @@ export default function ImportPage() {
   }
   return <div className="import-page codecanopy-import">
     <a className="skip-link" href="#import-form">Skip to import</a>
-    <header className="topbar codecanopy-topbar"><Link className="brand" to="/"><span className="brand-mark"><img src="/codecanopy-logo.png" alt=""/></span><span>GREPO</span></Link></header>
+    <header className="topbar codecanopy-topbar"><Link className="brand" to="/"><span className="brand-mark"><img src={brandLogo} alt=""/></span><span>GREPO</span></Link></header>
     <main className="codecanopy-import-main"><section className="codecanopy-import-content">
-      <img className="codecanopy-mascot" src="/codecanopy-logo.png" alt="GREPO gecko"/>
+      <img className="codecanopy-mascot" src={brandLogo} alt="GREPO gecko"/>
       <h1>Find your way through the code.</h1><p className="import-intro">Import a repository. Explore its structure. Plan where to start.</p>
       <div className="import-card">{busy && <ImportLoader run={run} source={source} onCancel={runId ? () => {void cancelRun(runId).then(setRun).catch(e => setError(e.message))} : undefined}/>}<div hidden={busy}><div role="group" aria-label="Import source" className="source-switch"><button disabled={busy} aria-pressed={source === 'github'} onClick={() => setSource('github')}>Public GitHub</button><button disabled={busy} aria-pressed={source === 'zip'} onClick={() => setSource('zip')}>Upload ZIP</button></div>
       <form id="import-form" onSubmit={submit}>

@@ -5,6 +5,7 @@ import type { DependencyResult } from './types'
 
 registerFeature('dependencies.workspace', {
   Component: DependencyExplorer,
+  loadKey: () => 'snapshot',
   load: (context, signal) => request<DependencyResult>(
     snapshotPath(context.projectId, context.snapshotId) + '/dependencies', { signal },
   ),

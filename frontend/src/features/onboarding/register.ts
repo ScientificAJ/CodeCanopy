@@ -5,6 +5,7 @@ import type { ChangePack } from '../../types/v1/prd.generated'
 
 registerFeature('proposals.derived', {
   Component: ProposalsPanel,
+  loadKey: context => context.selectedEntity?.path || '.',
   load: (context, signal) => {
     const base = snapshotPath(context.projectId, context.snapshotId) + '/proposals'
     const path = context.selectedEntity?.path

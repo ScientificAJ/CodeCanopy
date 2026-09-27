@@ -1,6 +1,6 @@
 /** Shared identities, selection, source navigation and view-only preferences. */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { getAllFiles, getCapabilities, getEntities, getPreferences, getProject, getSnapshot, getRun, savePreferences } from '../services/v1/api'
+import { getAllFiles, getWorkspaceBootstrap, getInventory, getCapabilities, getEntities, getPreferences, getProject, getSnapshot, getRun, savePreferences } from '../services/v1/api'
 import type { AnalysisRun, CapabilityReport, FileRecord, Graph, GraphEntity, Snapshot, ViewPreferences } from '../types/v1'
 export interface SelectedEntity { entityId: string; kind: string; path: string; fileId?: string; lineRange?: {start: number; end: number} }
 export interface ViewState { focusedView: 'overview' | 'map' | 'source'; mapCamera: {x: number; y: number; scale: number} }
@@ -31,12 +31,46 @@ export function WorkspaceProvider({children}: {children: ReactNode}) {
     loading.current?.abort(); const control = new AbortController(); loading.current = control; generation.current++
     set({...initial, projectId: p})
     try {
-      const [project, snapshot, files, entities, capabilities, preferences] = await Promise.all([
-        getProject(p, control.signal), getSnapshot(p, s, control.signal), getAllFiles(p, s, control.signal),
-        getEntities(p, s, control.signal), getCapabilities(p, s, control.signal), getPreferences(p, s, control.signal),
-      ])
-      const run = snapshot.analysis_run_id ? await getRun(snapshot.analysis_run_id, control.signal).catch(() => null) : null
-      if (!control.signal.aborted) set({...initial, projectId: p, projectName: project.name, snapshot, files, entities, capabilities, preferences, run, loading: false})
+      const hosted = import.meta.env.VITE_HOSTED === 'true'
+      let runRequest: Promise<AnalysisRun | null> = Promise.resolve(null)
+      const startDiagnostics = (snapshot: Snapshot) => {
+        runRequest = snapshot.analysis_run_id
+          ? getRun(snapshot.analysis_run_id, control.signal).catch(() => null) : Promise.resolve(null)
+        return snapshot
+      }
+      const loadSeparate = async () => {
+        const snapshotRequest = getSnapshot(p, s, control.signal).then(startDiagnostics)
+        const [project, snapshot, files, entities, capabilities, preferences] = await Promise.all([
+          getProject(p, control.signal), snapshotRequest, getAllFiles(p, s, control.signal),
+          getEntities(p, s, control.signal), getCapabilities(p, s, control.signal), getPreferences(p, s, control.signal),
+        ])
+        return {project, snapshot, files, entities, capabilities, preferences}
+      }
+      const loadHosted = async () => {
+        const bootstrap = await getWorkspaceBootstrap(p, s, control.signal).catch(error => {
+          // Large repositories can exceed the platform's combined response
+          // limit. Never bypass authentication or hide other server failures.
+          if (error?.code === 'BOOTSTRAP_TOO_LARGE') return null
+          throw error
+        })
+        if (!bootstrap) return loadSeparate()
+        startDiagnostics(bootstrap.snapshot)
+        const files = [...bootstrap.files.files]
+        let cursor = bootstrap.files.cursor
+        while (cursor) {
+          const page = await getInventory(p, s, cursor, 2000, control.signal)
+          files.push(...page.files); cursor = page.cursor
+        }
+        return {...bootstrap, files}
+      }
+      const {project, snapshot, files, entities, capabilities, preferences} = await (hosted ? loadHosted() : loadSeparate())
+      if (control.signal.aborted) return
+      const next = {...initial, projectId: p, projectName: project.name, snapshot, files, entities, capabilities, preferences, loading: false}
+      // Optional hosted diagnostics must not hold the repository UI behind a
+      // second round trip. Local loading retains its existing completion gate.
+      if (hosted) set(next)
+      const run = await runRequest
+      if (!control.signal.aborted) set(current => hosted ? {...current, run} : {...next, run})
     } catch (e) { if (!control.signal.aborted) set({...initial, projectId: p, loading: false, error: e instanceof Error ? e.message : 'Unable to open this workspace.'}) }
   }, [])
   const selectEntity = useCallback((selectedEntity: SelectedEntity | null) => set(s => ({...s, selectedEntity})), [])

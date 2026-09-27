@@ -1,4 +1,4 @@
-import { Component, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { Component, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWorkspace, selectionFor } from '../../contexts/WorkspaceContext'
 import { getSlot, slotRevision, subscribeSlots, type RequestState, type SlotContext, type SlotId } from '../../contexts/SlotRegistry'
@@ -33,7 +33,14 @@ function SlotContent({id}: {id: SlotId}) {
       ws.selectEntity({...selectionFor(entity), lineRange: range}); navigate(`/p/${ws.projectId}/s/${ws.snapshot!.id}/map`)
     },
   }), [ws.projectId, ws.snapshot, ws.selectedEntity, ws.files, ws.entities, ws.graph, ws.capabilities, ws.viewState, ws.selectEntity, navigate])
+  // Display context stays current while loaders depend only on their declared
+  // server inputs. A map render or source-range selection must not restart a
+  // snapshot-wide analysis request. Context-based reloads remain the fallback.
+  const latestContext = useRef(context)
+  useEffect(() => {latestContext.current = context}, [context])
+  const loadKey = context && import.meta.env.VITE_HOSTED === 'true' && feature?.loadKey ? feature.loadKey(context) : context
   useEffect(() => {
+    const context = latestContext.current
     const controller = new AbortController()
     setRequest({status: 'idle'})
     if (context && feature?.load && (feature.availability ?? 'connected') === 'connected') {
@@ -41,7 +48,7 @@ function SlotContent({id}: {id: SlotId}) {
       feature.load(context, controller.signal).then(data => {if (!controller.signal.aborted) setRequest({status: 'ready', data})}).catch(e => {if (!controller.signal.aborted) setRequest({status: 'error', message: e instanceof Error ? e.message : 'Extension request failed.'})})
     }
     return () => controller.abort()
-  }, [feature, context])
+  }, [feature, loadKey])
   if (!feature || !context || feature.availability === 'not-connected' || feature.availability === 'unavailable') return <Unavailable id={id}/>
   const View = feature.Component
   return <Boundary key={`${id}:${ws.snapshot?.id}`} id={id}><View {...context} availability="connected" request={request}/></Boundary>

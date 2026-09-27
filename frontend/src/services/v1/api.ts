@@ -20,6 +20,13 @@ export const getProject = (p: string, signal?: AbortSignal) => request<V1Project
 export const deleteProject = (p: string) => request<void>(`/projects/${encodeURIComponent(p)}`, { method: 'DELETE' })
 export const listSnapshots = (p: string, signal?: AbortSignal) => request<Snapshot[]>(`/projects/${encodeURIComponent(p)}/snapshots`, { signal })
 export const getSnapshot = (p: string, s: string, signal?: AbortSignal) => request<Snapshot>(snapshotPath(p, s), { signal })
+export interface WorkspaceBootstrap {
+  project: V1Project; snapshot: Snapshot; files: FilePage; entities: GraphEntity[]
+  capabilities: CapabilityReport; preferences: ViewPreferences
+}
+export const getWorkspaceBootstrap = (p: string, s: string, signal?: AbortSignal) =>
+  request<WorkspaceBootstrap>(snapshotPath(p, s) + '/bootstrap', { signal })
+
 export async function importZip(file: File): Promise<ImportAccepted> {
   if (import.meta.env.VITE_HOSTED === 'true') {
     if (!file.name.toLowerCase().endsWith('.zip')) throw new ApiError(400, 'Choose a ZIP archive.', 'INVALID_ARCHIVE')

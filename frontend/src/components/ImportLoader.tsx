@@ -1,3 +1,4 @@
+import { brandLogo } from '../assets'
 import { useEffect, useState } from 'react'
 import type { AnalysisRun } from '../types/v1'
 import './ImportLoader.css'
@@ -30,7 +31,7 @@ export function ImportLoader({ run, source, onCancel }: {
     <div className="gecko-loader-top"><span><i aria-hidden="true"/> EXPEDITION IN PROGRESS</span><span aria-label={`${seconds} seconds elapsed`}>{Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}</span></div>
     <div className="gecko-trail" aria-hidden="true">
       <span className="trail-file trail-file-one">{'{ }'}</span><span className="trail-file trail-file-two">&lt;/&gt;</span><span className="trail-file trail-file-three">#</span>
-      <div className="gecko-scout"><img src="/codecanopy-logo.png" alt=""/></div>
+      <div className="gecko-scout"><img src={brandLogo} alt=""/></div>
       <div className="trail-ground"/><span className="trail-spark spark-one">✦</span><span className="trail-spark spark-two">✦</span>
     </div>
     <div role="status" aria-live="polite" aria-atomic="true"><h2>{label}</h2></div>

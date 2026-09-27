@@ -25,6 +25,7 @@ export interface FeaturePayloads {
 export function registerFeature<K extends SlotId>(id: K, feature: {
   Component: ComponentType<SlotProps<FeaturePayloads[K]>>
   availability?: SlotRegistration['availability']
+  loadKey?: SlotRegistration['loadKey']
   load: (context: SlotContext, signal: AbortSignal) => Promise<FeaturePayloads[K]>
 }) {
   // The registry erases the payload parameter at one boundary; the ID-specific

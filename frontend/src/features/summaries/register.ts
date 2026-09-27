@@ -5,6 +5,7 @@ import type { SummaryPayload } from '../../contexts/FeatureContracts'
 
 registerFeature('summaries.context-panel', {
   Component: SummaryPanel,
+  loadKey: context => context.selectedEntity?.path || '.',
   load: (context, signal) => {
     const base = snapshotPath(context.projectId, context.snapshotId) + '/summaries'
     const path = context.selectedEntity?.path

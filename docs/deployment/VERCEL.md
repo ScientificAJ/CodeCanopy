@@ -26,3 +26,24 @@ Archive upload size and analysis size are separate budgets. After dependency/bui
 ## Verification before sharing
 
 Verify a GitHub import, a ZIP import through private storage, source reading, repository map rendering, deterministic findings, an AI answer with citations, proposal/document drafts, and deletion. Repeat snapshot access from a fresh process/instance to confirm durability. Verify unauthenticated API access cannot read another browser workspace. The deployment URL must be accessible without Vercel login before it is used in a submission.
+
+## Hosted latency
+
+Hosted workspace startup uses one authorized bootstrap response instead of six
+independent ownership reads. Responses above 4 MiB explicitly fall back to the
+existing resources; inventory and analysis coverage are not shortened. Optional
+run diagnostics do not block opening the workspace. Feature loaders on the hosted
+frontend repeat only when their actual request inputs change.
+
+The hosted backend reuses storage and AI HTTP connections; mutable ownership
+records still come from the origin on every request, so deletion remains effective
+across warm instances. Recent project records are fetched with bounded concurrency.
+A first standalone greeting can answer without source retrieval or an AI call;
+repository questions, follow-ups, proposals and documentation retain the same
+model and evidence budgets.
+
+Production `Server-Timing` headers report application processing time, plus chat
+retrieval and provider time when applicable. They contain durations, not source,
+prompts or credentials. Compare these with total browser time to distinguish
+provider work from transfer or platform startup delays. First requests and provider
+response times can vary; a warm benchmark is not a cold-start guarantee.

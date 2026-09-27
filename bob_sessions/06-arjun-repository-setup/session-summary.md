@@ -25,12 +25,20 @@ implementation work can begin in IBM BOB.
 
 ## Evidence
 
+- [BOB conversation in Markdown](bob_task_2026-09-26_f3b97993.md)
 - [Recovered full transcript](f3b97993fb2da6229060e14ee055e677-full.txt)
 - [Original recovered messages](raw/) — 42 JSON records, numbered 000–041.
 - The task list in the
   [implementation screenshot](../07-arjun-structure-workspace/teamstrawhatpirates_task01_Startfirstsetoffeatures.png)
   shows the clone task with **0.638 Bobcoins**. This is the value displayed in
   that screenshot, not a separately reconstructed consumption report.
+
+The Markdown conversation was reconstructed from the archived messages and
+checked against the local BOB database. It follows Jae's export format: task
+title, recorded status/date, user and assistant turns, and tool-call labels.
+The recorded `active` status is preserved even though the conversation reports
+successful setup. System context, tool outputs, and full tool arguments remain
+available in the original JSON records and text transcript.
 
 ## Result and Scope
 

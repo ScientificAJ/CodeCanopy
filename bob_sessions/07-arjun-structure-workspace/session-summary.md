@@ -38,6 +38,7 @@ attributed to this BOB run.
 
 ## BOB Evidence
 
+- [BOB conversation in Markdown](bob_task_2026-09-26_f1bb6425.md)
 - [Task screenshot with usage and implementation output](teamstrawhatpirates_task01_Startfirstsetoffeatures.png)
 - [Earlier task-list screenshot](teamstrawhatpirates_task01_Startfirstsetoffeatures1.png)
 - [Recovered full transcript](f1bb6425233af7a645a4edf70662f791-full.txt)
@@ -45,6 +46,13 @@ attributed to this BOB run.
 
 Both screenshots show the same implementation task. They are two captures,
 not two separate tasks or two separate 37.95-coin charges.
+
+The Markdown conversation was reconstructed from the archived messages and
+checked against the local BOB database. It follows Jae's export format: task
+title, recorded status/date, user and assistant turns, and tool-call labels.
+The recorded `error` status is preserved. System context, tool outputs, and
+full tool arguments remain available in the original JSON records and text
+transcript; the Markdown does not add a completion message to the session.
 
 ## Supporting Implementation and Verification Evidence
 

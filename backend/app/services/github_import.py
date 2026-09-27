@@ -14,7 +14,7 @@ from pathlib import Path
 
 from app.services.project_archive import _validated_entries, _extract_entries
 
-MAX_GITHUB_ARCHIVE_BYTES = 1024 * 1024 * 1024
+MAX_GITHUB_ARCHIVE_BYTES = 250 * 1024 * 1024
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024
 
 ALLOWED_HOSTS = {'api.github.com', 'codeload.github.com', 'github.com'}

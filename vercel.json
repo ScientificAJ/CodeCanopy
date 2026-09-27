@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "fluid": true,
-  "installCommand": "npm ci --prefix frontend",
+  "installCommand": "npm ci && npm ci --prefix frontend",
   "buildCommand": "node scripts/build-vercel.mjs",
   "outputDirectory": "frontend/dist",
   "functions": {
@@ -13,6 +13,10 @@
     }
   },
   "rewrites": [
+    {
+      "source": "/api/upload",
+      "destination": "/api/upload"
+    },
     {
       "source": "/api/:path*",
       "destination": "/api/index.py"

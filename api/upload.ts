@@ -29,7 +29,7 @@ function workspace(request: Request): string {
   return createHash('sha256').update(token).digest('hex')
 }
 
-export default async function upload(request: Request): Promise<Response> {
+async function upload(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return Response.json({ error: 'Use POST for uploads.' }, { status: 405, headers: { ...headers, Allow: 'POST' } })
   }
@@ -104,3 +104,6 @@ export default async function upload(request: Request): Promise<Response> {
     return Response.json({ error: 'Private upload could not be authorized. Please retry.', code: 'UPLOAD_UNAVAILABLE' }, { status: 503, headers })
   }
 }
+
+// Use the documented Web Standard handler shape for Vercel Node Functions.
+export default { fetch: upload }

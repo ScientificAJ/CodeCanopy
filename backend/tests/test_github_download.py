@@ -5,19 +5,18 @@ import zipfile
 import pytest
 
 from app.services import github_import as github
-from app.services.project_archive import MAX_UPLOAD_BYTES
 
 SHA = 'a' * 40
 
 
-def test_github_import_above_upload_limit(monkeypatch, tmp_path):
+def test_github_import_above_former_50_mib_limit(monkeypatch, tmp_path):
     fixture = tmp_path / 'large-repository.zip'
     with zipfile.ZipFile(fixture, 'w', compression=zipfile.ZIP_STORED) as archive:
         with archive.open('repo/node_modules/package/payload.bin', 'w') as member:
             for _ in range(51):
                 member.write(b'x' * (1024 * 1024))
         archive.writestr('repo/main.py', 'print("complete source")\n')
-    assert fixture.stat().st_size > MAX_UPLOAD_BYTES
+    assert fixture.stat().st_size > 50 * 1024 * 1024
     assert fixture.stat().st_size < github.MAX_GITHUB_ARCHIVE_BYTES
     monkeypatch.setattr(github, '_open', lambda url: fixture.open('rb'))
     monkeypatch.setattr(github, 'resolve_ref_to_commit', lambda *args: (SHA, 'main'))

@@ -19,7 +19,7 @@ const prepare = { type: 'grepo.prepare-upload', name: 'repository.zip', size: 10
 const token = path => ({ type: 'blob.generate-client-token', payload: { pathname: path, multipart: true, clientPayload: '{"workspace":"attacker"}' } })
 
 test('preparation accepts the 1 GiB boundary and returns only an owned generated path', async () => {
-  const response = await upload(request(prepare))
+  const response = await upload.fetch(request(prepare))
   assert.equal(response.status, 200)
   const result = await response.json()
   assert.match(result.pathname, new RegExp(`^uploads/${owner}/[a-f0-9]{32}\\.zip$`))
@@ -29,25 +29,25 @@ test('preparation accepts the 1 GiB boundary and returns only an owned generated
 })
 
 test('size and ZIP type validation reject invalid upload metadata', async () => {
-  for (const size of [0, -1, 1.5, 1024 ** 3 + 1]) assert.equal((await upload(request({ ...prepare, size }))).status, 413)
-  assert.equal((await upload(request({ ...prepare, name: 'source.exe' }))).status, 400)
+  for (const size of [0, -1, 1.5, 1024 ** 3 + 1]) assert.equal((await upload.fetch(request({ ...prepare, size }))).status, 413)
+  assert.equal((await upload.fetch(request({ ...prepare, name: 'source.exe' }))).status, 400)
 })
 
 test('a workspace cookie and exact same origin are required', async () => {
-  assert.equal((await upload(request(prepare, { cookie: '' }))).status, 401)
-  assert.equal((await upload(request(prepare, { cookie: 'codecanopy_workspace=invalid' }))).status, 401)
-  assert.equal((await upload(request(prepare, { origin: 'https://attacker.example' }))).status, 403)
-  assert.equal((await upload(request(token(pathname), { origin: '' }))).status, 403)
+  assert.equal((await upload.fetch(request(prepare, { cookie: '' }))).status, 401)
+  assert.equal((await upload.fetch(request(prepare, { cookie: 'codecanopy_workspace=invalid' }))).status, 401)
+  assert.equal((await upload.fetch(request(prepare, { origin: 'https://attacker.example' }))).status, 403)
+  assert.equal((await upload.fetch(request(token(pathname), { origin: '' }))).status, 403)
 })
 
 test('tokens cannot authorize another workspace or traversal path', async () => {
   for (const path of [`uploads/${'f'.repeat(64)}/${'b'.repeat(32)}.zip`, pathname.replace('uploads/', 'uploads/../'), `${pathname}/other`]) {
-    assert.equal((await upload(request(token(path)))).status, 403)
+    assert.equal((await upload.fetch(request(token(path)))).status, 403)
   }
 })
 
 test('token grants one immutable ZIP path with trusted ownership and a 1 GiB cap', async () => {
-  const response = await upload(request(token(pathname)))
+  const response = await upload.fetch(request(token(pathname)))
   assert.equal(response.status, 200)
   const result = await response.json()
   const payload = getPayloadFromClientToken(result.clientToken)
@@ -62,6 +62,6 @@ test('token grants one immutable ZIP path with trusted ownership and a 1 GiB cap
 })
 
 test('unsigned completion callbacks cannot be accepted', async () => {
-  const response = await upload(request({ type: 'blob.upload-completed', payload: { blob: { pathname }, tokenPayload: '{}' } }, { cookie: '', origin: '' }))
+  const response = await upload.fetch(request({ type: 'blob.upload-completed', payload: { blob: { pathname }, tokenPayload: '{}' } }, { cookie: '', origin: '' }))
   assert.notEqual(response.status, 200)
 })

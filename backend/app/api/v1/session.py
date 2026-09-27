@@ -1,5 +1,6 @@
 """Isolated anonymous local workspace sessions. No GitHub/Watson credentials."""
 import hashlib
+import os
 import re
 import secrets
 
@@ -24,5 +25,5 @@ def create_session(request: Request, response: Response):
     token = request.cookies.get(COOKIE, '')
     if not TOKEN.fullmatch(token):
         token = secrets.token_hex(32)
-    response.set_cookie(COOKIE, token, httponly=True, secure=request.url.scheme == 'https', samesite='strict', max_age=86400)
+    response.set_cookie(COOKIE, token, httponly=True, secure=request.url.scheme == 'https' or bool(os.environ.get('VERCEL')), samesite='strict', max_age=86400)
     return {'schema_version': '1.0', 'status': 'ready'}

@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, UploadFile
+from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from app.api.v1.session import workspace_session
@@ -41,7 +42,10 @@ async def import_zip(file: UploadFile = File(...), workspace: str = Depends(work
     name = (file.filename or 'Repository.zip').replace('\\', '/').rsplit('/', 1)[-1]
     if name.lower().endswith('.zip'):
         name = name[:-4]
-    submit_import(run, workspace, archive=archive, name=' '.join(name.split())[:100] or 'Repository')
+    # Hosted imports complete inside this request; do not block the ASGI event
+    # loop while parsing and publishing their durable snapshot.
+    await run_in_threadpool(submit_import, run, workspace, archive=archive,
+                            name=' '.join(name.split())[:100] or 'Repository')
     return ImportAccepted(run_id=run.id, project_id=run.project_id)
 
 

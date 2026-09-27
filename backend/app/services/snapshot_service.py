@@ -19,6 +19,7 @@ from app.models.v1.snapshot import FilePage, FileRecord, Project, Snapshot, Snap
 from app.models.v1.source import CapabilityReport, FileCapability, SourceSlice
 from app.services.inventory_service import build_inventory, decode_text
 from app.services.v1_errors import WorkspaceError
+from app.services import cloud_storage
 
 ID_PATTERN = re.compile(r'^[a-f0-9]{32}$')
 MAX_SOURCE_BYTES = 256 * 1024
@@ -70,16 +71,25 @@ def checked_id(value: str) -> str:
 
 def get_project(project_id: str, workspace_id: str | None = None) -> Project:
     path = _v1_root() / f'project_{checked_id(project_id)}.json'
-    try:
-        data = _read_json(path)
-    except (OSError, ValueError):
-        raise SnapshotNotFoundError('Project not found.') from None
+    if cloud_storage.enabled() and workspace_id is not None:
+        data = cloud_storage.load_project(workspace_id, project_id)
+        if data is None:
+            raise SnapshotNotFoundError('Project not found.')
+        _write_json(path, data)
+    else:
+        try:
+            data = _read_json(path)
+        except (OSError, ValueError):
+            raise SnapshotNotFoundError('Project not found.') from None
     if workspace_id is not None and data.get('workspace_id') != workspace_id:
         raise SnapshotNotFoundError('Project not found.')
     return Project.model_validate(data)
 
 
 def list_projects(workspace_id: str) -> list[Project]:
+    if cloud_storage.enabled():
+        return sorted((Project.model_validate(data) for data in cloud_storage.list_projects(workspace_id)),
+                      key=lambda project: project.created_at, reverse=True)
     projects = []
     for path in _v1_root().glob('project_*.json'):
         try:
@@ -93,11 +103,15 @@ def list_projects(workspace_id: str) -> list[Project]:
 
 def get_snapshot(snapshot_id: str) -> Snapshot:
     path = _v1_root() / checked_id(snapshot_id) / 'snapshot.json'
+    if cloud_storage.enabled():
+        cloud_storage.hydrate_snapshot(snapshot_id, _v1_root())
     try:
         snapshot = Snapshot.model_validate(_read_json(path))
     except (OSError, ValueError):
         raise SnapshotNotFoundError() from None
     if snapshot.expires_at and snapshot.expires_at <= datetime.now(timezone.utc):
+        if cloud_storage.enabled():
+            cloud_storage.expire_snapshot(snapshot_id)
         raise WorkspaceError('EXPIRED', 'This snapshot has expired. Import the repository again.', 410)
     return snapshot
 
@@ -138,6 +152,9 @@ def create_snapshot_from_project(project_id: str, project_dir: Path, archive_dig
         check_cancel()
         staging.replace(root / snapshot_id)
         project = Project(id=project_id, name=project_name, created_at=now, snapshot_ids=[snapshot_id])
+        if cloud_storage.enabled():
+            cloud_storage.publish_snapshot(root / snapshot_id, snapshot.model_dump(mode='json'),
+                                           project.model_dump(mode='json'), workspace_id)
         _write_json(root / f'project_{project_id}.json', {**project.model_dump(mode='json'), 'workspace_id': workspace_id})
         return snapshot, records
     except Exception:
@@ -307,7 +324,9 @@ def read_source_lines(snapshot_id: str, file_id: str, line_start: int = 1, line_
 
 def delete_project(project_id: str, workspace_id: str) -> None:
     project = get_project(project_id, workspace_id)
-    (_v1_root() / f'project_{project_id}.json').unlink()
+    if cloud_storage.enabled():
+        cloud_storage.delete_project(workspace_id, project.model_dump(mode='json'))
+    (_v1_root() / f'project_{project_id}.json').unlink(missing_ok=True)
     _cached_inventory.cache_clear()
     _cached_syntax.cache_clear()
     _syntax_index.cache_clear()

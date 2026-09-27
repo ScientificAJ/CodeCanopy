@@ -1,0 +1,309 @@
+"""Private durable storage for hosted workspaces; /tmp is only an immutable cache.
+
+Project records are the publication/authorization boundary. They are always read
+from origin, while source bundles may be cached after their digest is verified.
+No provider token or private Blob URL is returned to the browser.
+"""
+from __future__ import annotations
+
+import hashlib
+import io
+import json
+import os
+import re
+import shutil
+import tempfile
+import threading
+import zipfile
+from datetime import datetime, timedelta, timezone
+from pathlib import Path, PurePosixPath
+
+from app.services.v1_errors import WorkspaceError
+
+_PREFIX = 'grepo/v1/'
+_ID = re.compile(r'^[a-f0-9]{32}$')
+_WORKSPACE = re.compile(r'^[a-f0-9]{64}$')
+_hydration_locks = [threading.Lock() for _ in range(32)]
+MAX_BUNDLE_BYTES = 512 * 1024 * 1024
+MAX_EXPANDED_BYTES = 1024 * 1024 * 1024
+MAX_BUNDLE_ENTRIES = 200_010
+
+
+def enabled() -> bool:
+    mode = os.environ.get('CODECANOPY_STORAGE', '').strip()
+    if mode == 'vercel_blob':
+        return True
+    if os.environ.get('VERCEL'):
+        raise WorkspaceError('STORAGE_UNAVAILABLE', 'Durable workspace storage is not configured.', 503)
+    return False
+
+
+def _sdk():
+    try:
+        from vercel import blob
+        return blob
+    except ImportError:
+        raise WorkspaceError('STORAGE_UNAVAILABLE', 'Durable workspace storage is unavailable.', 503) from None
+
+
+def _id(value: str) -> str:
+    if not _ID.fullmatch(value):
+        raise WorkspaceError('NOT_FOUND', 'Workspace item not found.', 404)
+    return value
+
+
+def _workspace(value: str) -> str:
+    if not _WORKSPACE.fullmatch(value):
+        raise WorkspaceError('SESSION_REQUIRED', 'Open GREPO to start a workspace session.', 401)
+    return value
+
+
+def _item(workspace: str, kind: str, item_id: str) -> str:
+    return f'{_PREFIX}workspaces/{_workspace(workspace)}/{kind}/{_id(item_id)}.json'
+
+
+def _snapshot(snapshot_id: str, name: str) -> str:
+    return f'{_PREFIX}snapshots/{_id(snapshot_id)}/{name}'
+
+
+def _get(path: str) -> bytes | None:
+    sdk = _sdk()
+    from vercel.blob.errors import BlobNotFoundError
+    try:
+        result = sdk.get(path, access='private', use_cache=False, timeout=60)
+        return result.content if result is not None else None
+    except BlobNotFoundError:
+        return None
+    except Exception:
+        raise WorkspaceError('STORAGE_UNAVAILABLE', 'Workspace storage could not be reached. Please retry.', 503) from None
+
+
+def _put(path: str, data, *, overwrite: bool = True, content_type: str = 'application/json') -> None:
+    try:
+        _sdk().put(path, data, access='private', overwrite=overwrite,
+                   add_random_suffix=False, content_type=content_type,
+                   cache_control_max_age=60)
+    except WorkspaceError:
+        raise
+    except Exception:
+        raise WorkspaceError('STORAGE_UNAVAILABLE', 'Workspace storage could not save this change. Please retry.', 503) from None
+
+
+def _delete(paths: list[str]) -> None:
+    if not paths:
+        return
+    try:
+        _sdk().delete(paths)
+    except WorkspaceError:
+        raise
+    except Exception:
+        raise WorkspaceError('STORAGE_UNAVAILABLE', 'Workspace storage could not complete deletion. Please retry.', 503) from None
+
+
+def _list(prefix: str):
+    cursor = None
+    while True:
+        try:
+            page = _sdk().list_objects(prefix=prefix, cursor=cursor, limit=1000)
+        except WorkspaceError:
+            raise
+        except Exception:
+            raise WorkspaceError('STORAGE_UNAVAILABLE', 'Workspace storage could not be reached. Please retry.', 503) from None
+        yield from page.blobs
+        if not page.has_more:
+            break
+        if not page.cursor or page.cursor == cursor:
+            raise WorkspaceError('STORAGE_UNAVAILABLE', 'Workspace storage returned an invalid page.', 503)
+        cursor = page.cursor
+
+
+def _read_json(path: str) -> dict | None:
+    raw = _get(path)
+    if raw is None:
+        return None
+    try:
+        value = json.loads(raw)
+        if not isinstance(value, dict):
+            raise ValueError()
+        return value
+    except (ValueError, UnicodeError):
+        raise WorkspaceError('STORAGE_INTEGRITY', 'Stored workspace metadata is invalid.', 503) from None
+
+
+def _json_bytes(data: dict) -> bytes:
+    return json.dumps(data, ensure_ascii=True, sort_keys=True).encode()
+
+
+def load_project(workspace: str, project_id: str) -> dict | None:
+    value = _read_json(_item(workspace, 'projects', project_id))
+    if value is not None and (value.get('workspace_id') != workspace or value.get('id') != project_id):
+        raise WorkspaceError('NOT_FOUND', 'Project not found.', 404)
+    return value
+
+
+def list_projects(workspace: str) -> list[dict]:
+    prefix = f'{_PREFIX}workspaces/{_workspace(workspace)}/projects/'
+    result = []
+    for item in _list(prefix):
+        project_id = item.pathname.removeprefix(prefix).removesuffix('.json')
+        if not _ID.fullmatch(project_id):
+            continue
+        value = load_project(workspace, project_id)
+        if value is not None:
+            result.append(value)
+    return result
+
+
+def save_run(workspace: str, run_id: str, data: dict) -> None:
+    _put(_item(workspace, 'runs', run_id), _json_bytes({**data, 'workspace_id': workspace}))
+
+
+def load_run(workspace: str, run_id: str) -> dict | None:
+    value = _read_json(_item(workspace, 'runs', run_id))
+    if value is not None and (value.get('workspace_id') != workspace or value.get('id') != run_id):
+        return None
+    return value
+
+
+def load_view(snapshot_id: str) -> dict | None:
+    return _read_json(_snapshot(snapshot_id, 'view.json'))
+
+
+def save_view(snapshot_id: str, data: dict) -> None:
+    # The existing preferences API replaces the complete document. Preserve that
+    # contract; all instances read the latest completed write without CDN cache.
+    _put(_snapshot(snapshot_id, 'view.json'), _json_bytes(data))
+
+
+def publish_snapshot(directory: Path, snapshot: dict, project: dict, workspace: str) -> None:
+    """Upload immutable bytes first and publish the workspace pointer last."""
+    sid = _id(snapshot['id'])
+    project_path = _item(workspace, 'projects', project['id'])
+    archive_path = _snapshot(sid, 'source.zip')
+    descriptor_path = _snapshot(sid, 'snapshot.json')
+    with tempfile.TemporaryFile() as bundle:
+        with zipfile.ZipFile(bundle, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as archive:
+            for path in sorted(directory.rglob('*')):
+                if path.is_symlink():
+                    raise WorkspaceError('SOURCE_INTEGRITY', 'Source snapshot contains an invalid link.', 409)
+                if path.is_file():
+                    relative = path.relative_to(directory)
+                    if relative.parts[0] in {'renders', 'view.json'}:
+                        continue
+                    archive.write(path, relative.as_posix())
+        bundle.seek(0)
+        digest = hashlib.file_digest(bundle, 'sha256').hexdigest()
+        if bundle.seek(0, os.SEEK_END) > MAX_BUNDLE_BYTES:
+            raise WorkspaceError('SNAPSHOT_TOO_LARGE', 'Analyzed repository exceeds the hosted storage limit.', 413)
+        bundle.seek(0)
+        descriptor = {'snapshot': snapshot, 'project': project, 'workspace_id': workspace,
+                      'archive_sha256': digest}
+        try:
+            _put(archive_path, bundle, overwrite=False, content_type='application/zip')
+            _put(descriptor_path, _json_bytes(descriptor), overwrite=False)
+            _put(project_path, _json_bytes({**project, 'workspace_id': workspace}), overwrite=False)
+        except Exception:
+            # The project pointer must not survive a failed publication.
+            try:
+                _delete([project_path, archive_path, descriptor_path])
+            except WorkspaceError:
+                pass
+            raise
+
+
+def _extract_bundle(raw: bytes, target: Path) -> None:
+    if len(raw) > MAX_BUNDLE_BYTES:
+        raise ValueError('bundle too large')
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        entries = archive.infolist()
+        if len(entries) > MAX_BUNDLE_ENTRIES or sum(info.file_size for info in entries) > MAX_EXPANDED_BYTES:
+            raise ValueError('bundle exceeds limits')
+        seen = set()
+        for info in entries:
+            path = PurePosixPath(info.filename)
+            mode = info.external_attr >> 16
+            if (not info.filename or path.is_absolute() or '\\' in info.filename
+                    or '..' in path.parts or mode & 0o170000 == 0o120000
+                    or info.filename in seen):
+                raise ValueError('unsafe bundle path')
+            seen.add(info.filename)
+            destination = target.joinpath(*path.parts)
+            if info.is_dir():
+                destination.mkdir(parents=True, exist_ok=True)
+            else:
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(info) as source, destination.open('wb') as output:
+                    shutil.copyfileobj(source, output, 1024 * 1024)
+
+
+def hydrate_snapshot(snapshot_id: str, root: Path) -> None:
+    """Reuse only a completely materialized immutable cache directory."""
+    sid = _id(snapshot_id)
+    directory = root / sid
+    with _hydration_locks[int(sid[:2], 16) % len(_hydration_locks)]:
+        if (directory / 'snapshot.json').is_file():
+            return
+        descriptor = _read_json(_snapshot(sid, 'snapshot.json'))
+        if descriptor is None or descriptor.get('snapshot', {}).get('id') != sid:
+            raise WorkspaceError('NOT_FOUND', 'Snapshot not found.', 404)
+        snapshot = descriptor['snapshot']
+        if datetime.fromisoformat(snapshot['expires_at']) <= datetime.now(timezone.utc):
+            expire_snapshot(sid)
+            raise WorkspaceError('EXPIRED', 'This snapshot has expired. Import the repository again.', 410)
+        raw = _get(_snapshot(sid, 'source.zip'))
+        if raw is None:
+            raise WorkspaceError('NOT_FOUND', 'Snapshot not found.', 404)
+        if hashlib.sha256(raw).hexdigest() != descriptor.get('archive_sha256'):
+            raise WorkspaceError('SOURCE_INTEGRITY', 'Stored snapshot integrity check failed.', 409)
+        staging = Path(tempfile.mkdtemp(prefix=f'.{sid}.hydrate-', dir=root))
+        try:
+            _extract_bundle(raw, staging)
+            metadata = json.loads((staging / 'snapshot.json').read_text())
+            if metadata != snapshot:
+                raise ValueError('snapshot identity mismatch')
+            staging.replace(directory)
+            # Internal graph construction reads the already-authorized project
+            # name from this local cache. Public access always rechecks Blob.
+            project = {**descriptor['project'], 'workspace_id': descriptor['workspace_id']}
+            temporary = root / f'.project_{project["id"]}.{sid}.tmp'
+            temporary.write_bytes(_json_bytes(project))
+            temporary.replace(root / f'project_{project["id"]}.json')
+        except (ValueError, KeyError, OSError, zipfile.BadZipFile):
+            raise WorkspaceError('SOURCE_INTEGRITY', 'Stored snapshot could not be restored safely.', 409) from None
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
+
+
+def expire_snapshot(snapshot_id: str) -> None:
+    _delete([_snapshot(snapshot_id, 'source.zip'), _snapshot(snapshot_id, 'view.json')])
+
+
+def delete_project(workspace: str, project: dict) -> None:
+    # Revoke access first. Subsequent authorized requests cannot use a warm cache.
+    _delete([_item(workspace, 'projects', project['id'])])
+    for sid in project['snapshot_ids']:
+        _delete([_snapshot(sid, name) for name in ('source.zip', 'snapshot.json', 'view.json')])
+
+
+def purge_expired() -> int:
+    """Scheduled retention for durable sources, including abandoned publications."""
+    now = datetime.now(timezone.utc)
+    deleted = 0
+    for item in _list(f'{_PREFIX}snapshots/'):
+        if not item.pathname.endswith('/snapshot.json'):
+            continue
+        descriptor = _read_json(item.pathname)
+        if descriptor is None:
+            continue
+        snapshot = descriptor['snapshot']
+        expires = datetime.fromisoformat(snapshot['expires_at'])
+        if expires <= now:
+            sid = _id(snapshot['id'])
+            _delete([_snapshot(sid, 'source.zip'), _snapshot(sid, 'view.json')])
+            deleted += 1
+            if expires + timedelta(days=1) <= now:
+                _delete([item.pathname, _item(descriptor['workspace_id'], 'projects', snapshot['project_id'])])
+    for item in _list(f'{_PREFIX}workspaces/'):
+        if '/runs/' in item.pathname and item.uploaded_at + timedelta(days=2) <= now:
+            _delete([item.pathname])
+    return deleted

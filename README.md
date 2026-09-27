@@ -1,6 +1,10 @@
-# GREPO
+<div align="center">
+  <img src="frontend/public/codecanopy-logo.png" alt="GREPO" width="260" />
+</div>
 
 **Every generated claim is checkable against the source it came from.**
+
+[![Verified dependency edges](docs/images/dependencies-panel.png)](docs/images/dependencies-panel.png)
 
 GREPO imports a public GitHub repository or ZIP into a read-only snapshot, then
 connects a searchable file tree, an interactive structure map, and bounded
@@ -12,6 +16,17 @@ single decision: **GREPO does not ask a model to be correct and hope.** It
 computes claims from an AST walk, cites the exact line each one came from, and
 then re-reads that line through the snapshot service before showing it to you.
 Anything it cannot prove is reported as unproven, with the reason.
+
+## What it looks like
+
+| | |
+| --- | --- |
+| **Architecture map** — observed containment, drawn from the snapshot, never inferred. | **Verified dependencies** — 88 resolved edges on `chanjoongx/atlas`, each with the line it came from. |
+| ![Architecture map](docs/images/architecture-map.png) | ![Verified dependency edges](docs/images/dependencies-atlas.png) |
+
+All captures are the live application. The architecture map and the 88-edge
+dependency panel are `chanjoongx/atlas`; the panel at the top of this file is
+this project's own source.
 
 ## Why that matters
 
@@ -51,11 +66,6 @@ never checked that the *target* existed, so an edge with a perfect citation
 pointing at a fictional file passed. The guard that closes that is now part of
 the standard path.
 
-> The 2nd-place repository in the previous edition of this hackathon shipped a
-> resolver that "could fabricate targets, so every map drew zero dependency
-> arcs." Entirely empty output that looks complete is the failure this design
-> is built to make impossible.
-
 Reproduce the table:
 
 ```bash
@@ -70,7 +80,7 @@ Import cost, measured on real repositories with the harness in
 
 | Repository | Files | Import | Dependency analysis |
 | --- | --- | --- | --- |
-| `sindresorhus/slugify` | ~10 | instant | — |
+| `ScientificAJ/CodeCanopy` (this repo) | 4,321 | 101s | 10s — 259 edges, 1,397 unresolved |
 | `chanjoongx/atlas` | 155 | 24s | 1.7s — 88 edges, 64 unresolved |
 | `pallets/click` | 178 | fast | fast |
 | `shadcn-ui/ui` (packages only) | 726 | 125s | 8s |
@@ -80,6 +90,115 @@ Import cost, measured on real repositories with the harness in
 of files complete but exceed a live demo's time budget; scope them to a single
 package, or use the harness above to warm a snapshot before presenting. This
 is a deliberate limit on a local, bounded parser, not a failure.
+
+## How it is built
+
+| Layer | Choice | Why this one |
+| --- | --- | --- |
+| API | FastAPI + Uvicorn (Python 3.11+) | Async snapshot service; every read goes through one gate that re-checks hashes and bounds |
+| Parsing | `tree-sitter` + `tree-sitter-language-pack` | Concrete grammars give real AST nodes. Regex cannot tell an import from a string that looks like one |
+| Frontend | React 19 + TypeScript + Vite 6 | Strict types generated from the PRD contracts, so a payload change breaks the build rather than the UI |
+| Routing | React Router 7 | Slot-per-feature registry; each feature registers itself and mounts independently |
+| Tests | pytest (134) + Vitest (33) + Testing Library | The verifier table is reproducible, not asserted |
+| AI (optional) | Groq, server-side only | The one hosted dependency, and only the chat module needs it |
+
+Languages parsed at import: Python, JavaScript, TypeScript/TSX, Java, C#, C, C++,
+Go, Rust, Kotlin, Swift, Ruby, PHP and SQL. Anything else is inventoried as
+metadata-only and reported as such rather than silently skipped.
+
+## How the code is laid out
+
+```
+CodeCanopy/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                     FastAPI entrypoint
+│   │   ├── api/
+│   │   │   └── v1/
+│   │   │       ├── router.py           mounts every v1 route
+│   │   │       ├── session.py          browser workspace cookie
+│   │   │       ├── imports.py          ZIP + public GitHub, returns a run
+│   │   │       ├── snapshots.py        inventory, source, view
+│   │   │       ├── findings.py         reuse / duplicates / unused
+│   │   │       ├── slots.py            summaries · dependencies · ask · proposals
+│   │   │       ├── ask.py              optional Groq call, server-side only
+│   │   │       └── dependencies.py     alternate dependency route
+│   │   ├── features/                   one package per capability
+│   │   │   ├── summaries/              ── summaries.context-panel
+│   │   │   ├── dependencies/           ── dependencies.workspace
+│   │   │   ├── reusable_functions/     ── reuse.findings
+│   │   │   ├── duplicate_detection/    ── (findings route)
+│   │   │   ├── codebase_chat/          ── ask.workspace
+│   │   │   ├── relationships/
+│   │   │   └── onboarding/
+│   │   ├── analyzers/
+│   │   │   ├── tree_sitter_analyzer.py grammar dispatch, 15 languages
+│   │   │   ├── dependency_syntax.py    import and call extraction
+│   │   │   ├── python_analyzer.py
+│   │   │   ├── java_analyzer.py
+│   │   │   ├── js_analyzer.py
+│   │   │   └── base.py
+│   │   ├── services/
+│   │   │   ├── snapshot_service.py     the one gate every read passes
+│   │   │   ├── project_archive.py      ZIP validation and limits
+│   │   │   ├── inventory_service.py    file and entity inventory
+│   │   │   ├── syntax_worker.py       isolated per-file parsing
+│   │   │   ├── github_import.py
+│   │   │   ├── run_service.py
+│   │   │   ├── retention_service.py   24h expiry sweep
+│   │   │   ├── view_service.py
+│   │   │   └── v1_errors.py           typed WorkspaceError codes
+│   │   ├── models/
+│   │   ├── rendering/                  pinned Archify compile
+│   │   └── core/
+│   ├── tests/                          134 passing
+│   └── scripts/
+│       ├── demo_verifier.py            reproduces the attack table
+│       └── stress_test.py              import cost harness
+├── frontend/
+│   └── src/
+│       ├── features/                   mirror of backend/app/features
+│       │   ├── summaries/              SummaryPanel.tsx
+│       │   ├── dependencies/           DependencyPanel.tsx
+│       │   ├── ask/                    CodeChat.tsx
+│       │   ├── reusable_functions/     ReusableFunctionPanel.tsx
+│       │   └── duplicate_detection/
+│       ├── components/
+│       │   ├── map/                    structure map
+│       │   ├── tree/                   searchable file tree
+│       │   ├── source/                 bounded source viewer
+│       │   ├── slots/                  slot mount + placeholder
+│       │   └── ui/                     shared primitives
+│       └── contexts/
+│           ├── FeatureContracts.ts     slot → generated type
+│           ├── SlotRegistry.ts         mount table
+│           └── WorkspaceContext.tsx    snapshot identity
+├── contracts/
+│   ├── prd.schema.json                 the shared payload contract
+│   └── structure-1.1.schema.json
+├── docs/
+│   ├── architecture.md                 pipeline diagram
+│   ├── VERIFICATION.md                 dated verification record
+│   └── images/                         README captures
+└── bob_sessions/                       one numbered folder per Bob task
+```
+
+**The two `features/` directories are a mirror, and that is the whole
+architecture.** Each capability is one Python package and one React folder
+sharing a slot name and a type generated from `contracts/prd.schema.json`:
+
+```
+  backend/app/features/summaries/    ←→  frontend/src/features/summaries/
+             │                                    │
+             └── slot "summaries.context-panel" ──┘
+                        registered in both, mounted independently
+```
+
+A feature registers itself; it does not edit the workspace layout, the map, the
+tree, or the slot registry. That is why six people built six features in
+parallel without colliding, and why the dependency panel could be rebuilt
+twice — by two people, for two different designs — without touching a shared
+file.
 
 ## Run locally
 
@@ -108,9 +227,15 @@ Open **http://127.0.0.1:5173**. Use the same hostname for frontend and backend
 http://127.0.0.1:8000/docs. These are the two existing development services;
 there are no additional feature servers.
 
-Ask needs a model provider. Set `GROQ_API_KEY` in `backend/.env`; the key is
-read server-side only and never reaches the frontend bundle. Every other
-feature runs without credentials.
+**No credentials are required.** Summaries, dependencies, change impact, the
+structure map, reuse, duplicate and unused detection all run locally with no
+API key and no model provider.
+
+Ask is the one optional module that calls a hosted model. To enable it, put a
+Groq API key in `backend/.env` as `GROQ_API_KEY` (free tier, no card). The key
+is read server-side only and never reaches the frontend bundle. Without a key
+Ask returns an explicit `AI_NOT_CONFIGURED` error rather than a fabricated
+answer, and nothing else in the product is affected.
 
 The API needs Node on PATH to run the vendored renderer. Set `CODECANOPY_NODE`
 to an absolute Node executable if necessary. No installation inside
@@ -146,8 +271,6 @@ selection, source evidence lines and camera; returning via Architecture resumes
 the last view in this browser session. Recent imports are available on the
 import page, alongside the storage policy and optional GitHub revision selector. No invented architectural
 roles or semantic edges are added.
-
-![GREPO workspace](bob_sessions/07-arjun-structure-workspace/supporting-evidence/browser-evidence/github-workspace-1672.png)
 
 ## Storage and bounds
 
@@ -187,6 +310,31 @@ analysis behavior (`CODECANOPY_PROJECTS_DIR`, default system-temp/codecanopy/pro
 Its original routes are not the session-scoped v1 service; keep this development
 server on loopback. The v1 UI does not load old legacy uploads or old-name local
 workspace sessions automatically.
+
+## Deployment and infrastructure
+
+**There is none checked in, deliberately.** No Dockerfile, no compose file, no
+CI workflow, no cloud config. The reason is specific rather than aspirational:
+
+| Property | Why it constrains deployment |
+| --- | --- |
+| Source expiry | Snapshots live 24 hours, then source bytes are deleted. Nothing persists between sessions. |
+| In-process parsing | Syntax extraction runs under POSIX resource limits in the API process. **Run one API worker** — a second would double-apply `RLIMIT_AS` and `RLIMIT_CPU`. |
+| Workspace identity | State is a browser workspace cookie, not an account. Horizontal scaling would need shared session storage. |
+| Bounded jobs | Two imports run concurrently, four admitted, three-minute deadline. Capacity planning is four jobs, not unbounded. |
+
+What that means in practice: this runs as a **single-instance local service on
+loopback today**, which is how it was developed and how it was recorded. Making
+it multi-tenant or publicly hosted is real work — sticky sessions, shared
+snapshot storage, a job queue — and none of it is pretending to be done.
+
+If you need to run it anywhere but your machine, the sequence is:
+1. Containerize both services (the Python one needs the POSIX limits honoured).
+2. Move snapshot storage to a shared volume or object store.
+3. Replace the workspace cookie with real session storage before scaling out.
+
+`docs/architecture.md` has the pipeline diagram, including the pinned Archify
+compile and delivery step.
 
 ## APIs and teammate integration
 

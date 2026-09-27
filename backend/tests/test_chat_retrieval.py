@@ -44,7 +44,7 @@ def test_chat_returns_validated_citations_and_drops_invented_ids(client, monkeyp
     def provider(url, **kwargs):
         prompt = kwargs['json']['messages'][0]['content']
         assert '[S1]' in prompt and 'return a + b' in prompt
-        return httpx.Response(200, request=httpx.Request('POST', url), json={'choices':[{'message':{'content':'It adds two numbers 【S1†L1-L2】. Also [S1]. Extra claim ［S999］.'},'finish_reason':'stop'}]})
+        return httpx.Response(200, request=httpx.Request('POST', url), json={'choices':[{'message':{'content':'It adds two numbers 【S1†L1-L2】. Also [\u200bS1\u200b]. Extra claim ［\u200bS999\u200b］.'},'finish_reason':'stop'}]})
     monkeypatch.setattr(ask.httpx, 'post', provider)
     response = client.post(path + '/chat', json={'question':'What does add do?'})
     assert response.status_code == 200
@@ -93,3 +93,18 @@ def test_semantic_scoring_uses_complete_function_or_declines(tmp_path, monkeypat
     assert _candidate_source(snap.id, evidence) is None
     evidence.line_start=1201
     assert 'return token + "renewed"' in _candidate_source(snap.id, evidence)
+
+
+@pytest.mark.parametrize('purpose,budget', [('answer',1600),('proposal',4000),('documentation',4000)])
+def test_draft_output_budget_preserves_citation_and_scope_guards(client, monkeypatch, purpose, budget):
+    monkeypatch.setenv('GROQ_API_KEY', 'synthetic-test-key')
+    path, _, _ = import_files(client, {'a.py':'def retry():\n    return True\n'})
+    def provider(url, **kwargs):
+        assert kwargs['json']['max_tokens'] == budget
+        assert 'untrusted data' in kwargs['json']['messages'][0]['content']
+        return httpx.Response(200, request=httpx.Request('POST',url), json={'choices':[{'message':{'content':'Retry returns True [S1].'},'finish_reason':'stop'}]})
+    monkeypatch.setattr(ask.httpx, 'post', provider)
+    response = client.post(path + '/chat',json={'question':'Document retry','purpose':purpose})
+    assert response.status_code == 200
+    assert response.json()['sources'][0]['path'] == 'a.py'
+    assert client.post(path + '/chat',json={'question':'Document retry','purpose':'unbounded'}).status_code == 422

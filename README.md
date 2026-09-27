@@ -282,3 +282,18 @@ Archify is MIT licensed, copyright tt-a1i and Cocoon AI; its license and bundled
 font notices are retained. A license for the project's original application
 code has not yet been selected. The supplied gecko image master is preserved
 byte-for-byte; CSS viewports show the gecko beside the GREPO wordmark.
+
+### Proposals and documentation
+
+The Proposals page generates an editable, cited change plan from a goal. The
+Documentation page offers repository overview, getting-started, and developer
+reference drafts. Both use the existing authenticated source-retrieval endpoint
+and server-side Groq configuration, with generation triggered explicitly by the
+user. Draft requests have a separate 4,000-token output budget; chat keeps its
+1,600-token budget.
+
+Drafts are saved in browser storage per project, immutable snapshot, and feature.
+Users can inspect cited source ranges, edit the draft, and export Markdown with
+revision, scope, sources, and limitations. Plans do not apply patches or run tests;
+generated documentation is a draft for review. Generation failures and truncated
+responses remain visible.

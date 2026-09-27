@@ -19,6 +19,7 @@ router = APIRouter(prefix='/projects', tags=['v1-ask'])
 GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 MODEL = 'openai/gpt-oss-120b'
 MAX_OUTPUT_TOKENS = 1600
+MAX_DRAFT_OUTPUT_TOKENS = 4000
 
 
 class ChatMessage(BaseModel):
@@ -27,6 +28,7 @@ class ChatMessage(BaseModel):
 
 
 class AskRequest(BaseModel):
+    purpose: Literal['answer', 'proposal', 'documentation'] = 'answer'
     question: Annotated[str, Field(min_length=1, max_length=4000)]
     history: list[ChatMessage] = Field(default_factory=list, max_length=10)
     file_id: str | None = None
@@ -76,7 +78,7 @@ def ask_chat(project_id: str, snapshot_id: str, body: Annotated[AskRequest, Body
     messages.append({'role': 'user', 'content': body.question})
     try:
         response = httpx.post(GROQ_URL, headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={'model': MODEL, 'messages': messages, 'max_tokens': MAX_OUTPUT_TOKENS, 'temperature': 0.2}, timeout=60)
+            json={'model': MODEL, 'messages': messages, 'max_tokens': MAX_OUTPUT_TOKENS if body.purpose == 'answer' else MAX_DRAFT_OUTPUT_TOKENS, 'temperature': 0.2}, timeout=60)
         response.raise_for_status()
         choice = response.json()['choices'][0]
         answer = choice['message']['content']
@@ -91,6 +93,8 @@ def ask_chat(project_id: str, snapshot_id: str, body: Annotated[AskRequest, Body
         raise WorkspaceError('AI_TIMEOUT', 'The AI provider did not respond in time. Please try again.', 504) from None
     except (KeyError, IndexError, TypeError, ValueError):
         raise WorkspaceError('AI_PARSE', 'The AI provider returned an empty or invalid answer. Please try again.', 502) from None
+    # Providers sometimes insert invisible spacing inside source citation IDs.
+    answer = re.sub(r'([【［\[])[\s\u200b-\u200d\ufeff]*(S\d+)[\s\u200b-\u200d\ufeff]*(?=[†:】］\]])', r'\1\2', answer)
     # Providers sometimes use full-width citation brackets despite the prompt.
     answer = re.sub(r'[【［\[](?P<id>S\d+)(?:[†:]L?\d+(?:[-–]L?\d+)?)?[】］\]]', r'[\g<id>]', answer)
     cited = set(re.findall(r'\[(S\d+)\]', answer))

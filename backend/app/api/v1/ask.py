@@ -1,12 +1,15 @@
 """Ask GREPO: question-focused source retrieval and cited Groq answers."""
 from __future__ import annotations
 
+import atexit
+from functools import lru_cache
 import os
 import re
+import time
 from typing import Annotated, Literal
 
 import httpx
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, Response
 from pydantic import BaseModel, Field
 
 from app.api.v1.session import workspace_session
@@ -50,13 +53,55 @@ def _api_key() -> str:
     return key
 
 
+def _hosted() -> bool:
+    return bool(os.environ.get('VERCEL')) or os.environ.get('CODECANOPY_STORAGE') == 'vercel_blob'
+
+
+@lru_cache(maxsize=1)
+def _provider_client() -> httpx.Client:
+    # Reuse DNS/TLS connections on warm hosted instances. Authorization remains
+    # request-specific; neither source prompts nor responses are cached.
+    client = httpx.Client(timeout=60, limits=httpx.Limits(
+        max_connections=16, max_keepalive_connections=8, keepalive_expiry=60))
+    atexit.register(client.close)
+    return client
+
+
+def _greeting(body: AskRequest) -> bool:
+    # Only a first, standalone salutation. Follow-ups and anything that mentions
+    # repository behavior still use the complete source-retrieval path.
+    return (body.purpose == 'answer' and not body.history
+            and body.scope == 'repository'
+            and re.fullmatch(r'(?:hi|hello|hey)(?:\s+grepo)?[!.?\s]*', body.question.strip(), re.IGNORECASE) is not None)
+
+
+def _timing(response: Response, started: float, retrieval_seconds=0.0, provider_seconds=0.0) -> None:
+    response.headers['Server-Timing'] = (
+        f'chat_retrieval;dur={retrieval_seconds * 1000:.1f}, '
+        f'chat_provider;dur={provider_seconds * 1000:.1f}, '
+        f'chat_handler;dur={(time.perf_counter() - started) * 1000:.1f}'
+    )
+
+
 @router.post('/{project_id}/snapshots/{snapshot_id}/chat', response_model=AskResponse)
-def ask_chat(project_id: str, snapshot_id: str, body: Annotated[AskRequest, Body()],
+def ask_chat(project_id: str, snapshot_id: str, body: Annotated[AskRequest, Body()], response: Response,
              snap: Snapshot = Depends(snapshot_access), _workspace: str = Depends(workspace_session)) -> AskResponse:
+    started = time.perf_counter()
+    hosted = _hosted()
+    if hosted and _greeting(body):
+        _timing(response, started)
+        return AskResponse(
+            answer='Hi! Ask me about this repository, select a file to explore, or describe a change you want to plan.',
+            context_hint='Greeting only; no repository source was searched or sent to the AI provider.',
+        )
     api_key = _api_key()
+    retrieval_started = time.perf_counter()
     previous_question = next((m.content for m in reversed(body.history) if m.role == 'user'), '')
     evidence = retrieve(snap.id, body.question, body.scope, body.file_id, body.folder_path, previous_question)
+    retrieval_seconds = time.perf_counter() - retrieval_started
     if not evidence.sources:
+        if hosted:
+            _timing(response, started, retrieval_seconds)
         return AskResponse(answer='I could not find readable source evidence within the selected scope. Select another file or folder, or re-import if the source has expired.', context_hint=evidence.hint, limitations=evidence.limitations)
     system = (
         'You are GREPO, a codebase assistant. Answer using only the source evidence below. '
@@ -76,11 +121,13 @@ def ask_chat(project_id: str, snapshot_id: str, body: Annotated[AskRequest, Body
     for message in body.history[-4:]:
         messages.append({'role': message.role, 'content': message.content[:2000]})
     messages.append({'role': 'user', 'content': body.question})
+    provider_started = time.perf_counter()
     try:
-        response = httpx.post(GROQ_URL, headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+        post = _provider_client().post if hosted else httpx.post
+        provider_response = post(GROQ_URL, headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={'model': MODEL, 'messages': messages, 'max_tokens': MAX_OUTPUT_TOKENS if body.purpose == 'answer' else MAX_DRAFT_OUTPUT_TOKENS, 'temperature': 0.2}, timeout=60)
-        response.raise_for_status()
-        choice = response.json()['choices'][0]
+        provider_response.raise_for_status()
+        choice = provider_response.json()['choices'][0]
         answer = choice['message']['content']
         if not isinstance(answer, str) or not answer.strip():
             raise ValueError('Empty answer')
@@ -93,6 +140,7 @@ def ask_chat(project_id: str, snapshot_id: str, body: Annotated[AskRequest, Body
         raise WorkspaceError('AI_TIMEOUT', 'The AI provider did not respond in time. Please try again.', 504) from None
     except (KeyError, IndexError, TypeError, ValueError):
         raise WorkspaceError('AI_PARSE', 'The AI provider returned an empty or invalid answer. Please try again.', 502) from None
+    provider_seconds = time.perf_counter() - provider_started
     # Providers sometimes insert invisible spacing inside source citation IDs.
     answer = re.sub(r'([【［\[])[\s\u200b-\u200d\ufeff]*(S\d+)[\s\u200b-\u200d\ufeff]*(?=[†:】］\]])', r'\1\2', answer)
     # Providers sometimes use full-width citation brackets despite the prompt.
@@ -107,4 +155,6 @@ def ask_chat(project_id: str, snapshot_id: str, body: Annotated[AskRequest, Body
         evidence.limitations.append('The model returned no source citations; treat its answer as unverified.')
     if choice.get('finish_reason') == 'length':
         evidence.limitations.append('The answer reached its output limit. Ask a narrower follow-up for the remaining detail.')
+    if hosted:
+        _timing(response, started, retrieval_seconds, provider_seconds)
     return AskResponse(answer=answer, context_hint=evidence.hint, sources=sources, limitations=evidence.limitations)

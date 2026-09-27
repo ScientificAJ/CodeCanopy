@@ -1,4 +1,4 @@
-# GREPO — IBM Bob Usage Statement
+# GREPO, IBM Bob Usage Statement
 
 **Ten Bob sessions, 39.88 of 40 Bobcoins, and three agents that corrected the
 briefs they were given.**
@@ -33,7 +33,7 @@ its session summary, and each is the more useful outcome:
   fixed, on the grounds that both problems should be visible in the output.
 - The rendering brief assumed a streaming bug. There is no streaming. Bob traced
   the renderer's control flow, reported that the label renders exactly once, and
-  fixed the real cause — a preview that sliced a markdown table in half.
+  fixed the real cause, a preview that sliced a markdown table in half.
 - The Ask wiring brief asked for a budget confirmation Bob could not see. Bob
   said so instead of inventing a figure.
 

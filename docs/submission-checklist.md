@@ -4,7 +4,7 @@ Everything in this file is a claim the submission makes about itself. Each one
 is either verified here, or owned by a named person. Nothing is left as an
 assumption.
 
-## Verified — reproduce it yourself
+## Verified, reproduce it yourself
 
 | Item | Where to check | Expected |
 | --- | --- | --- |
@@ -19,12 +19,12 @@ assumption.
 
 ## Written and in the repository
 
-- [x] **Problem and Solution statement** — `docs/submission-problem-solution.md`, 484 words
-- [x] **IBM Bob Usage statement** — `docs/submission-bob-usage.md`, 489 words
-- [x] **README** — leads with the verifier, shows the attack table, real captures, honest infrastructure section
-- [x] **Bob IDE proof** — `docs/images/bob-ide-workspace.png`, referenced from the README
-- [x] **Folder structure** — verified tree, all 52 paths checked against disk
-- [x] **Cover image** — use `frontend/public/codecanopy-logo.png`; the submission form wants a single image, and the logo is the one asset built for that
+- [x] **Problem and Solution statement**, `docs/submission-problem-solution.md`, 484 words
+- [x] **IBM Bob Usage statement**, `docs/submission-bob-usage.md`, 489 words
+- [x] **README**, leads with the verifier, shows the attack table, real captures, honest infrastructure section
+- [x] **Bob IDE proof**, `docs/images/bob-ide-workspace.png`, referenced from the README
+- [x] **Folder structure**, verified tree, all 52 paths checked against disk
+- [x] **Cover image**, use `frontend/public/codecanopy-logo.png`; the submission form wants a single image, and the logo is the one asset built for that
 
 ## What the guide requires, confirmed
 
@@ -38,16 +38,16 @@ that is a lablab requirement rather than a guide requirement.
 
 ## Not in this repository
 
-- [ ] **Demo video** — AJ. Not a guide requirement; a submission-form requirement.
-- [ ] **`06-arjun-repository-setup` panel screenshot** — Arjun. The guide says each
+- [ ] **Demo video**, AJ. Not a guide requirement; a submission-form requirement.
+- [ ] **`06-arjun-repository-setup` panel screenshot**, Arjun. The guide says each
       participant must upload their own task panels. The folder currently has
       transcripts but no panel image.
-- [ ] **`08-sajidHameed-chatbot-work` panel screenshot** — Sajid. Same requirement;
+- [ ] **`08-sajidHameed-chatbot-work` panel screenshot**, Sajid. Same requirement;
       that folder has a transcript and no panel image.
 
 ## Known limits, stated rather than hidden
 
-- Import cost: 155 files in 24s, 4,321 in 101s, 726 in 125s. Repositories in the
+- Import cost: 133 files in 11.8s, 832 in 97s, 726 in 125s. Repositories in the
   thousands of files exceed a live demo's time budget. The archive caps are
   10,000 entries, 25 MiB per file, 250 MiB extracted.
 - No Dockerfile, CI workflow or cloud config is checked in. The README explains
@@ -64,5 +64,5 @@ that is a lablab requirement rather than a guide requirement.
    in the repository but the form is separate.
 2. Confirm every team member's Bob panels are present, including the two above.
 3. Re-run the verification table at the top on the final commit.
-4. If the form requires a live app URL, that does not exist yet — the service
+4. If the form requires a live app URL, that does not exist yet. The service
    runs on loopback. See the deployment section of the README.

@@ -21,11 +21,21 @@ Anything it cannot prove is reported as unproven, with the reason.
 
 | | |
 | --- | --- |
-| **Architecture map** — observed containment, drawn from the snapshot, never inferred. | **Verified dependencies** — 88 resolved edges on `chanjoongx/atlas`, each with the line it came from. |
-| ![Architecture map](docs/images/architecture-map.png) | ![Verified dependency edges](docs/images/dependencies-atlas.png) |
+| **Architecture map**, observed containment, drawn from the snapshot, never inferred. | **Verified dependencies**, 269 resolved import edges on this repository's own source, each with the line it came from. |
+| ![Architecture map](docs/images/architecture-map.png) | ![Verified dependency edges](docs/images/dependencies-panel.png) |
 
-All captures are the live application, all on `chanjoongx/atlas`; the panel at
-the top of this file is this project's own source.
+Every capture above is the live application running against
+`ScientificAJ/CodeCanopy`, this repository, at revision `54b5267`.
+
+**The "Partial import" badge in those captures is not a failure.** It means the
+run recorded diagnostics, and 49 of the 51 on this repository are the Bob panel
+screenshots under `bob_sessions/`, which are binary PNGs and therefore carry
+metadata only. Two files exceeded the parse resource budget and remain
+browsable as text. The tool says so rather than hiding it.
+
+The same view on a well known library. `pallets/click`, 191 verified edges:
+
+![Verified dependency edges on pallets/click](docs/images/dependencies-click.png)
 
 ## Change proposals
 
@@ -52,7 +62,7 @@ the 40 Bobcoin budget.
 
 *Bob IDE with `backend/app/features/dependencies/verifier.py` open and the task
 panel beside it. This is the guard that rejects an edge whose target does not
-exist — the check described below, written by Bob against a brief that
+exist: the check described below, written by Bob against a brief that
 described the attack rather than the fix.*
 
 ## Why that matters
@@ -107,16 +117,25 @@ Import cost, measured on real repositories with the harness in
 
 | Repository | Files | Import | Dependency analysis |
 | --- | --- | --- | --- |
-| `ScientificAJ/CodeCanopy` (this repo) | 4,321 | 101s | 10s — 259 edges, 1,397 unresolved |
-| `chanjoongx/atlas` | 155 | 24s | 1.7s — 88 edges, 64 unresolved |
-| `pallets/click` | 178 | fast | fast |
-| `shadcn-ui/ui` (packages only) | 726 | 125s | 8s |
+| `ScientificAJ/CodeCanopy` (this repo, also shown above) | 832 | 97s | 269 edges |
+| `psf/requests` | 133 | 11.8s | 1.1s, 80 edges, 244 unresolved |
+| `pallets/click` | 181 | 27.7s | 2.1s, 191 edges, 517 unresolved |
+| `shadcn-ui/ui`, one package | 726 | 125s | 8.4s, 276 edges, 1,633 unresolved |
+| `tiangolo/fastapi` | 3,142 | 327.2s | 98.1s, 1,001 edges, 2,553 unresolved |
+
+File counts are what the harness reports after it strips `.git`,
+`node_modules`, `dist`, `build`, `coverage`, `.next` and `.turbo`, so they can
+be three or four files higher than a raw `find` on the same checkout. The edge
+counts are the ones the running application shows, and they match the harness
+exactly.
 
 **The boundary is real and stated.** Archives are capped at 10,000 entries,
-25 MiB per file, and 250 MiB total uncompressed. Repositories in the thousands
-of files complete but exceed a live demo's time budget; scope them to a single
-package, or use the harness above to warm a snapshot before presenting. This
-is a deliberate limit on a local, bounded parser, not a failure.
+25 MiB per file, and 250 MiB total uncompressed. `tiangolo/fastapi` is the real
+scale test: 3,142 files, 327 seconds to import, then 98 seconds of dependency
+analysis to produce 1,001 verified edges. It works, and it takes longer than a
+live demo allows. Scope a large repository to one package, or warm the snapshot
+with the harness before presenting. This is a deliberate limit on a local,
+bounded parser, not a failure.
 
 ## How it is built
 
@@ -225,7 +244,7 @@ sharing a slot name and a type generated from `contracts/prd.schema.json`:
 A feature registers itself; it does not edit the workspace layout, the map, the
 tree, or the slot registry. That is why six people built six features in
 parallel without colliding, and why the dependency panel could be rebuilt
-twice — by two people, for two different designs — without touching a shared
+twice, by two people, for two different designs, without touching a shared
 file.
 
 ## Run locally
@@ -281,7 +300,7 @@ to an absolute Node executable if necessary. No installation inside
    lines. This is the point of the product.
 5. Open **Dependencies**. Resolved edges are grouped by source file, each with a
    citation button. Unresolved references are listed separately with their
-   reason — an external package and a missing file are different problems and
+   reason: an external package and a missing file are different problems and
    are reported differently.
 6. Use Customize view to change labels, order, theme and map density. Create
    virtual groups from the complete inventory, rename/recolor them, and add or
@@ -347,14 +366,14 @@ CI workflow, no cloud config. The reason is specific rather than aspirational:
 | Property | Why it constrains deployment |
 | --- | --- |
 | Source expiry | Snapshots live 24 hours, then source bytes are deleted. Nothing persists between sessions. |
-| In-process parsing | Syntax extraction runs under POSIX resource limits in the API process. **Run one API worker** — a second would double-apply `RLIMIT_AS` and `RLIMIT_CPU`. |
+| In-process parsing | Syntax extraction runs under POSIX resource limits in the API process. **Run one API worker**, because a second would double-apply `RLIMIT_AS` and `RLIMIT_CPU`. |
 | Workspace identity | State is a browser workspace cookie, not an account. Horizontal scaling would need shared session storage. |
 | Bounded jobs | Two imports run concurrently, four admitted, three-minute deadline. Capacity planning is four jobs, not unbounded. |
 
 What that means in practice: this runs as a **single-instance local service on
 loopback today**, which is how it was developed and how it was recorded. Making
-it multi-tenant or publicly hosted is real work — sticky sessions, shared
-snapshot storage, a job queue — and none of it is pretending to be done.
+it multi-tenant or publicly hosted is real work: sticky sessions, shared
+snapshot storage, a job queue. None of it is pretending to be done.
 
 If you need to run it anywhere but your machine, the sequence is:
 1. Containerize both services (the Python one needs the POSIX limits honoured).

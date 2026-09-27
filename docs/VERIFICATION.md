@@ -1,6 +1,6 @@
 # Verification record
 
-## 2026-09-27 — shared UI completion
+## 2026-09-27, shared UI completion
 
 Implemented real ZIP upload, optional GitHub revision input, recent imports,
 retention/exclusion disclosures, a factual overview, adaptive map density,
@@ -55,7 +55,7 @@ correction_rounds: 1
 These are local implementation/browser checks, not a hosted deployment claim.
 The original foundation evidence below remains a historical record.
 
-## 2026-09-26 — foundation
+## 2026-09-26, foundation
 
 Recorded 2026-09-26. Scope: the structure workspace and shared integration
 surfaces described in [SCOPE.md](SCOPE.md).

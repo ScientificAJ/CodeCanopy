@@ -1,92 +1,163 @@
-import asyncio, tempfile, pathlib, os, sys
-sys.path.insert(0, '.')
+"""Reproduce the verifier attack table shown in the README.
 
-tmp = tempfile.mkdtemp()
-os.environ['CODECANOPY_SNAPSHOTS_DIR'] = tmp
+Each case constructs a real dependency edge by hand and runs it through the
+real verifier. Nothing here is mocked: every result is the verifier's own
+answer to a graph it was actually given.
 
-from app.services.snapshot_service import create_snapshot_from_project
-from app.features.dependencies.service import _build_graph_raw
-from app.features.dependencies.verifier import verify_dependency_edges
-from app.services.inventory_service import entity_id
+Run from the backend directory:
 
-source = pathlib.Path(tempfile.mkdtemp())
-(source / 'pkg').mkdir()
-(source / 'pkg' / 'utils.py').write_text('def helper():\n    return 42\n', encoding='utf-8')
-(source / 'pkg' / 'main.py').write_text(
-    'from .utils import helper\n\ndef run():\n    return helper()\n',
-    encoding='utf-8'
+    .venv/bin/python scripts/demo_verifier.py
+"""
+from __future__ import annotations
+
+import asyncio
+import os
+import pathlib
+import sys
+import tempfile
+import uuid
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+os.environ['CODECANOPY_SNAPSHOTS_DIR'] = tempfile.mkdtemp() + '/snapshots'
+
+from app.features.dependencies.service import (  # noqa: E402
+    DependencyEdge,
+    DependencyGraph,
+    DependencyOverlay,
+    EdgeEndpoint,
+    EvidenceItem,
+    SourceRange,
+    _build_graph_raw,
+    build_dependencies,
 )
-(source / 'pkg' / 'app.py').write_text(
-    'from .main import run\nimport os\n\nrun()\n',
-    encoding='utf-8'
+from app.features.dependencies.verifier import verify_dependency_edges  # noqa: E402
+from app.services.inventory_service import entity_id  # noqa: E402
+from app.services.snapshot_service import (  # noqa: E402
+    create_snapshot_from_project,
+    get_inventory,
 )
 
-snap, _ = create_snapshot_from_project('a' * 32, source, 'test', 'demo')
+SNAPSHOT_FILES = {
+    'pkg/utils.py': 'def helper():\n    return 42\n',
+    'pkg/main.py': 'from .utils import helper\n\ndef run():\n    return helper()\n',
+    'pkg/app.py': 'from .main import run\nimport os\n\nrun()\n',
+}
 
-graph, specifier_map, lang_map = _build_graph_raw(snap.id)
-print('--- RAW GRAPH ---')
-print(f'Edges: {len(graph.edges)}')
-for e in graph.edges:
-    ev = next((x for x in graph.evidence if x.id == e.evidence_id), None)
-    line = ev.range.line_start if ev else '?'
-    basis = ev.basis if ev else '?'
-    spec = specifier_map[e.id]
-    print(f'  {e.source.path} -> {e.target.path} | specifier={spec!r} | line={line} | basis={basis}')
 
-pruned, report = verify_dependency_edges(snap.id, graph, lang_map, specifier_map)
-print()
-print('--- VERIFIER OUTPUT (real imported repository) ---')
-print(f'Verified: {report.verified}  Unverified: {report.unverified}')
-for r in report.results:
-    status_line = f'  {r.edge_id[:8]}... status={r.status}'
-    if r.reason:
-        status_line += f' reason={r.reason}'
-    print(status_line)
+def make_snapshot():
+    root = pathlib.Path(tempfile.mkdtemp())
+    source = root / 'source'
+    source.mkdir()
+    for name, text in SNAPSHOT_FILES.items():
+        target = source / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding='utf-8')
+    snap, _ = create_snapshot_from_project('a' * 32, source, 'test', 'verifier-demo')
+    return snap
 
-print()
-print('Unresolved:')
-for u in graph.unresolved:
-    print(f'  {u.source_path} -> {u.specifier!r} reason={u.reason}')
 
-print()
-print('--- ADVERSARIAL TEST ---')
-import uuid as _uuid
-from app.features.dependencies.service import (
-    DependencyGraph, DependencyEdge, EdgeEndpoint, EvidenceItem, SourceRange, UnresolvedRef
-)
-from app.services.snapshot_service import get_inventory
+def build_edge(snap, main_rec, spec, line, target_file_id, target_path):
+    """An edge whose citation is always legitimate, with a caller-chosen target."""
+    evidence = EvidenceItem(
+        id=uuid.uuid4().hex,
+        snapshot_id=snap.id,
+        file_id=main_rec.id,
+        path=main_rec.path,
+        range=SourceRange(line_start=line, line_end=line),
+        content_sha256=main_rec.content_hash,
+        basis='resolved',
+    )
+    edge_id = uuid.uuid4().hex
+    graph = DependencyGraph(
+        edges=[
+            DependencyEdge(
+                id=edge_id,
+                source=EdgeEndpoint(
+                    entity_id=entity_id(snap.id, 'pkg/main.py', 'file'),
+                    path='pkg/main.py',
+                    file_id=main_rec.id,
+                ),
+                target=EdgeEndpoint(
+                    entity_id=entity_id(snap.id, target_path, 'file'),
+                    path=target_path,
+                    file_id=target_file_id,
+                ),
+                kind='imports',
+                evidence_id=evidence.id,
+            )
+        ],
+        unresolved=[],
+        evidence=[evidence],
+    )
+    return graph, {edge_id: spec}, {main_rec.id: 'python'}
 
-records = get_inventory(snap.id, limit=100).files
-rec_main = next(r for r in records if r.path == 'pkg/main.py')
-rec_utils = next(r for r in records if r.path == 'pkg/utils.py')
 
-# Forge an edge: cite line 3 of main.py ('def run():') which is NOT an import
-forged_ev = EvidenceItem(
-    id=_uuid.uuid4().hex,
-    snapshot_id=snap.id,
-    file_id=rec_main.id,
-    path=rec_main.path,
-    range=SourceRange(line_start=3, line_end=3),  # 'def run():' -- not an import
-    content_sha256=rec_main.content_hash,
-    basis='resolved',
-)
-forged_edge_id = _uuid.uuid4().hex
-forged_graph = DependencyGraph(
-    edges=[DependencyEdge(
-        id=forged_edge_id,
-        source=EdgeEndpoint(entity_id='src', path='pkg/main.py', file_id=rec_main.id),
-        target=EdgeEndpoint(entity_id='tgt', path='pkg/utils.py', file_id=rec_utils.id),
-        kind='imports',
-        evidence_id=forged_ev.id,
-    )],
-    unresolved=[],
-    evidence=[forged_ev],
-)
-_, adv_report = verify_dependency_edges(
-    snap.id, forged_graph,
-    {rec_main.id: 'python'},
-    {forged_edge_id: '.utils'},
-)
-print(f'Forged edge citing line 3 ("def run():") for specifier=".utils":')
-print(f'  status={adv_report.results[0].status}')
-print(f'  reason={adv_report.results[0].reason}')
+def main() -> None:
+    snap = make_snapshot()
+    records = {r.path: r for r in get_inventory(snap.id, limit=100).files}
+    main_rec = records['pkg/main.py']
+    utils_rec = records['pkg/utils.py']
+
+    print(f'Snapshot {snap.id}')
+    print()
+
+    raw, spec_map, lang_map = _build_graph_raw(snap.id)
+    print('Honest graph, built from real import statements')
+    for edge in raw.edges:
+        evidence = next(e for e in raw.evidence if e.id == edge.evidence_id)
+        print(
+            f'  {edge.source.path:14} -> {edge.target.path:14} '
+            f'line {evidence.range.line_start}  specifier {spec_map[edge.id]!r}'
+        )
+    _, report = verify_dependency_edges(snap.id, raw, lang_map, spec_map)
+    print(f'  verifier: {report.verified} verified, {report.unverified} unverified')
+    print()
+
+    ghost = 'f' * 32
+    other_snapshot_rec = records['pkg/app.py']
+    cases = [
+        (
+            'Citation entirely valid, target file does not exist',
+            build_edge(snap, main_rec, '.utils', 1, ghost, 'fictional/target.py'),
+        ),
+        (
+            'Null target (external or unresolved)',
+            build_edge(snap, main_rec, '.utils', 1, None, 'external/package'),
+        ),
+        (
+            'Citation on a real line that is not an import',
+            build_edge(snap, main_rec, '.utils', 3, utils_rec.id, 'pkg/utils.py'),
+        ),
+        (
+            'Citation pointing past end of file',
+            build_edge(snap, main_rec, '.utils', 999, utils_rec.id, 'pkg/utils.py'),
+        ),
+    ]
+
+    print('Forged edges, each through the same verifier')
+    print('-' * 74)
+    for label, (graph, specifiers, languages) in cases:
+        _, outcome = verify_dependency_edges(snap.id, graph, languages, specifiers)
+        result = outcome.results[0]
+        status = 'VERIFIED  ' if result.status == 'verified' else 'unverified'
+        print(f'{status}  {label}')
+        if result.reason:
+            print(f'            {result.reason}')
+    print('-' * 74)
+    print()
+
+    overlay = asyncio.run(build_dependencies(snap.id, None, None))
+    assert isinstance(overlay, DependencyOverlay)
+    print('Unresolved references, reported with a reason instead of drawn:')
+    for item in overlay.graph.unresolved:
+        print(f'  {item.source_path} -> {item.specifier!r}  ({item.reason})')
+    print()
+    for line in overlay.limitations:
+        print(f'  limitation: {line}')
+
+
+if __name__ == '__main__':
+    main()

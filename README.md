@@ -1,18 +1,85 @@
 # GREPO
 
-**See the structure. Find your path through the code.**
+**Every generated claim is checkable against the source it came from.**
 
-GREPO imports a public GitHub repository or ZIP into a read-only snapshot,
-then connects a searchable file tree, an interactive structure map, and bounded
-source previews. Organize your view with labels and virtual groups, and export
-that view as an interactive, offline HTML file.
+GREPO imports a public GitHub repository or ZIP into a read-only snapshot, then
+connects a searchable file tree, an interactive structure map, and bounded
+source previews. It summarises files and folders, traces how files and functions
+connect, and highlights reusable, duplicated and unused code.
 
-The workspace includes a [dependency explorer](docs/dependency-analysis.md) for
-Python and JavaScript/TypeScript file imports and function calls, with source
-links, cycle detection, and potential change impact. Dependency analysis runs
-locally without model credentials. Reuse, duplicate/unused findings and Ask have
-separate connected modules; AI summaries, proposals and generated documents remain
-extension slots.
+What separates it from the other repository analysers in this category is a
+single decision: **GREPO does not ask a model to be correct and hope.** It
+computes claims from an AST walk, cites the exact line each one came from, and
+then re-reads that line through the snapshot service before showing it to you.
+Anything it cannot prove is reported as unproven, with the reason.
+
+## Why that matters
+
+Most tools in this space produce a summary and hope it drifted. A summary that
+says a function "validates the payload" is worthless if you cannot check it in
+one click, and worse than worthless if it is wrong and you have no way to know.
+
+GREPO's summaries and dependency edges carry a line citation for every claim.
+Before a claim is displayed, a verifier independently re-reads the cited range
+through the snapshot service, which re-checks the content hash, enforces
+bounds, and confirms the text at that line actually supports the claim. Claims
+that fail are **removed, not shown faintly**.
+
+The same principle runs through the rest of the product. An import that does
+not resolve is listed as unresolved with its reason rather than being drawn as
+a plausible edge. A change-impact query with no meaningful answer returns an
+empty list *and says why* instead of returning a confident zero.
+
+## The verifier, attacked
+
+The claims above are only worth something if they were tested adversarially,
+not just demonstrated on a happy-path repository. Six forgery attempts, each
+constructed by hand, each run against the real verifier:
+
+| Attack | Result |
+| --- | --- |
+| Honest graph, real edges | **verified** |
+| Citation on a real line that does not import the target | unverified |
+| Citation pointing past end of file | unverified |
+| `file_id` belonging to a different snapshot | unverified |
+| **Citation entirely valid, target file does not exist** | unverified |
+| **Null target (external or unresolved)** | unverified |
+
+The last two were found by attacking the finished code, not by writing tests
+for it. The first implementation validated the *citation* on every edge but
+never checked that the *target* existed, so an edge with a perfect citation
+pointing at a fictional file passed. The guard that closes that is now part of
+the standard path.
+
+> The 2nd-place repository in the previous edition of this hackathon shipped a
+> resolver that "could fabricate targets, so every map drew zero dependency
+> arcs." Entirely empty output that looks complete is the failure this design
+> is built to make impossible.
+
+Reproduce the table:
+
+```bash
+cd backend
+.venv/bin/python scripts/demo_verifier.py
+```
+
+## Measured, not estimated
+
+Import cost, measured on real repositories with the harness in
+`backend/scripts/stress_test.py`:
+
+| Repository | Files | Import | Dependency analysis |
+| --- | --- | --- | --- |
+| `sindresorhus/slugify` | ~10 | instant | — |
+| `chanjoongx/atlas` | 155 | 24s | 1.7s — 88 edges, 64 unresolved |
+| `pallets/click` | 178 | fast | fast |
+| `shadcn-ui/ui` (packages only) | 726 | 125s | 8s |
+
+**The boundary is real and stated.** Archives are capped at 10,000 entries,
+25 MiB per file, and 250 MiB total uncompressed. Repositories in the thousands
+of files complete but exceed a live demo's time budget; scope them to a single
+package, or use the harness above to warm a snapshot before presenting. This
+is a deliberate limit on a local, bounded parser, not a failure.
 
 ## Run locally
 
@@ -41,6 +108,10 @@ Open **http://127.0.0.1:5173**. Use the same hostname for frontend and backend
 http://127.0.0.1:8000/docs. These are the two existing development services;
 there are no additional feature servers.
 
+Ask needs a model provider. Set `GROQ_API_KEY` in `backend/.env`; the key is
+read server-side only and never reaches the frontend bundle. Every other
+feature runs without credentials.
+
 The API needs Node on PATH to run the vendored renderer. Set `CODECANOPY_NODE`
 to an absolute Node executable if necessary. No installation inside
 `vendor/archify` is needed.
@@ -52,13 +123,17 @@ to an absolute Node executable if necessary. No installation inside
 2. Wait for the import run. It can be cancelled; warnings produce a partial
    result with per-file diagnostics, not fabricated success.
 3. Start on the factual overview, then open the architecture map or suggested
-   README/manifests. Search the tree (Ctrl/Cmd+K), expand folders, and select a file. Double-click
-   a folder or use its map-list arrow to drill down. Map selection and source
-   inspection share canonical snapshot-scoped IDs.
-4. Use Customize view to change labels, order, theme and map density. Create
+   README/manifests. Search the tree (Ctrl/Cmd+K), expand folders, and select a file. Map selection and source inspection share canonical snapshot-scoped IDs.
+4. Open **Summaries** and click any citation. The source opens at exactly those
+   lines. This is the point of the product.
+5. Open **Dependencies**. Resolved edges are grouped by source file, each with a
+   citation button. Unresolved references are listed separately with their
+   reason — an external package and a missing file are different problems and
+   are reported differently.
+6. Use Customize view to change labels, order, theme and map density. Create
    virtual groups from the complete inventory, rename/recolor them, and add or
    remove individual members. These preferences never modify source bytes.
-5. Export HTML for the current map chapter. The export contains the graph,
+7. Export HTML for the current map chapter. The export contains the graph,
    provenance and view preferences, plus Archify's offline interactions. Source
    contents are **not included**. It is a structural view, not an AI report or
    dependency analysis.
@@ -71,6 +146,8 @@ selection, source evidence lines and camera; returning via Architecture resumes
 the last view in this browser session. Recent imports are available on the
 import page, alongside the storage policy and optional GitHub revision selector. No invented architectural
 roles or semantic edges are added.
+
+![GREPO workspace](bob_sessions/07-arjun-structure-workspace/supporting-evidence/browser-evidence/github-workspace-1672.png)
 
 ## Storage and bounds
 
@@ -125,7 +202,10 @@ All new behavior is under `/api/v1`:
 | `GET …/snapshots/{s}` | Immutable revision and expiry |
 | `GET …/{s}/files`, `/entities`, `/capabilities` | Inventory and honest coverage |
 | `GET …/{s}/source/{file_id}` | Validated bounded line ranges |
-| `GET …/{s}/dependencies` | Static file/function connections, evidence and coverage |
+| `GET …/{s}/summaries` | Cited summaries with verified evidence |
+| `GET …/{s}/dependencies` | Verified import edges, unresolved refs, change impact |
+| `GET …/{s}/reuse`, `/duplicates`, `/unused` | Reuse, duplicate and unused findings |
+| `GET …/{s}/ask`, `POST …/{s}/chat` | Capability greeting and grounded answers |
 | `GET …/{s}/graph` | Bounded observed containment graph |
 | `GET/PATCH …/{s}/view` | View-only preferences |
 | `POST …/{s}/map` | Validated Archify HTML, graph, hashes and receipt |

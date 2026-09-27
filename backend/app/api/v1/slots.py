@@ -81,7 +81,7 @@ def get_ask_slot(
     snapshot_id: str,
     snap: Snapshot = Depends(snapshot_access),
 ) -> AskResponse:
-    """Greeting and capability description for the Ask CodeCanopy feature panel.
+    """Greeting and capability description for the Ask GREPO feature panel.
 
     Returns a non-empty answer describing what this feature does so that any
     reviewer or first-time user immediately understands the panel.  Raises a
@@ -90,7 +90,7 @@ def get_ask_slot(
     """
     _api_key()   # raises WorkspaceError("AI_NOT_CONFIGURED", …, 503) if key absent
     greeting = (
-        "Ask Grepo is your AI assistant for this repository. "
+        "Ask GREPO is your AI assistant for this repository. "
         "You can ask questions about code structure, imports, API design, "
         "technology choices, and the logic inside any file or folder. "
         "Open the chat panel to start a conversation — each answer is grounded "

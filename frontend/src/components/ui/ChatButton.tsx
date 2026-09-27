@@ -8,7 +8,7 @@ import { Icon } from '../ui/Icon'
 import { useChatState } from '../../features/ask/useChatState'
 import { ChatModal } from '../../features/ask/ChatModal'
 
-export function ChatButton({ label = 'Grepo' }: { label?: string }) {
+export function ChatButton({ label = 'GREPO' }: { label?: string }) {
   const ws = useWorkspace()
   const [open, setOpen] = useState(false)
   const [prefill, setPrefill] = useState<string | undefined>()

@@ -100,9 +100,9 @@ SLOT_UNUSED = IntegrationSlotResponse(
 SLOT_ASK = IntegrationSlotResponse(
     slot="ask.workspace",
     status=SlotStatus.NOT_CONNECTED,
-    title="Ask CodeCanopy",
+    title="Ask GREPO",
     description=(
-        "Integration slot: put the Ask CodeCanopy conversational feature here.  "
+        "Integration slot: put the Ask GREPO conversational feature here.  "
         "Not connected yet.  No Watson credentials are required to browse the map."
     ),
     integration_path="app.features.codebase_chat",

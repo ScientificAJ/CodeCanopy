@@ -5,7 +5,7 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 schema = json.loads((root / 'contracts/prd.schema.json').read_text())
 schema['$id'] = 'https://codecanopy.local/contracts/structure-1.1.schema.json'
-schema['title'] = 'CodeCanopy structure slice 1.1'
+schema['title'] = 'GREPO structure slice 1.1'
 schema['$comment'] = 'Versioned extension of the supplied PRD. See contracts/README.md.'
 d = schema['$defs']
 d['Entity']['properties']['kind']['enum'] += ['repository', 'virtual_group']

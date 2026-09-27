@@ -3,18 +3,18 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createHash } from 'node:crypto'
-const evidence = resolve('../bob_sessions/browser-evidence')
+const evidence = resolve('../bob_sessions/local-verification/browser-evidence')
 mkdirSync(evidence,{recursive:true})
-const fixture = resolve('../bob_sessions/verification-fixture.zip')
+const fixture = resolve('../bob_sessions/local-verification/verification-fixture.zip')
 execFileSync(process.env.PYTHON ?? (process.platform === 'win32' ? 'python' : 'python3'), ['../scripts/make_test_zip.py',fixture])
 const sizes = [[1672,941],[1440,900],[1920,1080],[1600,1000],[2048,1320]]
 test('ZIP workspace, source, issues, organization and offline export', async ({page,browser}) => {
   const errors: string[] = []; page.on('pageerror',error => errors.push(error.message))
   await page.goto('/')
-  await expect(page.getByRole('link',{name:'CodeCanopy',exact:true})).toBeVisible()
+  await expect(page.getByRole('link',{name:'GREPO',exact:true})).toBeVisible()
   await expect(page.getByRole('heading',{name:'Find your way through the code.'})).toBeVisible()
   await expect(page.getByLabel('GitHub repository URL')).toBeVisible()
-  await expect(page.getByRole('img',{name:'CodeCanopy gecko'})).toBeVisible()
+  await expect(page.getByRole('img',{name:'GREPO gecko'})).toBeVisible()
   for (const [width,height] of sizes) {await page.setViewportSize({width,height}); await page.screenshot({path:`${evidence}/import-${width}.png`}); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)}
   await page.setViewportSize({width:1672,height:941})
   await page.getByRole('button',{name:'Upload ZIP',exact:true}).click()

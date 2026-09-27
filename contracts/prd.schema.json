@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://grepo.invalid/contracts/1.0/grepo.schema.json",
-  "title": "Grepo core design contracts 1.0",
+  "title": "GREPO core design contracts 1.0",
   "$comment": "Design specification, not generated from or implemented by the inspected starter. Examples marked fixture_only are synthetic.",
   "oneOf": [
     {

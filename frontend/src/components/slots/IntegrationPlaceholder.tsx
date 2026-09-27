@@ -6,7 +6,7 @@
  *   - AI Summaries
  *   - Dependencies / Change Impact
  *   - Reuse / Duplicates / Unused (Opportunities)
- *   - Ask Grepo
+ *   - Ask GREPO
  *   - Proposals & Change Packs
  *
  * The placeholder is:

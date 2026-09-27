@@ -59,9 +59,9 @@ export default function HomePage() {
   return (
     <main className="dashboard-shell">
       <header className="topbar">
-        <a className="brand" href="/" aria-label="Grepo home">
+        <a className="brand" href="/" aria-label="GREPO home">
           <span className="brand__mark" aria-hidden="true">G</span>
-          <span>Grepo</span>
+          <span>GREPO</span>
         </a>
         <div className="topbar__project">
           <span className="topbar__caption">Current project</span>

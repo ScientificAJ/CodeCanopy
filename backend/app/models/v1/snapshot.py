@@ -1,6 +1,6 @@
 """V1 snapshot and project identity models.
 
-These are the canonical shared identities for the CodeCanopy v1 API.
+These are the canonical shared identities for the GREPO v1 API.
 All feature modules must reference these types rather than defining
 their own parallel project/snapshot concepts.
 """

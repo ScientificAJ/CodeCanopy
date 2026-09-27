@@ -1,4 +1,4 @@
-/* CodeCanopy bridge v1.1. Upstream Archify is immutable; this wrapper uses its public
+/* GREPO bridge v1.1. Upstream Archify is immutable; this wrapper uses its public
  * focus/view APIs and audited data-node-id DOM seam. No repository code executes. */
 (() => {
   'use strict';
@@ -86,7 +86,7 @@
   // A visible offline disclosure and machine-readable manifest preserve provenance.
   const disclosure = document.createElement('p');
   disclosure.className = 'codecanopy-provenance';
-  disclosure.textContent = 'CodeCanopy · Repository structure · ' + manifest.graph.entities.length +
+  disclosure.textContent = 'GREPO · Repository structure · ' + manifest.graph.entities.length +
     ' entities in this view · source code not included · Archify 9e35d2b · ' +
     'View labels and groups are user preferences, not source changes. ' +
     manifest.export_scope + ' Not connected: ' + manifest.deferred_capabilities.join(', ') + '.';

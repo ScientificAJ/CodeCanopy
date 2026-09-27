@@ -1,6 +1,6 @@
 /* Generated from contracts/structure-1.1.schema.json. Run npm run contracts; do not edit. */
 
-export type CodeCanopyStructureSlice11 = Graph | AnalysisRun | ApiError;
+export type GREPOStructureSlice11 = Graph | AnalysisRun | ApiError;
 
 export interface Graph {
   schema_version: "1.1";

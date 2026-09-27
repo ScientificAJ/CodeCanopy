@@ -1,4 +1,4 @@
-"""Tests for the Ask CodeCanopy slot endpoint."""
+"""Tests for the Ask GREPO slot endpoint."""
 from __future__ import annotations
 
 import pytest

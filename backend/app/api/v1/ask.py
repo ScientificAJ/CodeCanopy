@@ -1,4 +1,4 @@
-"""Ask CodeCanopy – Groq-backed codebase chat endpoint."""
+"""Ask GREPO – Groq-backed codebase chat endpoint."""
 from __future__ import annotations
 
 import os
@@ -207,7 +207,7 @@ def ask_chat(
 
     # Compose system prompt
     system_parts = [
-        "You are CodeCanopy's AI assistant. You help developers understand large codebases.",
+        "You are GREPO's AI assistant. You help developers understand large codebases.",
         "You have full structural knowledge of this repository via the file tree below.",
         "Answer questions about code structure, imports, API design, technologies, logic, and any file or folder.",
         "Always reference exact file paths from the tree when answering.",

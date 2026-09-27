@@ -66,7 +66,7 @@ export default function CodeChat({ projectId, snapshotId, selectedEntity, files,
               </button>
             )}
             <button className="btn primary" onClick={() => openWith()}>
-              <Icon name="spark" /> Open Grepo
+              <Icon name="spark" /> Open GREPO
             </button>
           </div>
         </div>

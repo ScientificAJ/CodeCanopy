@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "fluid": true,
+  "installCommand": "npm ci --prefix frontend",
+  "buildCommand": "node scripts/build-vercel.mjs",
+  "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 300,
+      "includeFiles": "{backend/app/**,vendor/archify/**,.runtime/**}",
+      "excludeFiles": "{frontend/**,backend/tests/**,backend/.venv/**,bob_sessions/**,docs/**,contracts/**,tests/**,scripts/**,.git/**,.github/**,.vercel/**,.env*,**/__pycache__/**,**/.pytest_cache/**,**/node_modules/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/index.py" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}

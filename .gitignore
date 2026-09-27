@@ -42,3 +42,8 @@ Grepo_PRD_Complete_Package.zip
 # Local browser verification artifacts
 frontend/test-results/
 frontend/playwright-report/
+.vercel
+.env*
+
+# Generated deployment renderer runtime; never commit binaries or credentials.
+.runtime/

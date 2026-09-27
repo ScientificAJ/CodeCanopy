@@ -132,7 +132,13 @@ def _import(run, workspace, archive, name, github_url, ref):
             run.snapshot_id = snapshot.id
             run.result_snapshot_id = snapshot.id
             run.diagnostics = [RunDiagnostic.model_validate(d) for d in _read_json(_v1_root() / snapshot.id / 'diagnostics.json')]
-            run.status = RunStatus.PARTIAL if run.diagnostics else RunStatus.COMPLETED
+            # A diagnostic is not the same as a failure. A binary file or a file
+            # above the parse budget still imports in full: the source is
+            # readable, only its syntax could not be extracted. Labelling the
+            # whole run PARTIAL for those means a repo of screenshots and a repo
+            # with a genuinely broken import look identical in the UI.
+            degraded = [d for d in run.diagnostics if d.severity == 'error']
+            run.status = RunStatus.PARTIAL if degraded else RunStatus.COMPLETED
             run.stage = RunStage.INVENTORY
             run.stage_progress = 1
             run.event_sequence += 1

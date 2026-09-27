@@ -27,11 +27,15 @@ Anything it cannot prove is reported as unproven, with the reason.
 Every capture above is the live application running against
 `ScientificAJ/CodeCanopy`, this repository, at revision `54b5267`.
 
-**The "Partial import" badge in those captures is not a failure.** It means the
-run recorded diagnostics, and 49 of the 51 on this repository are the Bob panel
-screenshots under `bob_sessions/`, which are binary PNGs and therefore carry
-metadata only. Two files exceeded the parse resource budget and remain
-browsable as text. The tool says so rather than hiding it.
+**Those captures were taken before a status bug was fixed, and they show a
+"Partial import" badge that should not have appeared.** The rule was that any
+diagnostic at all marked the whole run partial, so the 49 Bob panel PNGs under
+`bob_sessions/`, which are binary and carry no syntax to extract, were enough to
+label a 832-file repository as degraded. It now imports as `completed`. A run is
+only `partial` when something of severity `error` was recorded, which in
+practice means the import was interrupted. The two files on this repository that
+exceed the parse budget still disclose it individually in the diagnostics list,
+and their text stays browsable, but they no longer make the import look broken.
 
 The same view on a well known library. `pallets/click`, 191 verified edges:
 
@@ -145,7 +149,7 @@ bounded parser, not a failure.
 | Parsing | `tree-sitter` + `tree-sitter-language-pack` | Concrete grammars give real AST nodes. Regex cannot tell an import from a string that looks like one |
 | Frontend | React 19 + TypeScript + Vite 6 | Strict types generated from the PRD contracts, so a payload change breaks the build rather than the UI |
 | Routing | React Router 7 | Slot-per-feature registry; each feature registers itself and mounts independently |
-| Tests | pytest (142) + Vitest (38) + Testing Library | The verifier table is reproducible, not asserted |
+| Tests | pytest (149) + Vitest (38) + Testing Library | The verifier table is reproducible, not asserted |
 | AI (optional) | Groq, server-side only | The one hosted dependency, and only the chat module needs it |
 
 Languages parsed at import: Python, JavaScript, TypeScript/TSX, Java, C#, C, C++,
@@ -197,7 +201,7 @@ CodeCanopy/
 │   │   ├── models/
 │   │   ├── rendering/                  pinned Archify compile
 │   │   └── core/
-│   ├── tests/                          142 passing
+│   ├── tests/                          149 passing
 │   └── scripts/
 │       ├── demo_verifier.py            reproduces the attack table
 │       └── stress_test.py              import cost harness

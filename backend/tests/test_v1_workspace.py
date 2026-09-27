@@ -48,7 +48,13 @@ def test_inventory_source_identity_policy_and_session(client):
     assert snapshot['source']['archive_digest'] == hashlib.sha256(archive).hexdigest()
     records = {f['path']: f for f in client.get(path + '/files').json()['files']}
     caps = client.get(path + '/capabilities').json()
-    assert run['status'] == 'partial' and caps['parsed_count'] == 1
+    # 'broken.py' fails syntax extraction and 'image.png' is not text, but both
+    # still import: the source stays browsable and the snapshot is whole. Only a
+    # severity='error' diagnostic, meaning an interrupted import, makes a run
+    # partial. parsed_count stays 1 because only src/app.py yields an AST.
+    assert run['status'] == 'completed' and caps['parsed_count'] == 1
+    assert {d['severity'] for d in run['diagnostics']} <= {'warning'}
+    assert any(d['file_path'] == 'broken.py' for d in run['diagnostics'])
     assert records['.env']['excluded']
     assert client.get(path + '/source/' + records['.env']['id']).status_code == 403
     assert client.get(path + '/source/' + records['image.png']['id']).status_code == 415

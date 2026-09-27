@@ -17,3 +17,6 @@ v1_router.include_router(session_router)
 
 from app.api.v1.ask import router as ask_router
 v1_router.include_router(ask_router)
+
+from app.api.v1.dependencies import router as dependencies_router
+v1_router.include_router(dependencies_router)

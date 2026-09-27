@@ -7,10 +7,10 @@ under `backend/app/features` are preserved.
 
 ## Actual mount points
 
-| Slot ID | Mounted by | Payload / future backend endpoint |
+| Slot ID | Mounted by | Payload / backend endpoint |
 | --- | --- | --- |
 | `summaries.context-panel` | `frontend/src/pages/workspace/WorkspaceLayout.tsx` | `SummaryPayload`; `GET …/{snapshot}/summaries` |
-| `dependencies.workspace` | `…/DependenciesPage.tsx` | `DependencyOverlay`; `GET …/{snapshot}/dependencies` |
+| `dependencies.workspace` | `…/DependenciesPage.tsx` | `DependencyResult`; connected `GET …/{snapshot}/dependencies` |
 | `map.overlay` | `…/MapPage.tsx` when registered | `DependencyOverlay`; same graph/evidence contract; inspector region below the structural map |
 | `reuse.findings` | `…/OpportunitiesPage.tsx`, route `/opportunities/reuse` | `ReusableFunctionResult`; `GET …/{snapshot}/findings/reuse` |
 | `duplicates.compare` | `…/OpportunitiesPage.tsx`, route `/opportunities/duplicates` | `DuplicateDetectionResult`; `GET …/{snapshot}/findings/duplicates` |
@@ -22,7 +22,7 @@ under `backend/app/features` are preserved.
 All mounts use `components/slots/SlotMount.tsx`. Unregistered or explicitly
 unavailable features render `Unavailable`; they do not fetch anything. The
 unimplemented v1 slots return 501 with `IntegrationSlotResponse` and
-`NOT_CONNECTED`. Reuse, duplicate and potentially-unused findings are connected and
+`NOT_CONNECTED`. Dependencies, reuse, duplicate and potentially-unused findings are connected and
 return snapshot-scoped analysis results. Do not return 200 with dummy findings
 or an empty successful analysis.
 
@@ -71,24 +71,26 @@ or an empty successful analysis.
    go through `snapshot_service.read_source_lines`; never search legacy project
    folders or open arbitrary caller-supplied paths.
 
-Registration shape, to use only after your implementation exists:
+Registration shape, as used by the dependency feature:
 
 ```tsx
 import { registerFeature } from '../../contexts/FeatureContracts'
 import { request, snapshotPath } from '../../services/v1/api'
-import type { DependencyOverlay } from '../../contexts/FeatureContracts'
-import { DependencyInspector } from './DependencyInspector'
+import type { DependencyResult } from './types'
+import { DependencyExplorer } from './DependencyExplorer'
 
 registerFeature('dependencies.workspace', {
-  Component: DependencyInspector,
-  load: (context, signal) => request<DependencyOverlay>(
+  Component: DependencyExplorer,
+  load: (context, signal) => request<DependencyResult>(
     snapshotPath(context.projectId, context.snapshotId) + '/dependencies',
     { signal },
   ),
 })
 ```
 
-The same payload adapter can register an inspector in `map.overlay`. It receives
+The dependency workspace uses `DependencyResult` with function nodes; see
+[dependency analysis](docs/dependency-analysis.md). A future `map.overlay` adapter
+must project its data into the separate `DependencyOverlay` contract. It receives
 canonical visible graph IDs and full inventory context. Semantic relations are
 not merged into the structural diagram automatically: the adapter is the
 explicit boundary for a future validated projection, not an authorization to

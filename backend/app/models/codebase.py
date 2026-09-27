@@ -38,6 +38,7 @@ class File(BaseModel):
     classes: list[Class] = Field(default_factory=list)
     imports: list[str] = Field(default_factory=list)
     call_sites: list[CallSite] = Field(default_factory=list)
+    dependency_syntax: dict | None = Field(default=None, exclude=True)
     references: list[str] = Field(default_factory=list, exclude=True)
 
 

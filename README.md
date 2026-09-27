@@ -7,10 +7,12 @@ then connects a searchable file tree, an interactive structure map, and bounded
 source previews. Organize your view with labels and virtual groups, and export
 that view as an interactive, offline HTML file.
 
-This is the **structure visualization and shared UI slice**. AI summaries,
-dependency/impact analysis, reuse, duplicates, unused-code findings, Ask,
-proposals and generated documents have intentional extension slots. Those
-engines are not implemented. No model credentials or AI calls are needed.
+The workspace includes a [dependency explorer](docs/dependency-analysis.md) for
+Python and JavaScript/TypeScript file imports and function calls, with source
+links, cycle detection, and potential change impact. Dependency analysis runs
+locally without model credentials. Reuse, duplicate/unused findings and Ask have
+separate connected modules; AI summaries, proposals and generated documents remain
+extension slots.
 
 ## Run locally
 
@@ -117,6 +119,7 @@ All new behavior is under `/api/v1`:
 | `GET …/snapshots/{s}` | Immutable revision and expiry |
 | `GET …/{s}/files`, `/entities`, `/capabilities` | Inventory and honest coverage |
 | `GET …/{s}/source/{file_id}` | Validated bounded line ranges |
+| `GET …/{s}/dependencies` | Static file/function connections, evidence and coverage |
 | `GET …/{s}/graph` | Bounded observed containment graph |
 | `GET/PATCH …/{s}/view` | View-only preferences |
 | `POST …/{s}/map` | Validated Archify HTML, graph, hashes and receipt |

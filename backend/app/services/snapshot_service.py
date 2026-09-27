@@ -204,7 +204,7 @@ def build_capability_report(snapshot_id: str) -> CapabilityReport:
         elif rec.is_text and not syntax:
             limitations.append('This file has no successful configured syntax extraction; function findings do not include it.')
         files.append(FileCapability(file_id=rec.id, path=rec.path, language=rec.language, level=level,
-                                    syntax_extraction=syntax, reference_resolution=False, summary_eligible=False,
+                                    syntax_extraction=syntax, reference_resolution=bool(parsed.get(rec.id, {}).get('dependency_syntax')), summary_eligible=False,
                                     parser_name=parser_name, limitations=limitations))
     return CapabilityReport(snapshot_id=snapshot_id, files=files,
         parsed_count=sum(f.syntax_extraction for f in files), text_only_count=sum(f.level == 'text_only' for f in files),
@@ -212,7 +212,7 @@ def build_capability_report(snapshot_id: str) -> CapabilityReport:
         limitations=[
             'Syntax extraction is bounded to 1 MiB per file.',
             'Function findings support Python, JavaScript, TypeScript/TSX, Go, Rust, Java, Kotlin, C/C++, C#, Ruby, PHP, Bash and SQL. Other languages remain text-only.',
-            'Call references are name-based and cannot resolve imports, dynamic dispatch, reflection or framework registration.',
+            'Dependency analysis resolves a conservative subset of Python and JavaScript/TypeScript static imports and calls. Dynamic dispatch, reflection and framework registration remain unresolved.',
             'AI semantic duplicate scoring runs only when a backend provider is configured.',
         ])
 

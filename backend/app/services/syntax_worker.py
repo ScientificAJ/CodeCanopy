@@ -24,7 +24,10 @@ if __name__ == '__main__':
     else:
         result = TreeSitterAnalyzer().analyze(payload['text'], payload['path'], language, payload['size'])
         parser_name = 'tree-sitter'
+    from app.analyzers.dependency_syntax import extract_dependencies
+    result.dependency_syntax = extract_dependencies(payload['text'], payload['path'], language)
     serialized = result.model_dump()
+    serialized['dependency_syntax'] = result.dependency_syntax
     serialized['parser'] = parser_name
     serialized['references'] = result.references
     for function_data, function in zip(serialized['functions'], result.functions):

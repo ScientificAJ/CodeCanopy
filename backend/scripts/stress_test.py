@@ -3,6 +3,8 @@
 Run from the backend directory with the venv python. Prints one JSON line per
 stage so a long import is visible rather than silent.
 """
+from __future__ import annotations
+
 import asyncio
 import json
 import os
@@ -12,9 +14,12 @@ import sys
 import tempfile
 import time
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(ROOT / '.env')
 
 SKIP_DIRS = {'.git', 'node_modules', 'dist', '.next', 'build', 'coverage', '.turbo'}
 

@@ -2,8 +2,12 @@
 
 Task folders follow the numbered, descriptive layout established by JAE: a
 `session-summary.md` alongside the available transcript and screenshots.
-Folder numbers are index positions; the original task IDs and screenshot
-filenames are preserved.
+Folder numbers are index positions; the original task IDs are preserved.
+
+Panel screenshots follow the naming convention in the hackathon guide —
+`team_taskNN_description_summary.png` — so a reviewer can identify a task
+without opening it. The task transcripts keep their original exported
+filenames.
 
 | Folder | Contributor | Task / evidence |
 | --- | --- | --- |
@@ -29,7 +33,8 @@ Bobcoin figures are read from each task's own summary panel, not estimated.
 | `43a21cfe5525f4493c6c6e6bf29c5605` | Change-impact correction for folder and root subjects | 2.02 |
 | `40a1564f2628dad5e9d0e678e46663c8` | Dependency target-existence guard | 1.51 |
 | `a81ad5b9d10223df4ea559efdeadb608` | Ask response rendering fix | 5.50 |
-| | **Total** | **35.08** |
+| `84f1cdb8943d28e56aa8050a22464bb0` | Ask slot greeting and frontend wiring | 4.80 |
+| | **Total** | **39.88** |
 
 Context usage across those panels ranged from 13% to 41% of the 270k budget,
 so the work was scoped to fit rather than run to the limit. The four

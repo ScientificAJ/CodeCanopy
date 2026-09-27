@@ -17,6 +17,20 @@ computes claims from an AST walk, cites the exact line each one came from, and
 then re-reads that line through the snapshot service before showing it to you.
 Anything it cannot prove is reported as unproven, with the reason.
 
+## Watch the demo
+
+A two-minute recorded walkthrough of importing an IBM repository, exploring its
+structure and source, tracing dependencies, and creating cited AI answers,
+proposals, and documentation.
+
+[![GREPO product demo](docs/demo/GREPO-Poster.png)](https://github.com/ScientificAJ/Grepo/releases/download/demo-video-v1/GREPO-Demo.mp4)
+
+[Download the full-quality demo](https://github.com/ScientificAJ/Grepo/releases/download/demo-video-v1/GREPO-Demo.mp4)
+· **1:58 · 1080p · Background music, no narration**
+
+[Music attribution and publishing notes](docs/demo/Credits-and-publishing.txt).
+The recording shows the local demo workspace on September 27, 2026.
+
 ## What it looks like
 
 | | |

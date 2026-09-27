@@ -1,0 +1,16 @@
+GREPO — Product Demo
+1920 x 1080 • 30 fps • 1 minute 58 seconds
+
+Workflow: Import → Overview → Architecture → Source → Dependencies → Reusable code → Duplicate and potentially unused code → AI answer with citations → Proposal → Documentation.
+
+Background music only, no narration.
+
+Paste the following music attribution into the video description when publishing:
+
+“Cipher” Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+https://creativecommons.org/licenses/by/4.0/
+Source: https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100844
+Edited for duration, volume and fades in the GREPO demo.
+
+The video includes source recordings edited in Remotion and opening/closing motion graphics authored in Hyperframes. Screen footage has been cropped and edited to remove browser/desktop chrome, pauses, failed attempts and rate-limit retries. Successful feature results remain.

@@ -15,6 +15,8 @@ import shutil
 import tempfile
 import threading
 import zipfile
+from collections import OrderedDict
+from urllib.parse import urlparse
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
 
@@ -24,8 +26,9 @@ _PREFIX = 'grepo/v1/'
 _ID = re.compile(r'^[a-f0-9]{32}$')
 _WORKSPACE = re.compile(r'^[a-f0-9]{64}$')
 _hydration_locks = [threading.Lock() for _ in range(32)]
-MAX_BUNDLE_BYTES = 512 * 1024 * 1024
-MAX_EXPANDED_BYTES = 1024 * 1024 * 1024
+MAX_BUNDLE_BYTES = 350 * 1024 * 1024
+MAX_UPLOAD_BYTES = 1024 * 1024 * 1024
+MAX_EXPANDED_BYTES = 350 * 1024 * 1024
 MAX_BUNDLE_ENTRIES = 200_010
 
 
@@ -165,6 +168,15 @@ def load_run(workspace: str, run_id: str) -> dict | None:
     return value
 
 
+def request_cancel(workspace: str, run_id: str) -> None:
+    # Independent monotonic marker cannot be undone by an older progress writer.
+    _put(_item(workspace, 'cancellations', run_id), b'{"cancel_requested":true}')
+
+
+def cancellation_requested(workspace: str, run_id: str) -> bool:
+    return _read_json(_item(workspace, 'cancellations', run_id)) is not None
+
+
 def load_view(snapshot_id: str) -> dict | None:
     return _read_json(_snapshot(snapshot_id, 'view.json'))
 
@@ -181,7 +193,11 @@ def publish_snapshot(directory: Path, snapshot: dict, project: dict, workspace: 
     project_path = _item(workspace, 'projects', project['id'])
     archive_path = _snapshot(sid, 'source.zip')
     descriptor_path = _snapshot(sid, 'snapshot.json')
-    with tempfile.TemporaryFile() as bundle:
+    # Keep the compressed bundle in memory: hosted /tmp also contains the
+    # retained source, and writing a second archive can exceed its disk budget.
+    if sum(path.stat().st_size for path in directory.rglob('*') if path.is_file()) > MAX_EXPANDED_BYTES:
+        raise WorkspaceError('SNAPSHOT_TOO_LARGE', 'Analyzed repository exceeds the hosted storage limit.', 413)
+    with io.BytesIO() as bundle:
         with zipfile.ZipFile(bundle, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as archive:
             for path in sorted(directory.rglob('*')):
                 if path.is_symlink():
@@ -199,8 +215,13 @@ def publish_snapshot(directory: Path, snapshot: dict, project: dict, workspace: 
         descriptor = {'snapshot': snapshot, 'project': project, 'workspace_id': workspace,
                       'archive_sha256': digest}
         try:
+            run_id = snapshot.get('analysis_run_id')
+            if run_id and cancellation_requested(workspace, run_id):
+                raise WorkspaceError('CANCELLED', 'Import cancelled.', 409)
             _put(archive_path, bundle, overwrite=False, content_type='application/zip')
             _put(descriptor_path, _json_bytes(descriptor), overwrite=False)
+            if run_id and cancellation_requested(workspace, run_id):
+                raise WorkspaceError('CANCELLED', 'Import cancelled.', 409)
             _put(project_path, _json_bytes({**project, 'workspace_id': workspace}), overwrite=False)
         except Exception:
             # The project pointer must not survive a failed publication.
@@ -304,6 +325,130 @@ def purge_expired() -> int:
             if expires + timedelta(days=1) <= now:
                 _delete([item.pathname, _item(descriptor['workspace_id'], 'projects', snapshot['project_id'])])
     for item in _list(f'{_PREFIX}workspaces/'):
-        if '/runs/' in item.pathname and item.uploaded_at + timedelta(days=2) <= now:
+        if any(kind in item.pathname for kind in ('/runs/', '/cancellations/')) and item.uploaded_at + timedelta(days=2) <= now:
+            _delete([item.pathname])
+    for item in _list('uploads/'):
+        if item.uploaded_at + timedelta(days=1) <= now:
             _delete([item.pathname])
     return deleted
+
+
+class RemoteBlobArchive:
+    """A verified private upload whose ZIP bytes are fetched by range, not staged."""
+    def __init__(self, pathname: str, workspace: str, staging: Path):
+        prefix = f'uploads/{_workspace(workspace)}/'
+        if not pathname.startswith(prefix) or not re.fullmatch(r'[a-f0-9]{32}\.zip', pathname[len(prefix):]):
+            raise WorkspaceError('NOT_FOUND', 'Uploaded archive not found in this workspace.', 404)
+        self.pathname = pathname
+        self.parent = staging
+
+    def open(self, mode='rb'):
+        if mode != 'rb':
+            raise ValueError('Uploaded archives are read-only.')
+        try:
+            metadata = _sdk().head(self.pathname)
+        except Exception:
+            raise WorkspaceError('NOT_FOUND', 'Uploaded archive is unavailable. Upload it again.', 404) from None
+        if metadata.pathname != self.pathname:
+            raise WorkspaceError('SOURCE_INTEGRITY', 'Uploaded archive identity does not match.', 409)
+        if metadata.size > MAX_UPLOAD_BYTES:
+            raise WorkspaceError('UPLOAD_TOO_LARGE', 'The ZIP upload exceeds the 1 GiB limit.', 413)
+        if metadata.size <= 0:
+            raise WorkspaceError('INVALID_ARCHIVE', 'The uploaded ZIP is empty.', 400)
+        return _BlobRangeReader(metadata.url, metadata.size)
+
+    def discard(self):
+        _delete([self.pathname])
+
+
+class _BlobRangeReader(io.RawIOBase):
+    """Bounded seekable reader for ZipFile's directory and selected members."""
+    BLOCK = 1024 * 1024
+    MAX_READ = 64 * 1024 * 1024
+
+    def __init__(self, url: str, size: int):
+        import httpx
+        parsed = urlparse(url)
+        if (parsed.scheme != 'https' or not parsed.hostname
+                or not parsed.hostname.endswith('.private.blob.vercel-storage.com')
+                or parsed.username or parsed.password or parsed.port not in (None, 443)):
+            raise WorkspaceError('SOURCE_INTEGRITY', 'Uploaded archive location is invalid.', 409)
+        token = os.environ.get('BLOB_READ_WRITE_TOKEN')
+        if not token:
+            raise WorkspaceError('STORAGE_UNAVAILABLE', 'Private upload storage is not configured.', 503)
+        self.url, self.size, self.position = url, size, 0
+        self.cache = OrderedDict()
+        self.client = httpx.Client(headers={'Authorization': f'Bearer {token}'},
+                                   timeout=30, follow_redirects=False)
+        self.etag = None
+
+    def readable(self):
+        return True
+
+    def seekable(self):
+        return True
+
+    def tell(self):
+        return self.position
+
+    def seek(self, offset, whence=io.SEEK_SET):
+        position = offset + (0 if whence == io.SEEK_SET else self.position if whence == io.SEEK_CUR else self.size)
+        if whence not in (io.SEEK_SET, io.SEEK_CUR, io.SEEK_END) or position < 0:
+            raise ValueError('Invalid archive seek.')
+        self.position = position
+        return position
+
+    def _block(self, index):
+        if index in self.cache:
+            self.cache.move_to_end(index)
+            return self.cache[index]
+        start = index * self.BLOCK
+        end = min(start + self.BLOCK, self.size) - 1
+        headers = {'Range': f'bytes={start}-{end}'}
+        if self.etag:
+            headers['If-Match'] = self.etag
+        try:
+            with self.client.stream('GET', self.url, headers=headers) as response:
+                if response.status_code != 206 or response.headers.get('Content-Range') != f'bytes {start}-{end}/{self.size}':
+                    raise WorkspaceError('STORAGE_UNAVAILABLE', 'Storage could not read the requested archive range.', 503)
+                etag = response.headers.get('ETag')
+                if self.etag and etag != self.etag:
+                    raise WorkspaceError('SOURCE_INTEGRITY', 'Uploaded archive changed during import.', 409)
+                self.etag = etag
+                content = bytearray()
+                for chunk in response.iter_bytes():
+                    content.extend(chunk)
+                    if len(content) > end - start + 1:
+                        raise WorkspaceError('SOURCE_INTEGRITY', 'Archive range exceeds its declared size.', 409)
+                if len(content) != end - start + 1:
+                    raise WorkspaceError('SOURCE_INTEGRITY', 'Archive range is incomplete.', 409)
+        except WorkspaceError:
+            raise
+        except Exception:
+            raise WorkspaceError('STORAGE_UNAVAILABLE', 'Uploaded archive could not be read. Please retry.', 503) from None
+        self.cache[index] = bytes(content)
+        while len(self.cache) > 4:
+            self.cache.popitem(last=False)
+        return self.cache[index]
+
+    def read(self, size=-1):
+        if self.closed:
+            raise ValueError('Archive stream is closed.')
+        size = max(0, min(self.size - self.position, self.size if size is None or size < 0 else size))
+        if size > self.MAX_READ:
+            raise WorkspaceError('INVALID_ARCHIVE', 'The ZIP directory exceeds the supported analysis size.', 413)
+        chunks = []
+        while size:
+            index, offset = divmod(self.position, self.BLOCK)
+            block = self._block(index)
+            count = min(size, len(block) - offset)
+            chunks.append(block[offset:offset + count])
+            self.position += count
+            size -= count
+        return b''.join(chunks)
+
+    def close(self):
+        if not self.closed and hasattr(self, 'client'):
+            self.client.close()
+            self.cache.clear()
+        super().close()

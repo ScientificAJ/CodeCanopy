@@ -13,6 +13,7 @@ from app.analyzers.tree_sitter_analyzer import parser_language
 from app.models.v1.snapshot import FileRecord, RunDiagnostic
 from app.services.project_archive import IGNORED_DIRECTORIES
 from app.services.syntax_process import SyntaxPool
+from app.services import cloud_storage
 
 LANGUAGES = {
     '.py': 'python', '.js': 'javascript', '.jsx': 'javascript', '.mjs': 'javascript',
@@ -95,7 +96,12 @@ def build_inventory(snapshot_id: str, source: Path, destination: Path, check_can
                 continue
             target = destination / path
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(data)
+            if cloud_storage.enabled():
+                # The import owns this staging tree; moving avoids retaining two
+                # complete copies in the hosted function's bounded /tmp space.
+                file.replace(target)
+            else:
+                target.write_bytes(data)
             target.chmod(0o444)
             if text is None:
                 diagnostics.append(RunDiagnostic(file_path=path, stage='inventory', message='Binary or unsupported text encoding; metadata only.'))

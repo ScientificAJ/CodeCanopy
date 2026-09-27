@@ -13,8 +13,14 @@ from app.services.github_import import parse_github_url, GitHubImportError
 from app.services.project_archive import _save_upload, ProjectUploadError, ProjectUploadTooLargeError
 from app.services.run_service import reserve_run, submit_import, abandon_run, get_run, cancel_run
 from app.services.v1_errors import WorkspaceError
+from app.services import cloud_storage
 
 router = APIRouter(tags=['v1-imports'])
+
+
+class BlobImportRequest(BaseModel):
+    pathname: str = Field(max_length=200)
+    name: str = Field(default='Repository.zip', max_length=200)
 
 
 class GitHubImportRequest(BaseModel):
@@ -68,3 +74,31 @@ def read_run(run_id: str, workspace: str = Depends(workspace_session)):
 @router.post('/runs/{run_id}/cancel', response_model=AnalysisRun, status_code=202)
 def cancel_import(run_id: str, workspace: str = Depends(workspace_session)):
     return cancel_run(run_id, workspace)
+
+
+@router.post('/imports/blob', response_model=ImportAccepted, status_code=202)
+def import_blob(request: BlobImportRequest, workspace: str = Depends(workspace_session)):
+    if not cloud_storage.enabled():
+        raise WorkspaceError('NOT_FOUND', 'Direct upload is not available in this environment.', 404)
+    staging = Path(tempfile.mkdtemp(prefix='codecanopy-upload-'))
+    uploaded = None
+    try:
+        uploaded = cloud_storage.RemoteBlobArchive(request.pathname, workspace, staging)
+        # Verify the trusted stored size before reserving import capacity.
+        with uploaded.open('rb'):
+            pass
+        run = reserve_run(workspace)
+        name = request.name.replace('\\', '/').rsplit('/', 1)[-1]
+        if name.lower().endswith('.zip'):
+            name = name[:-4]
+        submit_import(run, workspace, archive=uploaded, name=' '.join(name.split())[:100] or 'Repository')
+        return ImportAccepted(run_id=run.id, project_id=run.project_id)
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+        if uploaded is not None:
+            try:
+                uploaded.discard()
+            except WorkspaceError:
+                # Scheduled retention retries deletion without turning a
+                # successfully published import into a misleading failure.
+                pass

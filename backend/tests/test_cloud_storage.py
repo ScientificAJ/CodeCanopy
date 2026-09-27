@@ -143,3 +143,94 @@ def test_expiry_cleanup_removes_old_tombstone(hosted, tmp_path):
     descriptor['snapshot']['expires_at'] = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
     hosted.objects[key] = json.dumps(descriptor).encode()
     assert cloud.purge_expired() == 1 and hosted.objects == {}
+
+
+def test_cancellation_marker_survives_progress_writes(hosted):
+    run_id = '4' * 32
+    assert not cloud.cancellation_requested(WORKSPACE, run_id)
+    cloud.request_cancel(WORKSPACE, run_id)
+    cloud.request_cancel(WORKSPACE, run_id)
+    cloud.save_run(WORKSPACE, run_id, {'id': run_id, 'status': 'running'})
+    assert cloud.cancellation_requested(WORKSPACE, run_id)
+    assert not cloud.cancellation_requested(OTHER_WORKSPACE, run_id)
+
+
+def test_remote_upload_ownership_checked_before_access(hosted, tmp_path):
+    with pytest.raises(WorkspaceError) as error:
+        cloud.RemoteBlobArchive(f'uploads/{OTHER_WORKSPACE}/{"3" * 32}.zip', WORKSPACE, tmp_path)
+    assert error.value.status == 404
+    with pytest.raises(WorkspaceError):
+        cloud.RemoteBlobArchive(f'uploads/{WORKSPACE}/../elsewhere.zip', WORKSPACE, tmp_path)
+
+
+def test_range_reader_extracts_zip_without_downloading_ignored_payload(monkeypatch, tmp_path):
+    import httpx
+    import os
+    from app.services.project_archive import _validated_entries, _extract_entries
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_STORED) as zip_file:
+        zip_file.writestr('node_modules/large.bin', os.urandom(6 * 1024 * 1024))
+        zip_file.writestr('README.md', 'Only retained source is extracted.')
+    raw = archive.getvalue(); requests = []
+    def handle(request):
+        assert request.headers['Authorization'] == 'Bearer test-token'
+        start, end = map(int, request.headers['Range'].removeprefix('bytes=').split('-'))
+        requests.append((start, end))
+        return httpx.Response(206, headers={'Content-Range': f'bytes {start}-{end}/{len(raw)}', 'ETag': 'unchanged'}, content=raw[start:end + 1])
+    client = httpx.Client(transport=httpx.MockTransport(handle), headers={'Authorization': 'Bearer test-token'})
+    monkeypatch.setenv('BLOB_READ_WRITE_TOKEN', 'test-token')
+    monkeypatch.setattr(httpx, 'Client', lambda **kwargs: client)
+    with cloud._BlobRangeReader('https://example.private.blob.vercel-storage.com/file.zip', len(raw)) as reader:
+        with zipfile.ZipFile(reader) as zip_file:
+            _extract_entries(zip_file, _validated_entries(zip_file), tmp_path / 'retained')
+    assert (tmp_path / 'retained' / 'README.md').read_text() == 'Only retained source is extracted.'
+    assert not (tmp_path / 'retained' / 'node_modules').exists()
+    assert sum(end - start + 1 for start, end in requests) < 2 * 1024 * 1024
+
+
+def test_range_reader_rejects_server_ignoring_range(monkeypatch):
+    import httpx
+    client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, content=b'unbounded')))
+    monkeypatch.setenv('BLOB_READ_WRITE_TOKEN', 'test-token')
+    monkeypatch.setattr(httpx, 'Client', lambda **kwargs: client)
+    with cloud._BlobRangeReader('https://example.private.blob.vercel-storage.com/file.zip', 100) as reader:
+        with pytest.raises(WorkspaceError) as error:
+            reader.read(10)
+    assert error.value.status == 503
+
+
+def test_direct_upload_api_imports_and_removes_staged_blob(hosted, tmp_path, monkeypatch):
+    import hashlib
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.api.v1.session import COOKIE
+    with TestClient(app) as client:
+        assert client.post('/api/v1/session').status_code == 200
+        workspace = hashlib.sha256(client.cookies.get(COOKIE).encode()).hexdigest()
+        pathname = f'uploads/{workspace}/{"5" * 32}.zip'
+        payload = io.BytesIO()
+        with zipfile.ZipFile(payload, 'w') as archive:
+            archive.writestr('README.md', 'Remote repository')
+        raw = payload.getvalue()
+        hosted.objects[pathname] = raw
+        monkeypatch.setattr(hosted, 'head', lambda path: SimpleNamespace(pathname=path, size=len(raw), url='https://example.private.blob.vercel-storage.com/upload.zip'), raising=False)
+        monkeypatch.setattr(cloud, '_BlobRangeReader', lambda url, size: io.BytesIO(raw))
+        accepted = client.post('/api/v1/imports/blob', json={'pathname': pathname, 'name': 'remote.zip'})
+        assert accepted.status_code == 202, accepted.text
+        assert pathname not in hosted.objects
+        fresh(tmp_path, monkeypatch)
+        run = client.get('/api/v1/runs/' + accepted.json()['run_id'])
+        assert run.status_code == 200, run.text
+        assert run.json()['status'] in {'completed', 'partial'}, run.text
+        projects = client.get('/api/v1/projects').json()
+        assert len(projects) == 1 and projects[0]['name'] == 'remote'
+        snap = snapshots.authorized_snapshot(run.json()['project_id'], run.json()['result_snapshot_id'], workspace)
+        assert snap.source.archive_digest is None
+
+
+def test_direct_upload_size_is_checked_without_fetching_body(hosted, tmp_path, monkeypatch):
+    monkeypatch.setattr(hosted, 'head', lambda path: SimpleNamespace(pathname=path, size=1024**3 + 1), raising=False)
+    archive = cloud.RemoteBlobArchive(f'uploads/{WORKSPACE}/{"6" * 32}.zip', WORKSPACE, tmp_path)
+    with pytest.raises(WorkspaceError) as error:
+        archive.open()
+    assert error.value.status == 413 and hosted.reads == []

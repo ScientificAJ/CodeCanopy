@@ -1,7 +1,7 @@
 import type { HealthResponse, ProjectUploadResponse } from '../types/api'
 import type { File as CodebaseFile, Project } from '../types/codebase'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? '' : 'http://localhost:8000')
 
 async function apiError(response: Response): Promise<Error> {
   const payload: unknown = await response.json().catch(() => null)

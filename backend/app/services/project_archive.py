@@ -6,7 +6,7 @@ from pathlib import Path, PureWindowsPath
 
 from fastapi import UploadFile
 
-MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+MAX_UPLOAD_BYTES = 1024 * 1024 * 1024
 MAX_ARCHIVE_ENTRIES = 200_000
 MAX_PROJECT_FILES = 50_000
 MAX_FILE_BYTES = 25 * 1024 * 1024
@@ -140,14 +140,14 @@ def _validated_entries(archive: zipfile.ZipFile, check_cancel=lambda: None, *, s
 
 async def _save_upload(upload: UploadFile, archive_path: Path) -> None:
     if upload.size is not None and upload.size > MAX_UPLOAD_BYTES:
-        raise ProjectUploadTooLargeError("The ZIP upload exceeds the 50 MiB limit.")
+        raise ProjectUploadTooLargeError("The ZIP upload exceeds the 1 GiB limit.")
 
     size = 0
     with archive_path.open("xb") as destination:
         while chunk := await upload.read(CHUNK_SIZE):
             size += len(chunk)
             if size > MAX_UPLOAD_BYTES:
-                raise ProjectUploadTooLargeError("The ZIP upload exceeds the 50 MiB limit.")
+                raise ProjectUploadTooLargeError("The ZIP upload exceeds the 1 GiB limit.")
             destination.write(chunk)
 
 

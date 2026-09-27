@@ -1,6 +1,6 @@
 /** One authenticated, abortable API client for every v1 feature. */
 import type { AnalysisRun, CapabilityReport, DuplicateDetectionResult, FilePage, GitHubImportRequest, Graph, GraphEntity, ImportAccepted, MapArtifact, Snapshot, SourceSlice, UnusedDetectionResult, V1Project, ViewPreferences } from '../../types/v1'
-const base = `${import.meta.env.VITE_API_BASE_URL ?? `${window.location.protocol}//${window.location.hostname}:8000`}/api/v1`
+const base = `${import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? '' : `${window.location.protocol}//${window.location.hostname}:8000`)}/api/v1`
 export class ApiError extends Error {
   constructor(public readonly status: number, message: string, public readonly code?: string) { super(message); this.name = 'ApiError' }
 }

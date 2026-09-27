@@ -16,6 +16,7 @@ from app.services.inventory_service import entity_id
 from app.services.graph_service import build_structural_graph, inventory_entities
 from app.services.snapshot_service import _v1_root, _read_json, _write_json, get_snapshot
 from app.services.v1_errors import WorkspaceError
+from app.services import cloud_storage
 
 REPO = Path(__file__).resolve().parents[3]
 ARCHIFY_COMMIT = '9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993'
@@ -23,6 +24,9 @@ _render_capacity = threading.BoundedSemaphore(2)
 
 
 def get_preferences(snapshot_id: str) -> ViewPreferences:
+    if cloud_storage.enabled():
+        data = cloud_storage.load_view(snapshot_id)
+        return ViewPreferences.model_validate(data) if data is not None else ViewPreferences()
     path = _v1_root() / snapshot_id / 'view.json'
     return ViewPreferences.model_validate(_read_json(path)) if path.exists() else ViewPreferences()
 
@@ -41,6 +45,8 @@ def save_preferences(snapshot_id: str, preferences: ViewPreferences) -> ViewPref
     paths = {entity.path for entity in entities}
     if preferences.focus not in paths and preferences.focus not in group_ids:
         raise WorkspaceError('INVALID_VIEW', 'Focus must reference a directory or group in this snapshot.', 422)
+    if cloud_storage.enabled():
+        cloud_storage.save_view(snapshot_id, preferences.model_dump())
     _write_json(_v1_root() / snapshot_id / 'view.json', preferences.model_dump())
     return preferences
 

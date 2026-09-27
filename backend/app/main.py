@@ -43,7 +43,10 @@ app.include_router(api_router, prefix="/api")
 
 # V1 errors use the PRD envelope; the legacy routes retain their contracts.
 import uuid
+import os
+import secrets
 from fastapi import Request
+from app.services import cloud_storage
 from fastapi.responses import JSONResponse
 from app.services.v1_errors import WorkspaceError
 
@@ -58,6 +61,8 @@ async def workspace_error_handler(request: Request, error: WorkspaceError):
 
 @app.middleware('http')
 async def local_workspace_boundary(request: Request, call_next):
+    if cloud_storage.enabled() and request.url.path.startswith('/api/projects'):
+        return JSONResponse(status_code=404, content={'detail': 'Not found'})
     if request.url.path.startswith('/api/v1'):
         origin = request.headers.get('origin')
         allowed = {'http://localhost:5173', 'http://127.0.0.1:5173', str(request.base_url).rstrip('/')}
@@ -80,3 +85,16 @@ async def request_validation_handler(request: Request, error: RequestValidationE
         # Do not echo submitted values (URLs can accidentally contain credentials).
         return await workspace_error_handler(request, WorkspaceError('INVALID_REQUEST', 'One or more request fields are invalid.', 422))
     return await request_validation_exception_handler(request, error)
+
+
+@app.get('/api/internal/cleanup', include_in_schema=False)
+async def cleanup_hosted_workspaces(request: Request):
+    expected = os.environ.get('CRON_SECRET', '')
+    supplied = request.headers.get('authorization', '')
+    if not expected or not secrets.compare_digest(supplied, 'Bearer ' + expected):
+        return JSONResponse(status_code=401, content={'detail': 'Unauthorized'})
+    if not cloud_storage.enabled():
+        return {'deleted': 0}
+    deleted = await asyncio.to_thread(cloud_storage.purge_expired)
+    await asyncio.to_thread(purge_expired)
+    return {'deleted': deleted}

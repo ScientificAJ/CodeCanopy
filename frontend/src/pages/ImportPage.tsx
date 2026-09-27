@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { cancelRun, ensureSession, getRun, importGitHub, importZip, listProjects, listSnapshots } from '../services/v1/api'
 import { ImportLoader } from '../components/ImportLoader'
 import type { AnalysisRun } from '../types/v1'
+const maxZipMiB = 1024
 interface Recent {id: string; name: string; created: string; snapshot?: string; revision?: string; status: string}
 export default function ImportPage() {
   const navigate = useNavigate()
@@ -50,7 +51,7 @@ export default function ImportPage() {
   }, [runId,ready,navigate])
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setError(''); setRun(null)
-    if (source === 'zip' && (!file || !file.name.toLowerCase().endsWith('.zip') || file.size > 50 * 1024 * 1024)) {setError('Choose a ZIP archive up to 50 MiB.'); return}
+    if (source === 'zip' && (!file || !file.name.toLowerCase().endsWith('.zip') || file.size > maxZipMiB * 1024 * 1024)) {setError(`Choose a ZIP archive up to ${maxZipMiB} MiB. For larger repositories, use the GitHub URL.`); return}
     if (source === 'github') {
       try {const parsed = new URL(url.trim()); if (parsed.protocol !== 'https:' || parsed.hostname !== 'github.com' || parsed.username || parsed.password || !/^\/[^/]+\/[^/]+\/?$/.test(parsed.pathname)) throw new Error()} catch {setError('Enter a public GitHub repository URL: https://github.com/owner/repository.'); return}
     }
@@ -68,8 +69,8 @@ export default function ImportPage() {
       <h1>Find your way through the code.</h1><p className="import-intro">Import a repository. Explore its structure. Plan where to start.</p>
       <div className="import-card">{busy && <ImportLoader run={run} source={source} onCancel={runId ? () => {void cancelRun(runId).then(setRun).catch(e => setError(e.message))} : undefined}/>}<div hidden={busy}><div role="group" aria-label="Import source" className="source-switch"><button disabled={busy} aria-pressed={source === 'github'} onClick={() => setSource('github')}>Public GitHub</button><button disabled={busy} aria-pressed={source === 'zip'} onClick={() => setSource('zip')}>Upload ZIP</button></div>
       <form id="import-form" onSubmit={submit}>
-        {source === 'github' ? <><label htmlFor="repository-url">GitHub repository URL</label><input id="repository-url" type="url" required placeholder="https://github.com/owner/repository" value={url} disabled={busy} onChange={e => setUrl(e.target.value)}/><details className="import-advanced"><summary>Branch or tag (optional)</summary><label htmlFor="repository-ref">Branch, tag, or commit</label><input id="repository-ref" value={ref} maxLength={255} disabled={busy} placeholder="Repository default branch" onChange={e => setRef(e.target.value)}/><small>A branch or tag is resolved to an immutable commit before import.</small></details></> : <><label htmlFor="repository-zip">Repository ZIP archive</label><input id="repository-zip" type="file" accept=".zip,application/zip" required disabled={busy} onChange={e => setFile(e.target.files?.[0] ?? null)}/><p className="muted">Up to 50 MiB compressed. Source files are inspected without running their code.</p></>}
-        <p className="import-policy">Source is stored on this API server for up to 24 hours, accessible through this browser workspace. You can delete the import. Importing runs static analysis; it does not send source to an AI provider.</p>
+        {source === 'github' ? <><label htmlFor="repository-url">GitHub repository URL</label><input id="repository-url" type="url" required placeholder="https://github.com/owner/repository" value={url} disabled={busy} onChange={e => setUrl(e.target.value)}/><details className="import-advanced"><summary>Branch or tag (optional)</summary><label htmlFor="repository-ref">Branch, tag, or commit</label><input id="repository-ref" value={ref} maxLength={255} disabled={busy} placeholder="Repository default branch" onChange={e => setRef(e.target.value)}/><small>A branch or tag is resolved to an immutable commit before import.</small></details></> : <><label htmlFor="repository-zip">Repository ZIP archive</label><input id="repository-zip" type="file" accept=".zip,application/zip" required disabled={busy} onChange={e => setFile(e.target.files?.[0] ?? null)}/><p className="muted">Up to {maxZipMiB} MiB compressed. Source files are inspected without running their code.</p></>}
+        <p className="import-policy">Source is stored privately for this browser workspace. Access expires after 24 hours; expired data is removed during cleanup. You can delete the import. Importing runs static analysis; it does not send source to an AI provider.</p>
         <details className="import-advanced"><summary>What is excluded?</summary><p>Known credential files, private keys, and generated dependency/build directories are excluded. This is not a complete secret detector. Review your archive before uploading it.</p></details>
         <button className="btn primary import-submit" type="submit" disabled={!ready || busy || (source === 'github' ? !url.trim() : !file)}>{busy ? 'Importing…' : 'Explore repository'}</button>
       </form></div>

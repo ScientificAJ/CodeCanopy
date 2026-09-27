@@ -25,6 +25,10 @@ displayed product name is **GREPO**, and the repository is
 [`ScientificAJ/CodeCanopy`](https://github.com/ScientificAJ/CodeCanopy).
 
 The new summaries describe the existing evidence; they are not additional BOB
-session exports. Browser screenshots and test receipts are supporting product
+session exports. Arjun's task folders also contain `bob_task_2026-09-26_*.md`
+conversations reconstructed from the archived messages, checked against the
+local BOB database, and formatted like Jae's Markdown exports. The original
+JSON records and full text transcripts retain system context and tool outputs.
+Browser screenshots and test receipts are supporting product
 verification, separate from BOB task/usage screenshots. New E2E runs write to
 `local-verification/` so they do not overwrite the archived evidence.

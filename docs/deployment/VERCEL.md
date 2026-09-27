@@ -17,7 +17,7 @@ Deploy from the repository root with the Vercel CLI. The production build must p
 
 ## Retention and limits
 
-Snapshot access expires after 24 hours. The daily authenticated cleanup removes expired source bundles and view data; metadata tombstones remain briefly so expired links return an honest expiry response. Deleting an import revokes the workspace project pointer before removing its durable source.
+Snapshot access expires after 24 hours. The weekly authenticated cleanup removes expired source bundles and view data; metadata tombstones remain briefly so expired links return an honest expiry response. Deleting an import revokes the workspace project pointer before removing its durable source.
 
 The hosted upload path sends ZIP archives directly from the browser to private Blob storage using a short-lived, workspace-scoped upload token. Its archive allowance is **1 GiB (1,024 MiB)**. The long-lived storage token stays on the server. The importer reads bounded ZIP byte ranges rather than copying a whole large archive onto the function's limited scratch disk.
 

@@ -16,6 +16,8 @@ checked line references. AI chat, proposal drafts and generated documentation
 use retrieved source excerpts and expose their citations and coverage limits;
 review those drafts against the source before relying on them.
 
+**[Open the live demo](https://grepo-two.vercel.app)** · [Hosted setup and limits](docs/deployment/VERCEL.md)
+
 ## Watch the demo
 
 A two-minute recorded walkthrough of importing an IBM repository, exploring its
@@ -363,7 +365,7 @@ roles or semantic edges are added.
 ## Storage and bounds
 
 - GitHub: 250 MiB streamed archive download; the extraction limits below still apply.
-- ZIP: 50 MiB upload, 25 MiB per file, 250 MiB extracted, 200,000 raw entries
+- ZIP: 1 GiB upload, 25 MiB per file, 250 MiB extracted, 200,000 raw entries
   and 50,000 retained files. Traversal, unsafe Windows names, special files and
   unsupported compression are rejected. Generated/dependency directories are
   skipped. v1 imports skip symbolic links with a visible warning, without
@@ -374,13 +376,15 @@ roles or semantic edges are added.
   repository installation scripts run.
 - New workspace data: `CODECANOPY_SNAPSHOTS_DIR`, default
   `<system-temp>/codecanopy/snapshots`. The HttpOnly SameSite=Strict browser
-  cookie scopes v1 access. This is a local, single-process workspace model,
-  not a multi-user production identity service. Clearing the cookie loses
-  access to that workspace.
-- Source access expires after 24 hours. Cleanup runs every minute while the API
-  is running and at startup; source/render bytes are removed then. Brief
-  metadata tombstones and terminal runs are removed after two days. Use
-  Snapshot storage → Delete imported repository for immediate deletion.
+  cookie scopes v1 access. The hosted deployment stores workspace pointers and
+  immutable snapshots in private Vercel Blob; local development uses the
+  filesystem. These anonymous browser workspaces are not user accounts.
+  Clearing the cookie loses access to that workspace.
+- Source access expires after 24 hours. Hosted cleanup runs weekly, on Sunday
+  at 03:00 UTC, and expired source can also be removed on access. Local cleanup
+  runs every minute while the API is running and at startup. Brief metadata
+  tombstones remain for expiry responses. Use Snapshot storage → Delete imported
+  repository for immediate deletion.
 - Known secret filenames and private-key material are excluded. This is **not
   complete secret detection**; inspect archives before importing sensitive data.
 - Valid UTF-8 text of any language is browsable; Python also honors encoding
@@ -393,7 +397,9 @@ roles or semantic edges are added.
 - Source previews verify the full content hash and return at most 2,000 lines
   and 256 KiB. UI pages use 200 lines. Two imports run concurrently with four
   admitted jobs; processing has a three-minute deadline. Run status is durable;
-  interrupted runs report failure after a server restart. Run **one** API worker.
+  local interrupted runs report failure after a server restart. Run **one** local
+  API worker. Hosted imports stay within their request lifetime, persist their
+  results, and report stale interrupted runs after six minutes.
 - Semantic duplicate scoring uses complete function bodies: up to eight pairs,
   12,000 characters per function, and 48,000 characters in total. Larger functions
   retain their structural results and an explicit semantic-coverage limitation.
@@ -412,33 +418,29 @@ roles or semantic edges are added.
 The legacy `/api/projects` API keeps its original storage, contracts and Python
 analysis behavior (`CODECANOPY_PROJECTS_DIR`, default system-temp/codecanopy/projects).
 Its original routes are not the session-scoped v1 service; keep this development
-server on loopback. The v1 UI does not load old legacy uploads or old-name local
+server on loopback. Legacy upload routes are disabled on Vercel. The v1 UI does not load old legacy uploads or old-name local
 workspace sessions automatically.
 
 ## Deployment and infrastructure
 
-**There is none checked in, deliberately.** No Dockerfile, no compose file, no
-CI workflow, no cloud config. The reason is specific rather than aspirational:
+The public demo runs at **https://grepo-two.vercel.app**. Vercel serves the
+frontend, Python API and a small Node upload-authorisation endpoint from one
+origin. Imported snapshots and workspace metadata persist in a private Blob
+store; each request checks workspace ownership before returning source.
 
-| Property | Why it constrains deployment |
-| --- | --- |
-| Source expiry | Snapshots live 24 hours, then source bytes are deleted. Nothing persists between sessions. |
-| In-process parsing | Syntax extraction runs under POSIX resource limits in the API process. **Run one API worker**, because a second would double-apply `RLIMIT_AS` and `RLIMIT_CPU`. |
-| Workspace identity | State is a browser workspace cookie, not an account. Horizontal scaling would need shared session storage. |
-| Bounded jobs | Two imports run concurrently, four admitted, three-minute deadline. Capacity planning is four jobs, not unbounded. |
+Large ZIP uploads go directly to private storage with a short-lived token for
+one workspace-owned object. The importer reads bounded byte ranges, skips
+excluded directories and preserves source and manifest integrity hashes.
+The upload allowance is separate from the extraction and analysis budgets.
 
-What that means in practice: this runs as a **single-instance local service on
-loopback today**, which is how it was developed and how it was recorded. Making
-it multi-tenant or publicly hosted is real work: sticky sessions, shared
-snapshot storage, a job queue. None of it is pretending to be done.
+The Groq key is a sensitive server-side environment variable. It is not included
+in frontend code, exports or Git. The authenticated weekly retention job removes
+expired sources; no user key is needed to explore the structure and static facts.
+The map renderer uses the same pinned Archify code and a bundled Node runtime.
 
-If you need to run it anywhere but your machine, the sequence is:
-1. Containerize both services (the Python one needs the POSIX limits honoured).
-2. Move snapshot storage to a shared volume or object store.
-3. Replace the workspace cookie with real session storage before scaling out.
-
-`docs/architecture.md` has the pipeline diagram, including the pinned Archify
-compile and delivery step.
+See [hosted setup, limits and verification](docs/deployment/VERCEL.md) for details.
+Local development remains available using the commands above. The architecture
+pipeline and Archify adapter are described in `docs/architecture.md`.
 
 ## APIs and teammate integration
 

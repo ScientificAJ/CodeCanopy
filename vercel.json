@@ -18,18 +18,18 @@
       "destination": "/api/upload"
     },
     {
-      "source": "/api/:path*",
+      "source": "/api/:grepoApiPath*",
       "destination": "/api/index.py"
     },
     {
-      "source": "/:path*",
+      "source": "/:grepoPagePath*",
       "destination": "/index.html"
     }
   ],
   "crons": [
     {
       "path": "/api/internal/cleanup",
-      "schedule": "0 3 * * *"
+      "schedule": "0 3 * * 0"
     }
   ]
 }

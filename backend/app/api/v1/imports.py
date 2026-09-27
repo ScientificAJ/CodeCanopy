@@ -20,7 +20,7 @@ router = APIRouter(tags=['v1-imports'])
 
 class BlobImportRequest(BaseModel):
     pathname: str = Field(max_length=200)
-    name: str = Field(default='Repository.zip', max_length=200)
+    name: str = Field(default='Repository.zip', max_length=255)
 
 
 class GitHubImportRequest(BaseModel):

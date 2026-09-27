@@ -8,7 +8,7 @@ import re
 import warnings
 
 from tree_sitter import Node
-from tree_sitter_languages import get_parser
+from tree_sitter_language_pack import get_parser
 
 from app.models.codebase import CallSite, File, Function
 
@@ -22,17 +22,20 @@ FUNCTION_NODE_TYPES = {
     'kotlin': {'function_declaration'},
     'c': {'function_definition'},
     'cpp': {'function_definition'},
-    'c_sharp': {'method_declaration', 'local_function_statement', 'constructor_declaration', 'operator_declaration'},
+    'csharp': {'method_declaration', 'local_function_statement', 'constructor_declaration', 'operator_declaration'},
     'ruby': {'method', 'singleton_method'},
     'php': {'function_definition', 'method_declaration'},
     'bash': {'function_definition'},
-    'sql': {'create_function_statement', 'function_definition'},
+    'sql': {'create_function', 'create_function_statement', 'function_definition'},
 }
 ALL_FUNCTION_NODE_TYPES = frozenset(item for values in FUNCTION_NODE_TYPES.values() for item in values)
 CALL_NODE_TYPES = {
     'call_expression', 'method_invocation', 'function_call_expression',
     'member_call_expression', 'scoped_call_expression', 'invocation_expression',
     'function_call', 'call', 'command',
+    # tree-sitter-language-pack spells the SQL call node `invocation`; the
+    # bundled `invocation_expression` above is the tree-sitter-languages name.
+    'invocation',
 }
 IDENTIFIER_TYPES = {
     'identifier', 'type_identifier', 'field_identifier', 'property_identifier',
@@ -58,7 +61,7 @@ def parser_language(language: str, path: str) -> str | None:
     if language == 'typescript' and Path(path).suffix.lower() == '.tsx':
         return 'tsx'
     if language == 'csharp':
-        return 'c_sharp'
+        return 'csharp'
     if language == 'shell':
         return 'bash'
     return language if language in FUNCTION_NODE_TYPES else None
@@ -115,7 +118,7 @@ def _declared_name_node(node: Node, source: bytes, language: str) -> Node | None
 
     if language == 'kotlin' and node.type == 'function_declaration':
         return _first_identifier_node(node)
-    if language == 'sql' and node.type == 'create_function_statement':
+    if language == 'sql' and node.type in {'create_function', 'create_function_statement'}:
         return _first_identifier_node(node)
 
     parent = node.parent
@@ -145,18 +148,42 @@ def _call_name(node: Node, source: bytes) -> str | None:
 
 
 def _embedded_sql_roots(node: Node, source: bytes, parser) -> list[tuple[Node, bytes]]:
+    """Extract the body of a dollar-quoted SQL function body.
+
+    tree-sitter-languages 1.x parses `AS $$ ... $$` as a single `string` node.
+    tree-sitter-language-pack instead emits `dollar_quote` delimiters with the
+    body's own node (a `statement`) between them, so the body has to be located
+    structurally instead of by quoting a single node's text.
+    """
     roots = []
+    body = node
     for child in _walk(node):
-        if child.type != 'string' or not any(parent.type == 'function_body' for parent in _ancestors(child)):
-            continue
-        raw = _source_text(child, source)
-        match = re.match(r'^(\$[A-Za-z_0-9]*\$)(.*?)\1$', raw, re.DOTALL)
-        if not match or not match.group(2).strip():
-            continue
-        embedded_source = match.group(2).encode('utf-8')
-        embedded = parser.parse(embedded_source).root_node
-        if not embedded.has_error:
-            roots.append((embedded, embedded_source))
+        if child.type == 'string' and any(parent.type == 'function_body' for parent in _ancestors(child)):
+            body = child
+            break
+    else:
+        for parent in _walk(node):
+            if parent.type != 'function_body':
+                continue
+            children = parent.named_children
+            for index, child in enumerate(children):
+                if child.type != 'dollar_quote':
+                    continue
+                between = children[index + 1:-1] if index + 1 < len(children) - 1 else []
+                statement = next((item for item in between if item.type not in {'dollar_quote'}), None)
+                if statement is not None:
+                    roots.append((statement, source[statement.start_byte:statement.end_byte]))
+            break
+    if roots:
+        return roots
+    raw = _source_text(body, source)
+    match = re.match(r'^(\$[A-Za-z_0-9]*\$)(.*?)\1$', raw, re.DOTALL)
+    if not match or not match.group(2).strip():
+        return []
+    embedded_source = match.group(2).encode('utf-8')
+    embedded = parser.parse(embedded_source).root_node
+    if not embedded.has_error:
+        roots.append((embedded, embedded_source))
     return roots
 
 

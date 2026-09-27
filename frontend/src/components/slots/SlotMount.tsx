@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useWorkspace, selectionFor } from '../../contexts/WorkspaceContext'
 import { getSlot, slotRevision, subscribeSlots, type RequestState, type SlotContext, type SlotId } from '../../contexts/SlotRegistry'
 import { Icon } from '../ui/Icon'
-export const slotNames: Record<SlotId, string> = {'summaries.context-panel': 'File & folder summaries', 'dependencies.workspace': 'Dependencies & change impact', 'reuse.findings': 'Reusable code', 'duplicates.compare': 'Duplicate code', 'unused.review': 'Unused code', 'ask.workspace': 'Ask CodeCanopy', 'proposals.detail': 'Proposals & change packs', 'docs.generated': 'Generated documentation', 'map.overlay': 'Map insights'}
+export const slotNames: Record<SlotId, string> = {'summaries.context-panel': 'File & folder summaries', 'dependencies.workspace': 'Dependencies & change impact', 'reuse.findings': 'Reusable code', 'duplicates.compare': 'Duplicate code', 'unused.review': 'Unused code', 'ask.workspace': 'Ask Grepo', 'proposals.detail': 'Proposals & change packs', 'docs.generated': 'Generated documentation', 'map.overlay': 'Map insights'}
 export function Unavailable({id, message}: {id: SlotId; message?: string}) {
   return <section className="slot-placeholder" aria-label={slotNames[id]}><div className="slot-icon"><Icon name="spark" size={24}/></div><span className="badge">Not connected</span><h2>{slotNames[id]}</h2><p>{message ?? 'This feature is not connected in this workspace yet. You can explore the repository map and read source files now.'}</p><details><summary>Integration details</summary><p>Extension: <code>{id}</code></p><p>Register a component and optional data adapter through SlotRegistry. See INTEGRATION_GUIDE.md.</p></details></section>
 }

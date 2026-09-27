@@ -5,7 +5,14 @@ import { ChatModal } from './ChatModal'
 import type { SlotProps } from '../../contexts/SlotRegistry'
 import { Icon } from '../../components/ui/Icon'
 
-export default function CodeChat({ projectId, snapshotId, selectedEntity, files }: SlotProps) {
+/** Extract the greeting text from the slot response, if it was set. */
+function slotGreeting(request: SlotProps['request']): string {
+  if (request.status !== 'ready') return ''
+  const d = request.data as { answer?: string } | null
+  return (d && typeof d.answer === 'string') ? d.answer : ''
+}
+
+export default function CodeChat({ projectId, snapshotId, selectedEntity, files, request }: SlotProps) {
   const [open, setOpen] = useState(false)
   const [prefill, setPrefill] = useState<string | undefined>()
 
@@ -59,10 +66,19 @@ export default function CodeChat({ projectId, snapshotId, selectedEntity, files 
               </button>
             )}
             <button className="btn primary" onClick={() => openWith()}>
-              <Icon name="spark" /> Open Code Canopy
+              <Icon name="spark" /> Open Grepo
             </button>
           </div>
         </div>
+
+        {/* Greeting from the slot endpoint — shown only before the first conversation */}
+        {!lastAssistant && slotGreeting(request) && (
+          <div className="codechat-greeting" data-testid="ask-slot-greeting">
+            <p style={{ fontSize: 13, marginTop: 14, marginBottom: 0, color: 'var(--color-muted, #57606a)' }}>
+              {slotGreeting(request)}
+            </p>
+          </div>
+        )}
 
         {lastAssistant && (
           <div className="codechat-recent">

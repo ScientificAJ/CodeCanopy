@@ -1,5 +1,5 @@
 /**
- * CodeCanopy application root — sets up routing and the app shell.
+ * Grepo application root — sets up routing and the app shell.
  *
  * Route structure (PRD §7.1):
  *   /                                       — Import page
@@ -8,7 +8,7 @@
  *   /p/:projectId/s/:snapshotId/map         — Structure map
  *   /p/:projectId/s/:snapshotId/dependencies — Dependencies (integration slot)
  *   /p/:projectId/s/:snapshotId/opportunities/:kind — Opportunities (integration slot)
- *   /p/:projectId/s/:snapshotId/ask         — Ask CodeCanopy (integration slot)
+ *   /p/:projectId/s/:snapshotId/ask         — Ask Grepo (integration slot)
  *   /p/:projectId/s/:snapshotId/proposals   — Proposals (integration slot)
  */
 

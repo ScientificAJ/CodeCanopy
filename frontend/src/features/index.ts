@@ -5,5 +5,6 @@
  */
 import './reusable_functions/register'
 import './ask/register'
+import './summaries/register'
 import './dependencies/register'
 export {}

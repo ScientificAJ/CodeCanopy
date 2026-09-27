@@ -29,9 +29,11 @@ uploads/
 *.log
 Thumbs.db
 
-# Local session data
-bob_sessions/*
-!bob_sessions/.gitkeep
+# Local session data — bob_sessions/ is REQUIRED submission evidence
+# (task summary PNGs from every member). Do not ignore it.
+# Only transient scratch output is excluded.
+bob_sessions/**/*.tmp
+bob_sessions/**/node_modules/
 
 # Reference material: PRD package and bulk extraction (keep original ZIP out of git)
 Grepo_PRD_Complete_Package.zip

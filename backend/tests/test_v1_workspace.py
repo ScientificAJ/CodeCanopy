@@ -59,7 +59,7 @@ def test_inventory_source_identity_policy_and_session(client):
     assert client.get(path + '/source/' + file['id'] + '?line_start=99').status_code == 422
     entities = client.get(path + '/entities').json()
     assert next(e for e in entities if e['path'] == file['path'])['id'] == file['id']
-    assert client.get(path + '/summaries').status_code == 501
+    assert client.get(path + '/summaries').status_code == 200
     with TestClient(app) as stranger:
         stranger.post('/api/v1/session')
         assert stranger.get(path).status_code == 404

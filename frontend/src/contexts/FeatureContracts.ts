@@ -1,5 +1,4 @@
 /** Teammate payloads reuse the PRD's generated evidence and result contracts. */
-import type { DependencyResult } from '../features/dependencies/types'
 import type { ReusableFunctionResult } from '../types/codebase'
 import type { ComponentType } from 'react'
 import type { Answer, ChangePack, Evidence, Finding, Graph as PrdGraph } from '../types/v1/prd.generated'
@@ -11,7 +10,7 @@ export interface FindingPage {schema_version: '1.1'; snapshot_id: string; findin
 export interface GeneratedDocument {schema_version: '1.1'; snapshot_id: string; title: string; markdown: string; evidence: Evidence[]; limitations: string[]}
 export interface FeaturePayloads {
   'summaries.context-panel': SummaryPayload
-  'dependencies.workspace': DependencyResult
+  'dependencies.workspace': DependencyOverlay
   'map.overlay': DependencyOverlay
   'reuse.findings': ReusableFunctionResult
   'duplicates.compare': DuplicateDetectionResult

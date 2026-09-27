@@ -88,7 +88,7 @@ def _python(text):
 
 
 def _javascript(text, path, language):
-    from tree_sitter_languages import get_parser
+    from tree_sitter_language_pack import get_parser
     from app.analyzers.tree_sitter_analyzer import _walk, _ancestors, _declared_name_node, FUNCTION_NODE_TYPES
     parser_language = 'tsx' if path.endswith('.tsx') else language
     with warnings.catch_warnings():

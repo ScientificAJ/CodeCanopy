@@ -6,7 +6,7 @@
  *   - AI Summaries
  *   - Dependencies / Change Impact
  *   - Reuse / Duplicates / Unused (Opportunities)
- *   - Ask CodeCanopy
+ *   - Ask Grepo
  *   - Proposals & Change Packs
  *
  * The placeholder is:

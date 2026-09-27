@@ -64,12 +64,12 @@ export function ChatModal({ state, scopeLabel, scopeIcon, prefillQuestion, onClo
       role="presentation"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="codechat-modal" role="dialog" aria-modal="true" aria-label="Code Canopy">
+      <div className="codechat-modal" role="dialog" aria-modal="true" aria-label="Grepo">
 
         {/* ── Header ── */}
         <div className="codechat-modal-header">
           <span className="codechat-modal-title">
-            <Icon name="spark" size={16} /> Code Canopy
+            <Icon name="spark" size={16} /> Grepo
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {messages.length > 0 && (
@@ -129,7 +129,7 @@ export function ChatModal({ state, scopeLabel, scopeIcon, prefillQuestion, onClo
           {messages.map((m, i) => (
             <div key={i} className={`codechat-bubble codechat-bubble--${m.role}`}>
               <div className="codechat-bubble-header">
-                <span className="codechat-role">{m.role === 'user' ? 'You' : 'CodeCanopy AI'}</span>
+                <span className="codechat-role">{m.role === 'user' ? 'You' : 'Grepo AI'}</span>
                 {m.role === 'assistant' && (
                   <button
                     className="codechat-copy-btn"
@@ -154,7 +154,7 @@ export function ChatModal({ state, scopeLabel, scopeIcon, prefillQuestion, onClo
           {loading && (
             <div className="codechat-bubble codechat-bubble--assistant">
               <div className="codechat-bubble-header">
-                <span className="codechat-role">CodeCanopy AI</span>
+                <span className="codechat-role">Grepo AI</span>
               </div>
               <span className="codechat-typing">Thinking…</span>
             </div>

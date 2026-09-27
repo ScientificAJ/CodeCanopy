@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from difflib import SequenceMatcher
 from functools import lru_cache
 
@@ -17,7 +17,7 @@ from app.features.duplicate_detection import (
     UnusedDetectionResult,
 )
 from app.features.duplicate_detection.provider import SemanticSimilarityProvider, configured_provider
-from app.models.codebase import Function, Relationship
+from app.models.codebase import Function
 from app.services.snapshot_service import get_inventory, get_syntax_records, read_source_text
 
 MAX_CANDIDATES = 80
@@ -124,23 +124,24 @@ def _static_analysis(snapshot_id: str):
     for file_id, function in records:
         language = syntax[file_id].language
         by_name_functions[(language, function.name)].append((file_id, function))
-    relationships: list[Relationship] = []
-    for file_id, parsed_file in syntax.items():
-        for caller in parsed_file.functions:
-            for called_name in caller.calls:
-                for target_file_id, target in by_name_functions.get((parsed_file.language, called_name), ()):
-                    relationships.append(Relationship(
-                        source=_evidence(caller, file_id).id,
-                        target=_evidence(target, target_file_id).id,
-                        type='calls',
-                    ))
-
+    # Count name-based candidates without allocating a Relationship per possible
+    # target. Common names in monorepos otherwise create millions of objects.
+    call_counts = Counter((parsed_file.language, called_name)
+                          for parsed_file in syntax.values()
+                          for caller in parsed_file.functions
+                          for called_name in caller.calls)
+    referenced_ids = set()
+    relationship_count = 0
+    for key, count in call_counts.items():
+        targets = by_name_functions.get(key, ())
+        relationship_count += count * len(targets)
+        referenced_ids.update(_evidence(target, file_id).id for file_id, target in targets)
     referenced_names = {
         (parsed_file.language, name)
         for parsed_file in syntax.values()
         for name in parsed_file.references
     }
-    referenced_ids = {relationship.target for relationship in relationships}
+
     unused = []
     for file_id, function in records:
         function_id = _evidence(function, file_id).id
@@ -166,7 +167,7 @@ def _static_analysis(snapshot_id: str):
         limitations.append(f'Duplicate comparison reached its {MAX_PAIR_COMPARISONS:,}-pair budget; results are partial.')
     if candidate_count > MAX_CANDIDATES:
         limitations.append(f'Showing the strongest {MAX_CANDIDATES} of {candidate_count} structural candidates.')
-    return inventory, syntax, candidates, unused, len(relationships), limitations
+    return inventory, syntax, candidates, unused, relationship_count, limitations
 
 
 def get_unused_findings(snapshot_id: str) -> UnusedDetectionResult:

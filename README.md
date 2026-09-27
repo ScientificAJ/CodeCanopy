@@ -23,13 +23,19 @@ A two-minute recorded walkthrough of importing an IBM repository, exploring its
 structure and source, tracing dependencies, and creating cited AI answers,
 proposals, and documentation.
 
-[![GREPO product demo](docs/demo/GREPO-Poster.png)](https://github.com/ScientificAJ/Grepo/releases/download/demo-video-v1/GREPO-Demo.mp4)
+[![GREPO product demo v2](docs/demo/GREPO-Poster-v2.png)](https://github.com/ScientificAJ/Grepo/releases/download/demo-video-v2/GREPO-Demo-v2.mp4)
 
-[Download the full-quality demo](https://github.com/ScientificAJ/Grepo/releases/download/demo-video-v1/GREPO-Demo.mp4)
-· **1:58 · 1080p · Background music, no narration**
+**V2** keeps the full application in frame, with animated arrows, marker highlights,
+emoji reactions, two local magnifiers, and a playful gecko opening and closing.
 
-[Music attribution and publishing notes](docs/demo/Credits-and-publishing.txt).
-The recording shows the local demo workspace on September 27, 2026.
+| Version | Video | Release and credits |
+| --- | --- | --- |
+| **v2** | [Download v2](https://github.com/ScientificAJ/Grepo/releases/download/demo-video-v2/GREPO-Demo-v2.mp4) | [v2 release](https://github.com/ScientificAJ/Grepo/releases/tag/demo-video-v2) · [Music attribution](docs/demo/Credits-and-publishing-v2.txt) |
+| **v1 — original** | [Download v1](https://github.com/ScientificAJ/Grepo/releases/download/demo-video-v1/GREPO-Demo.mp4) | [v1 release](https://github.com/ScientificAJ/Grepo/releases/tag/demo-video-v1) · [Music attribution](docs/demo/Credits-and-publishing.txt) |
+
+Both versions are **1:58 · 1080p · Background music, no narration**.
+V1 remains available unchanged. The footage shows the local demo workspace on
+September 27, 2026; pauses and unsuccessful retries are edited out.
 
 ## What it looks like
 

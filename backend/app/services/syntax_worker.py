@@ -12,7 +12,14 @@ except ImportError:
 if resource is not None:
     resource.setrlimit(resource.RLIMIT_AS, (384 * 1024 * 1024, 384 * 1024 * 1024))
     resource.setrlimit(resource.RLIMIT_CPU, (2, resource.RLIM_INFINITY))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+# -I deliberately ignores PYTHONPATH, including Vercel's runtime injection.
+# Restore only the deployment-owned dependency bundle, never cwd or any path
+# supplied with an imported repository. Normal local virtualenvs still work.
+backend_root = Path(__file__).resolve().parents[2]
+vendor_root = backend_root.parent / '_vendor'
+if vendor_root.is_dir():
+    sys.path.insert(0, str(vendor_root))
+sys.path.insert(0, str(backend_root))
 from app.analyzers.python_analyzer import PythonAnalyzer
 from app.analyzers.tree_sitter_analyzer import TreeSitterAnalyzer
 

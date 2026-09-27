@@ -5,6 +5,18 @@ import { ChatModal } from './ChatModal'
 import type { SlotProps } from '../../contexts/SlotRegistry'
 import { Icon } from '../../components/ui/Icon'
 
+/**
+ * Slice `text` for the preview panel, cutting at the last newline that falls within
+ * `maxChars`.  This avoids mid-line truncation that would break table or code-fence
+ * detection in the markdown renderer.
+ */
+function previewContent(text: string, maxChars: number): string {
+  if (text.length <= maxChars) return text
+  const slice = text.slice(0, maxChars)
+  const lastNl = slice.lastIndexOf('\n')
+  return (lastNl > 0 ? slice.slice(0, lastNl) : slice) + '…'
+}
+
 /** Extract the greeting text from the slot response, if it was set. */
 function slotGreeting(request: SlotProps['request']): string {
   if (request.status !== 'ready') return ''
@@ -84,11 +96,7 @@ export default function CodeChat({ projectId, snapshotId, selectedEntity, files,
           <div className="codechat-recent">
             <p className="muted" style={{ fontSize: 12, margin: '0 0 6px' }}>Last answer:</p>
             <div className="md-body" style={{ fontSize: 13 }}>
-              {renderMarkdown(
-                lastAssistant.content.length > 300
-                  ? lastAssistant.content.slice(0, 300) + '…'
-                  : lastAssistant.content
-              )}
+              {renderMarkdown(previewContent(lastAssistant.content, 300))}
             </div>
             <button className="btn small" style={{ marginTop: 10 }} onClick={() => openWith()}>
               Continue conversation

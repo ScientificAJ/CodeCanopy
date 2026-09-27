@@ -1,8 +1,10 @@
 /**
  * Minimal markdown renderer for AI chat responses.
  * Handles: headings, bold, inline code, fenced code blocks, lists, tables, horizontal rules.
- * No external dependencies.
+ * Designed to render partial/streaming content safely — an unclosed block renders what it has.
+ * No external dependencies. Never injects raw HTML.
  */
+import React from 'react'
 
 interface Token {
   type: 'fence' | 'heading' | 'hr' | 'li' | 'table' | 'blank' | 'text'
@@ -25,6 +27,12 @@ function isSeparatorRow(cells: string[]): boolean {
   return cells.length > 0 && cells.every(c => /^:?-{2,}:?$/.test(c.trim()))
 }
 
+/**
+ * Tokenise markdown text.  Handles partial/truncated input:
+ * - An unclosed fenced code block emits a fence token with all accumulated body lines.
+ * - A table header line with no following separator row emits a partial table (no rows).
+ * - Mid-table truncation (truncated after the separator) emits whatever rows arrived.
+ */
 function tokenize(md: string): Token[] {
   const lines = md.split('\n')
   const tokens: Token[] = []
@@ -33,7 +41,7 @@ function tokenize(md: string): Token[] {
   while (i < lines.length) {
     const line = lines[i]
 
-    // Fenced code block
+    // Fenced code block — emit even if the closing ``` never arrives
     if (/^```/.test(line)) {
       const lang = line.slice(3).trim()
       const body: string[] = []
@@ -43,25 +51,35 @@ function tokenize(md: string): Token[] {
         i++
       }
       tokens.push({ type: 'fence', raw: body.join('\n'), lang })
-      i++
+      if (i < lines.length) i++ // skip closing ``` when present
       continue
     }
 
-    // Table: pipe line, then separator line, then data rows
+    // Table: pipe-delimited header line followed by a separator line
     if (/\|/.test(line)) {
       const headerCells = splitRow(line)
-      const nextLine = lines[i + 1] ?? ''
-      const sepCells = splitRow(nextLine)
-      if (headerCells.length > 0 && isSeparatorRow(sepCells)) {
-        // confirmed table — collect all following pipe rows
-        const rows: string[][] = []
-        i += 2 // skip header + separator
-        while (i < lines.length && /\|/.test(lines[i])) {
-          rows.push(splitRow(lines[i]))
-          i++
+      if (headerCells.length > 0) {
+        const nextLine = lines[i + 1] ?? ''
+        const sepCells = splitRow(nextLine)
+        if (isSeparatorRow(sepCells)) {
+          // Confirmed full table — collect all following pipe rows
+          const rows: string[][] = []
+          i += 2 // skip header + separator
+          while (i < lines.length && /\|/.test(lines[i])) {
+            rows.push(splitRow(lines[i]))
+            i++
+          }
+          tokens.push({ type: 'table', raw: line, headers: headerCells, rows })
+          continue
         }
-        tokens.push({ type: 'table', raw: line, headers: headerCells, rows })
-        continue
+        // Partial table: header line is the last line, or separator is still arriving.
+        // Emit a table token with no rows so the header renders as a proper table
+        // rather than raw pipe-delimited text.
+        if (i + 1 >= lines.length || nextLine.trim() === '') {
+          tokens.push({ type: 'table', raw: line, headers: headerCells, rows: [] })
+          i++
+          continue
+        }
       }
     }
 
@@ -109,16 +127,21 @@ function tokenize(md: string): Token[] {
   return tokens
 }
 
-/** Apply inline formatting: **bold**, `code`, *italic* */
+/**
+ * Apply inline formatting: **bold**, `code`, *italic*.
+ * Only matches complete markers — an unclosed marker renders as plain text,
+ * so a truncated chunk never produces garbled output.
+ */
 function inline(text: string): React.ReactNode[] {
+  // Only match markers that are both opened and properly closed.
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g)
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**'))
-      return <strong key={i}>{part.slice(2, -2)}</strong>
-    if (part.startsWith('`') && part.endsWith('`'))
-      return <code key={i} className="md-inline-code">{part.slice(1, -1)}</code>
-    if (part.startsWith('*') && part.endsWith('*'))
-      return <em key={i}>{part.slice(1, -1)}</em>
+  return parts.map((part, idx) => {
+    if (part.length > 4 && part.startsWith('**') && part.endsWith('**'))
+      return <strong key={idx}>{part.slice(2, -2)}</strong>
+    if (part.length > 2 && part.startsWith('`') && part.endsWith('`'))
+      return <code key={idx} className="md-inline-code">{part.slice(1, -1)}</code>
+    if (part.length > 2 && part.startsWith('*') && part.endsWith('*'))
+      return <em key={idx}>{part.slice(1, -1)}</em>
     return part
   })
 }

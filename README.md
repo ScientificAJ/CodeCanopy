@@ -38,7 +38,7 @@ Both versions are **1:58 · 1080p · Background music, no narration**.
 V1 remains available unchanged. The footage shows the local demo workspace on
 September 27, 2026; pauses and unsuccessful retries are edited out.
 
-The [current pitch presentation](docs/demo/GREPO-Presentation-v3.pdf) retains the original 17-slide format, with Hero credited alongside the other contributors on the IBM Bob slide. The [full original evidence](bob_sessions/09-hero-template-audit-reusable-functions/session-summary.md) follows the same task archive naming convention.
+The [current pitch presentation](docs/demo/GREPO-Presentation-original.pdf) is the original 17-slide deck. The IBM Bob slides retain their original wording and layout.
 
 ## What it looks like
 

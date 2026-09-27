@@ -24,9 +24,22 @@ Anything it cannot prove is reported as unproven, with the reason.
 | **Architecture map** — observed containment, drawn from the snapshot, never inferred. | **Verified dependencies** — 88 resolved edges on `chanjoongx/atlas`, each with the line it came from. |
 | ![Architecture map](docs/images/architecture-map.png) | ![Verified dependency edges](docs/images/dependencies-atlas.png) |
 
-All captures are the live application. The architecture map and the 88-edge
-dependency panel are `chanjoongx/atlas`; the panel at the top of this file is
-this project's own source.
+All captures are the live application, all on `chanjoongx/atlas`; the panel at
+the top of this file is this project's own source.
+
+## Change proposals
+
+Every slot above answers a question about the repository as it is. Proposals
+answers the one that comes next: if you are about to change this file, what else
+changes with it?
+
+![Proposals derived from verified import edges](docs/images/proposals-panel.png)
+
+Each proposal is derived from edges the dependency verifier already accepted,
+so a proposal cannot cite an import that would fail verification. A file nothing
+imports gets a `review first` entry rather than an invented blast radius, and a
+truncated walk is marked with a `+` and the cap stated, so a count is never
+presented as exact when it is a lower bound.
 
 ## Built with IBM Bob
 
@@ -113,7 +126,7 @@ is a deliberate limit on a local, bounded parser, not a failure.
 | Parsing | `tree-sitter` + `tree-sitter-language-pack` | Concrete grammars give real AST nodes. Regex cannot tell an import from a string that looks like one |
 | Frontend | React 19 + TypeScript + Vite 6 | Strict types generated from the PRD contracts, so a payload change breaks the build rather than the UI |
 | Routing | React Router 7 | Slot-per-feature registry; each feature registers itself and mounts independently |
-| Tests | pytest (134) + Vitest (33) + Testing Library | The verifier table is reproducible, not asserted |
+| Tests | pytest (142) + Vitest (38) + Testing Library | The verifier table is reproducible, not asserted |
 | AI (optional) | Groq, server-side only | The one hosted dependency, and only the chat module needs it |
 
 Languages parsed at import: Python, JavaScript, TypeScript/TSX, Java, C#, C, C++,
@@ -144,7 +157,7 @@ CodeCanopy/
 │   │   │   ├── duplicate_detection/    ── (findings route)
 │   │   │   ├── codebase_chat/          ── ask.workspace
 │   │   │   ├── relationships/
-│   │   │   └── onboarding/
+│   │   │   └── onboarding/             ── proposals.detail
 │   │   ├── analyzers/
 │   │   │   ├── tree_sitter_analyzer.py grammar dispatch, 15 languages
 │   │   │   ├── dependency_syntax.py    import and call extraction
@@ -165,7 +178,7 @@ CodeCanopy/
 │   │   ├── models/
 │   │   ├── rendering/                  pinned Archify compile
 │   │   └── core/
-│   ├── tests/                          134 passing
+│   ├── tests/                          142 passing
 │   └── scripts/
 │       ├── demo_verifier.py            reproduces the attack table
 │       └── stress_test.py              import cost harness
@@ -176,7 +189,8 @@ CodeCanopy/
 │       │   ├── dependencies/           DependencyPanel.tsx
 │       │   ├── ask/                    CodeChat.tsx
 │       │   ├── reusable_functions/     ReusableFunctionPanel.tsx
-│       │   └── duplicate_detection/
+│       │   ├── duplicate_detection/
+│       │   └── onboarding/             ProposalsPanel.tsx
 │       ├── components/
 │       │   ├── map/                    structure map
 │       │   ├── tree/                   searchable file tree

@@ -13,12 +13,12 @@ from app.api.v1.snapshots import snapshot_access
 
 from app.models.v1.slots import (
     SLOT_ASK,
-    SLOT_PROPOSALS,
     IntegrationSlotResponse,
 )
 from app.models.v1.snapshot import Snapshot
 from app.features.summaries.service import SummaryPayload, build_summary
 from app.features.dependencies.service import DependencyOverlay, build_dependencies
+from app.features.onboarding.service import ProposalsResponse, build_proposals
 from app.api.v1.ask import AskResponse, _api_key
 from app.services.v1_errors import WorkspaceError
 
@@ -102,9 +102,11 @@ def get_ask_slot(
 # INTEGRATION_SLOT: proposals.detail
 @router.get(
     _SNAPSHOT_PATH + "/proposals",
-    response_model=IntegrationSlotResponse,
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
+    response_model=ProposalsResponse,
 )
-def get_proposals_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:
-    """Slot endpoint for the proposals feature."""
-    return SLOT_PROPOSALS
+async def get_proposals_slot(
+    snap: Snapshot = Depends(snapshot_access),
+    subject: str | None = Query(None, max_length=1024),
+) -> ProposalsResponse:
+    """Proposals and change packs for this snapshot, or for one subject path."""
+    return await build_proposals(snap.id, subject)

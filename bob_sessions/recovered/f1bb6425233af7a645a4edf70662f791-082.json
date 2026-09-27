@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "aafb9138ad93634fee1e872e77191015",
+  "_meta": {
+    "timestamp": 1790414416993,
+    "spend": {
+      "cost": 0.21069,
+      "contextTokens": 105345
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_U9f6KdN6TBn6RGwHboIFoc",
+      "name": "write_file",
+      "arguments": {
+        "content": "\"\"\"Integration slot endpoints.\n\nThese routes return explicit NOT_CONNECTED responses for deferred\nfeature modules.  They are present so the frontend can navigate to\nthese pages and render an intentional placeholder rather than a 404.\n\nIMPORTANT: Never return HTTP 200 with invented results here.  The\nIntegrationSlotResponse schema explicitly signals \"not connected\".\n\"\"\"\nfrom __future__ import annotations\n\nfrom fastapi import APIRouter, HTTPException, status\n\nfrom app.models.v1.slots import (\n    SLOT_ASK,\n    SLOT_DEPENDENCIES,\n    SLOT_DUPLICATES,\n    SLOT_PROPOSALS,\n    SLOT_REUSE,\n    SLOT_SUMMARIES,\n    SLOT_UNUSED,\n    IntegrationSlotResponse,\n)\n\nrouter = APIRouter(prefix=\"/projects\", tags=[\"v1-slots\"])\n\n_SNAPSHOT_PATH = \"/{project_id}/snapshots/{snapshot_id}\"\n\n\n# INTEGRATION_SLOT: summaries.context-panel\n@router.get(\n    _SNAPSHOT_PATH + \"/summaries\",\n    response_model=IntegrationSlotResponse,\n    status_code=status.HTTP_200_OK,\n)\ndef get_summaries_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:\n    \"\"\"Slot endpoint for the AI file/folder summaries feature.\n\n    Returns a NOT_CONNECTED response until the summaries feature is wired in.\n    The frontend must render an explicit placeholder, not treat this as empty success.\n    \"\"\"\n    return SLOT_SUMMARIES\n\n\n# INTEGRATION_SLOT: dependencies.workspace\n@router.get(\n    _SNAPSHOT_PATH + \"/dependencies\",\n    response_model=IntegrationSlotResponse,\n    status_code=status.HTTP_200_OK,\n)\ndef get_dependencies_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:\n    \"\"\"Slot endpoint for the connections/change-impact feature.\"\"\"\n    return SLOT_DEPENDENCIES\n\n\n# INTEGRATION_SLOT: reuse.findings\n@router.get(\n    _SNAPSHOT_PATH + \"/findings/reuse\",\n    response_model=IntegrationSlotResponse,\n    status_code=status.HTTP_200_OK,\n)\ndef get_reuse_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:\n    \"\"\"Slot endpoint for reusable/shared function discovery.\"\"\"\n    return SLOT_REUSE\n\n\n# INTEGRATION_SLOT: duplicates.compare\n@router.get(\n    _SNAPSHOT_PATH + \"/findings/duplicates\",\n    response_model=IntegrationSlotResponse,\n    status_code=status.HTTP_200_OK,\n)\ndef get_duplicates_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:\n    \"\"\"Slot endpoint for duplicate code detection.\"\"\"\n    return SLOT_DUPLICATES\n\n\n# INTEGRATION_SLOT: unused.review\n@router.get(\n    _SNAPSHOT_PATH + \"/findings/unused\",\n    response_model=IntegrationSlotResponse,\n    status_code=status.HTTP_200_OK,\n)\ndef get_unused_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:\n    \"\"\"Slot endpoint for unused-code review.\"\"\"\n    return SLOT_UNUSED\n\n\n# INTEGRATION_SLOT: ask.workspace\n@router.get(\n    _SNAPSHOT_PATH + \"/ask\",\n    response_model=IntegrationSlotResponse,\n    status_code=status.HTTP_200_OK,\n)\ndef get_ask_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:\n    \"\"\"Slot endpoint for the Ask Grepo conversational feature.\"\"\"\n    return SLOT_ASK\n\n\n@router.post(\n    _SNAPSHOT_PATH + \"/answers\",\n    response_model=IntegrationSlotResponse,\n    status_code=status.HTTP_200_OK,\n)\ndef post_answer_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:\n    \"\"\"Slot endpoint for answer generation \u2013 not connected.\"\"\"\n    return SLOT_ASK\n\n\n# INTEGRATION_SLOT: proposals.detail\n@router.get(\n    _SNAPSHOT_PATH + \"/proposals\",\n    response_model=IntegrationSlotResponse,\n    status_code=status.HTTP_200_OK,\n)\ndef get_proposals_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:\n    \"\"\"Slot endpoint for the proposals feature.\"\"\"\n    return SLOT_PROPOSALS\n",
+        "line_count": 116,
+        "path": "backend/app/api/v1/slots.py"
+      }
+    }
+  ]
+}

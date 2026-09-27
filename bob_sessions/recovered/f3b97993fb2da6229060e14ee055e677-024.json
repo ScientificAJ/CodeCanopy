@@ -1,0 +1,53 @@
+{
+  "role": "tool",
+  "content": "Error from tool execute_command: Exit code: 127\n\nStderr:\n/bin/bash: line 1: gh: command not found",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_Xnxpp16INKN6q0a3HKm7jI",
+      "name": "execute_command",
+      "arguments": {
+        "command": "gh auth status && gh repo list --limit 10"
+      },
+      "isError": true
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "gh auth status",
+        "gh repo list --limit 10"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "gh auth status",
+        "gh",
+        "gh repo list --limit 10"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 12906,
+    "exitCode": 127,
+    "durationMs": 4217,
+    "timestamp": 1790410955380,
+    "processes": []
+  },
+  "id": "3153f9fd9b653bee640da357ea4e2513"
+}

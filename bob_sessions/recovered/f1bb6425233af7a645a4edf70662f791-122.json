@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "636da7b3a9c20343e502548f98433f25",
+  "_meta": {
+    "timestamp": 1790415423012,
+    "spend": {
+      "cost": 0.220778,
+      "contextTokens": 110389
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_OOf984eF5fvVpe5Tuvi7iZ",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh -o /tmp/install_nvm.sh && bash /tmp/install_nvm.sh 2>&1 | tail -8",
+        "timeout_seconds": 60
+      }
+    }
+  ]
+}

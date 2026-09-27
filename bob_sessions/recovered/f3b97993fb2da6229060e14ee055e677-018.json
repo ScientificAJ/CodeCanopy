@@ -1,0 +1,90 @@
+{
+  "role": "user",
+  "content": "None of these",
+  "availableTools": [
+    "GetSymbolsOverview",
+    "FindSymbol",
+    "FindReferencingSymbols",
+    "use_skill",
+    "apply_diff",
+    "create_html_artifact",
+    "insert_content",
+    "list_files",
+    "read_file",
+    "search_and_replace",
+    "update_todo_list",
+    "switch_mode",
+    "write_file",
+    "office_read",
+    "office_edit",
+    "execute_command",
+    "glob",
+    "grep",
+    "list_ibm_doc_libraries",
+    "search_ibm_docs",
+    "spawn_subagent",
+    "create_chart",
+    "ask_followup_question",
+    "start_subtask",
+    "start_workflow"
+  ],
+  "_meta": {
+    "mentionEditorState": {
+      "root": {
+        "children": [
+          {
+            "children": [
+              {
+                "detail": 0,
+                "format": 0,
+                "mode": "normal",
+                "style": "",
+                "text": "None of these",
+                "type": "text",
+                "version": 1
+              }
+            ],
+            "direction": null,
+            "format": "",
+            "indent": 0,
+            "type": "paragraph",
+            "version": 1,
+            "textFormat": 0,
+            "textStyle": ""
+          }
+        ],
+        "direction": null,
+        "format": "",
+        "indent": 0,
+        "type": "root",
+        "version": 1
+      }
+    },
+    "mask": "None of these",
+    "mode": {
+      "id": "agent",
+      "name": "Agent",
+      "description": "Take your idea, or plan, and bring it to life",
+      "groups": [
+        "read",
+        "edit",
+        "execute",
+        "mcp",
+        "skill",
+        "todo",
+        "artifact",
+        "subtask",
+        "subagent",
+        "mode"
+      ],
+      "roleDefinition": "You are Bob, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.",
+      "customInstructions": "You can write, modify, and refactor code in any programming language or framework. Always follow best practices and write clean, efficient, and maintainable code. Make sure to test your code thoroughly before submitting it. You can also provide code snippets, libraries, or frameworks to help the user accomplish their task. If you're following a set to do list as part of your task, use 'update_todo_list' as you progress \u2014 mark a task [-] in-progress only in the same update that marks the previous task [x] done, never as a standalone call before starting work.",
+      "whenToUse": "Use this mode when you need to write, modify, or refactor code. Ideal for implementing features, fixing bugs, creating new files, or making code improvements across any programming language or framework.",
+      "scope": "builtin",
+      "sourceId": "bob",
+      "sourceName": "Bob"
+    },
+    "timestamp": 1790410924773
+  },
+  "id": "7abc5a609918ebd0023bc3796ebd66e9"
+}

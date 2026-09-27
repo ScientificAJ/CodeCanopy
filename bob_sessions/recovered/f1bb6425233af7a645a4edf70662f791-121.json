@@ -1,0 +1,67 @@
+{
+  "role": "tool",
+  "content": "nvm not installed\nno snap node\nno local node",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_2Mb7bYtJADyQS6woBKc3ej",
+      "name": "execute_command",
+      "arguments": {
+        "command": "ls ~/.nvm 2>/dev/null && echo \"exists\" || echo \"nvm not installed\"\nls /snap/bin/node 2>/dev/null && /snap/bin/node --version || echo \"no snap node\"\nls /usr/local/bin/node 2>/dev/null && /usr/local/bin/node --version || echo \"no local node\""
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "ls ~/.nvm",
+        "echo \"exists\"",
+        "echo \"nvm not installed\"",
+        "ls /snap/bin/node",
+        "/snap/bin/node --version",
+        "echo \"no snap node\"",
+        "ls /usr/local/bin/node",
+        "/usr/local/bin/node --version",
+        "echo \"no local node\""
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "ls",
+        "echo \"exists\"",
+        "echo",
+        "echo \"nvm not installed\"",
+        "/snap/bin/node --version",
+        "/snap/bin/node",
+        "echo \"no snap node\"",
+        "/usr/local/bin/node --version",
+        "/usr/local/bin/node",
+        "echo \"no local node\""
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17687,
+    "exitCode": 0,
+    "durationMs": 14030,
+    "timestamp": 1790415420295,
+    "processes": []
+  },
+  "id": "b733bd92de53d53129cb601e184f4c13"
+}

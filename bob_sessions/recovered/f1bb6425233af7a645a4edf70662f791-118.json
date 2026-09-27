@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "bf8f4cfd1d06184bf3373395bb335492",
+  "_meta": {
+    "timestamp": 1790415402466,
+    "spend": {
+      "cost": 0.220152,
+      "contextTokens": 110076
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_zBdge3V8gx3z5pKuoTp5k4",
+      "name": "execute_command",
+      "arguments": {
+        "command": "ls ~/.nvm/ 2>/dev/null | head -5; cat ~/.bashrc | grep nvm | head -5"
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "e47b9ebdebc94804177743356a2c86b7",
+  "_meta": {
+    "timestamp": 1790416367861,
+    "spend": {
+      "cost": 0.378866,
+      "contextTokens": 189433
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_cZSuH3eRfM0He67opuraUy",
+      "name": "write_file",
+      "arguments": {
+        "content": "import { defineConfig } from 'vite'\nimport react from '@vitejs/plugin-react'\n\nexport default defineConfig({\n  plugins: [react()],\n  test: {\n    environment: 'jsdom',\n    globals: true,\n    setupFiles: [],\n    include: ['src/**/*.test.{ts,tsx}'],\n  },\n})\n",
+        "line_count": 12,
+        "path": "frontend/vite.config.ts"
+      }
+    }
+  ]
+}

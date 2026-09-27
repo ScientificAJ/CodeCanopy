@@ -1,0 +1,60 @@
+{
+  "role": "tool",
+  "content": "> grepo-frontend@0.1.0 test\n> vitest run\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.0.2 \u001b[39m\u001b[90m/home/rahul/Desktop/Grepo/frontend\u001b[39m\n\n \u001b[32m\u2713\u001b[39m src/contexts/SlotRegistry.test.ts \u001b[2m(\u001b[22m\u001b[2m7 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 7\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m\u2713\u001b[39m src/services/exportService.test.ts \u001b[2m(\u001b[22m\u001b[2m9 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 9\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m16 passed\u001b[39m\u001b[22m\u001b[90m (16)\u001b[39m\n\u001b[2m   Start at \u001b[22m 15:26:43\n\u001b[2m   Duration \u001b[22m 1.17s\u001b[2m (environment 90%, transform 6%, import 2%, worker 1%, tests 1%)\u001b[22m",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_ECAC5CBaM76sq2FitmBZCg",
+      "name": "execute_command",
+      "arguments": {
+        "command": "export NVM_DIR=\"$HOME/.nvm\" && source \"$NVM_DIR/nvm.sh\" && cd frontend && npm test 2>&1",
+        "timeout_seconds": 60
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "export NVM_DIR=\"$HOME/.nvm\"",
+        "source \"$NVM_DIR/nvm.sh\"",
+        "cd frontend",
+        "npm test"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "export NVM_DIR=\"$HOME/.nvm\"",
+        "export",
+        "source \"$NVM_DIR/nvm.sh\"",
+        "source",
+        "cd frontend",
+        "cd",
+        "npm"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 7137,
+    "exitCode": 0,
+    "durationMs": 2859,
+    "timestamp": 1790416604956,
+    "processes": []
+  },
+  "id": "d356389cbc5690b5e4397cc54c8bd481"
+}

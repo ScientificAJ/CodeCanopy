@@ -1,0 +1,57 @@
+{
+  "role": "tool",
+  "content": "Command completed with no output.",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_rUA5N4An5Qg2t21fGx2N10",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh 2>/dev/null | bash 2>&1 | tail -5",
+        "timeout_seconds": 60
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh",
+        "bash",
+        "tail -5"
+      ],
+      "requiresSecurityApproval": true,
+      "securityReason": "The command pipes the output of a remote script directly into `bash`, allowing arbitrary code execution from an external source. This is a classic remote code execution risk.",
+      "commandVariants": [
+        "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh",
+        "curl",
+        "bash",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17652,
+    "exitCode": 0,
+    "durationMs": 12556,
+    "timestamp": 1790415392982,
+    "processes": []
+  },
+  "id": "c46ff3ada6be32ce10e0392cb17923d3"
+}

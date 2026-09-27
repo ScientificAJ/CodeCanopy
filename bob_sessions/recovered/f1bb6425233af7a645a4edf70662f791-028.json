@@ -1,0 +1,30 @@
+{
+  "role": "tool",
+  "content": "Contents of file frontend/src/types/api.ts:\n\n1 | export interface HealthResponse {\n2 |   status: string\n3 | }\n4 | \n5 | export interface ProjectUploadResponse {\n6 |   project_id: string\n7 |   name: string\n8 |   status: string\n9 |   file_count: number\n10 | }\n11 | \n12 | export type ApiHealthState =\n13 |   | { status: 'loading' }\n14 |   | { status: 'connected'; detail: string }\n15 |   | { status: 'unavailable'; message: string }\n16 | ",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_i5qjldri6AScSPzRZC5atX",
+      "name": "read_file",
+      "arguments": {
+        "path": "frontend/src/types/api.ts"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path}",
+      "error": "Failed to read file {path}",
+      "running": "Reading file {path}",
+      "success": "Read file {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/frontend/src/types/api.ts": 1790411117718
+    },
+    "durationMs": 9,
+    "timestamp": 1790414055303
+  },
+  "id": "dd03c68ab569ce9ae52f205e49e0cd63"
+}

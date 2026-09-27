@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "887c4e057d0a8a4db7fdf14958f541de",
+  "_meta": {
+    "timestamp": 1790416324273,
+    "spend": {
+      "cost": 0.37182,
+      "contextTokens": 185910
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_1X1MjxmfX1SRw1g5AWAnu9",
+      "name": "write_file",
+      "arguments": {
+        "content": "/**\n * Opportunities page \u2014 integration slots for Reuse, Duplicates, and Unused Code.\n *\n * Routes: /p/:projectId/s/:snapshotId/opportunities/:kind\n *\n * INTEGRATION_SLOT: reuse.findings\n * INTEGRATION_SLOT: duplicates.compare\n * INTEGRATION_SLOT: unused.review\n *\n * All three kinds share the same page frame with distinct tabs.\n * To connect a feature module: see INTEGRATION_GUIDE.md\n */\n\nimport { useNavigate, useParams } from 'react-router-dom'\nimport { IntegrationPlaceholder } from '../../components/slots/IntegrationPlaceholder'\nimport type { SlotId } from '../../contexts/SlotRegistry'\n\ntype Kind = 'reuse' | 'duplicates' | 'unused'\n\nconst KIND_META: Record<Kind, { slotId: SlotId; title: string; description: string }> = {\n  reuse: {\n    slotId: 'reuse.findings',\n    title: 'Reusable &amp; Shared Functions',\n    description: 'Integration slot: put the reuse-discovery feature here. Not connected yet. The repository map and source browser work independently.',\n  },\n  duplicates: {\n    slotId: 'duplicates.compare',\n    title: 'Duplicate Code Review',\n    description: 'Integration slot: put the duplicate-detection feature here. Not connected yet.',\n  },\n  unused: {\n    slotId: 'unused.review',\n    title: 'Unused Code Candidates',\n    description: 'Integration slot: put the unused-code review feature here. Not connected yet.',\n  },\n}\n\nconst VALID_KINDS: Kind[] = ['reuse', 'duplicates', 'unused']\n\nexport default function OpportunitiesPage() {\n  const { projectId = '', snapshotId = '', kind = 'reuse' } = useParams<{\n    projectId: string\n    snapshotId: string\n    kind: string\n  }>()\n  const navigate = useNavigate()\n\n  const activeKind: Kind = VALID_KINDS.includes(kind as Kind) ? (kind as Kind) : 'reuse'\n  const meta = KIND_META[activeKind]\n\n  function goTo(k: Kind) {\n    navigate(`/p/${projectId}/s/${snapshotId}/opportunities/${k}`)\n  }\n\n  return (\n    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>\n      <div className=\"content-header\">\n        <p className=\"content-header__eyebrow\">Opportunities</p>\n        <h1 className=\"content-header__title\">Code Opportunities</h1>\n      </div>\n\n      {/* Tabs */}\n      <div style={{ borderBottom: '1px solid var(--grepo-line)', padding: '0 32px', background: 'var(--grepo-surface)', flex: 'none' }}>\n        <div role=\"tablist\" aria-label=\"Opportunity kind\" style={{ display: 'flex', gap: 0 }}>\n          {VALID_KINDS.map(k => (\n            <button\n              key={k}\n              type=\"button\"\n              role=\"tab\"\n              aria-selected={k === activeKind}\n              className={`import-tab ${k === activeKind ? 'import-tab--active' : ''}`}\n              onClick={() => goTo(k)}\n              style={{ textTransform: 'capitalize' }}\n            >\n              {k}\n            </button>\n          ))}\n        </div>\n      </div>\n\n      <div className=\"content-scroll\">\n        {/* INTEGRATION_SLOT: reuse.findings | duplicates.compare | unused.review */}\n        <IntegrationPlaceholder\n          slotId={meta.slotId}\n          title={meta.title}\n          description={meta.description}\n          onBack={() => navigate(`/p/${projectId}/s/${snapshotId}/map`)}\n          backLabel=\"Back to Map\"\n          showDevDisclosure={import.meta.env.DEV}\n        />\n      </div>\n    </div>\n  )\n}\n",
+        "line_count": 91,
+        "path": "frontend/src/pages/workspace/OpportunitiesPage.tsx"
+      }
+    }
+  ]
+}

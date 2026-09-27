@@ -1,0 +1,30 @@
+{
+  "role": "tool",
+  "content": "Contents of file frontend/src/types/codebase.ts:\n\n1 | export interface Function {\n2 |   name: string\n3 |   file: string\n4 |   line_start: number\n5 |   line_end: number\n6 | }\n7 | \n8 | export interface Class {\n9 |   name: string\n10 |   file: string\n11 |   line_start: number\n12 |   line_end: number\n13 | }\n14 | \n15 | export interface File {\n16 |   path: string\n17 |   name: string\n18 |   language: string\n19 |   size: number\n20 |   functions: Function[]\n21 |   classes: Class[]\n22 |   imports: string[]\n23 | }\n24 | \n25 | export interface Project {\n26 |   id: string\n27 |   name: string\n28 |   files: File[]\n29 | }\n30 | \n31 | export interface Relationship {\n32 |   source: string\n33 |   target: string\n34 |   type: string\n35 | }",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_2MtYsRNmiDeLjV4OECQApg",
+      "name": "read_file",
+      "arguments": {
+        "path": "frontend/src/types/codebase.ts"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path}",
+      "error": "Failed to read file {path}",
+      "running": "Reading file {path}",
+      "success": "Read file {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/frontend/src/types/codebase.ts": 1790411117718
+    },
+    "durationMs": 10,
+    "timestamp": 1790414058086
+  },
+  "id": "4bcf058e30271b7a45dbf1eb12c8d977"
+}

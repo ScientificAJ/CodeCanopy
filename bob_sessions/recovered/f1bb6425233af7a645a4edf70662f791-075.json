@@ -1,0 +1,51 @@
+{
+  "role": "tool",
+  "content": "Command completed with no output.",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_RMXnn9aZEiXEul4EUT540B",
+      "name": "execute_command",
+      "arguments": {
+        "command": "mkdir -p backend/app/api/v1"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "mkdir -p backend/app/api/v1"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "mkdir -p backend/app/api/v1",
+        "mkdir"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 16855,
+    "exitCode": 0,
+    "durationMs": 15983,
+    "timestamp": 1790414380815,
+    "processes": []
+  },
+  "id": "0be4832b301d30a5b2292da7dbc8b53f"
+}

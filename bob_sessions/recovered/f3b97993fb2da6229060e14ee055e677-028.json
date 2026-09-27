@@ -1,0 +1,54 @@
+{
+  "role": "tool",
+  "content": "github.com\n  \u2713 Logged in to github.com account ScientificAJ (keyring)\n  - Active account: true\n  - Git operations protocol: https\n  - Token: gho_************************************\n  - Token scopes: 'gist', 'read:org', 'repo'",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_gj2g2MhcnauLBhMhA0V4uM",
+      "name": "execute_command",
+      "arguments": {
+        "command": "export PATH=\"$PATH:/home/rahul/.local/bin\" && gh auth status"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "export PATH=\"$PATH:/home/rahul/.local/bin\"",
+        "gh auth status"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "export PATH=\"$PATH:/home/rahul/.local/bin\"",
+        "export",
+        "gh auth status",
+        "gh"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 12924,
+    "exitCode": 0,
+    "durationMs": 11520,
+    "timestamp": 1790410980648,
+    "processes": []
+  },
+  "id": "98528155fe58ec74203aab285243438f"
+}

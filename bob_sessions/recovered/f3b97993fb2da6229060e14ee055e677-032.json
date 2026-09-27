@@ -1,0 +1,54 @@
+{
+  "role": "tool",
+  "content": "E: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)\nE: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), are you root?",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_XM216tqESlN2Gw3icOGLNB",
+      "name": "execute_command",
+      "arguments": {
+        "command": "apt-get install -y git 2>&1 | tail -5",
+        "timeout_seconds": 60
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "apt-get install -y git",
+        "tail -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "apt-get install -y git",
+        "apt-get",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 12955,
+    "exitCode": 0,
+    "durationMs": 3012,
+    "timestamp": 1790411043888,
+    "processes": []
+  },
+  "id": "c9a4bd230fd0401ecb983d0e828d2f0a"
+}

@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "f98ccccbda912214744b2b072e99e257",
+  "_meta": {
+    "timestamp": 1790416452514,
+    "spend": {
+      "cost": 0.394618,
+      "contextTokens": 197309
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_BAhIsIztfSxdCMlvs3uEC5",
+      "name": "apply_diff",
+      "arguments": {
+        "diff": "<<<<<<< SEARCH\n:start_line:44\n-------\nfunction WorkspaceInner() {\n  const { projectId = '', snapshotId = '' } = useParams<{ projectId: string; snapshotId: string }>()\n  const navigate = useNavigate()\n  const ws = useWorkspace()\n=======\nfunction WorkspaceInner() {\n  const { projectId = '', snapshotId = '' } = useParams<{ projectId: string; snapshotId: string }>()\n  const ws = useWorkspace()\n>>>>>>> REPLACE\n",
+        "path": "frontend/src/pages/workspace/WorkspaceLayout.tsx"
+      }
+    }
+  ]
+}

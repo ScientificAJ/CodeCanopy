@@ -1,0 +1,55 @@
+{
+  "role": "tool",
+  "content": "Error from tool execute_command: Exit code: 2\n\nCommand failed with exit code 2: /bin/bash -c 'which node || which nodejs; ls /usr/local/bin/node* 2>/dev/null; ls ~/.nvm/versions/ 2>/dev/null; ls /usr/bin/node* 2>/dev/null'",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_ARFCwEKuEqkagQFjsuePft",
+      "name": "execute_command",
+      "arguments": {
+        "command": "which node || which nodejs; ls /usr/local/bin/node* 2>/dev/null; ls ~/.nvm/versions/ 2>/dev/null; ls /usr/bin/node* 2>/dev/null"
+      },
+      "isError": true
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "which node",
+        "which nodejs",
+        "ls /usr/local/bin/node*",
+        "ls ~/.nvm/versions/",
+        "ls /usr/bin/node*"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "which",
+        "ls"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17144,
+    "exitCode": 2,
+    "durationMs": 517,
+    "timestamp": 1790414603260,
+    "processes": []
+  },
+  "id": "c762d6a8b93c13a6444899f760396ffb"
+}

@@ -1,0 +1,22 @@
+{
+  "artifact": {
+    "bytes": 797472,
+    "sha256": "720b568fe0eab15d175f4d3f79d37ed25865cfbb4a5aa4628ed45f5c3989188b"
+  },
+  "command": "deliver",
+  "ok": true,
+  "schemaVersion": 1,
+  "specification": {
+    "bytes": 1212,
+    "sha256": "b6f9251b9dbaa662ab538e638ffb646c53801ee4019038740b5122ae6e74d0ea"
+  },
+  "type": "architecture",
+  "validation": {
+    "checkCount": 9,
+    "checksPassed": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

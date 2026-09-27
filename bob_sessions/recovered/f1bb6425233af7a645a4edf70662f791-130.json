@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "012b88b92c89247d112042178164435f",
+  "_meta": {
+    "timestamp": 1790415490800,
+    "spend": {
+      "cost": 0.222082,
+      "contextTokens": 111041
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_pyWJaGgu3yWQ9aJdO3xPay",
+      "name": "execute_command",
+      "arguments": {
+        "command": "cat /etc/hosts | grep github; nslookup raw.githubusercontent.com 2>/dev/null | head -5 || dig raw.githubusercontent.com 2>/dev/null | head -10"
+      }
+    }
+  ]
+}

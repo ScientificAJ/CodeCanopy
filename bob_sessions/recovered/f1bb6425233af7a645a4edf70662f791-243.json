@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "ef85a96affc72fcde2ba5079ea46ed4d",
+  "_meta": {
+    "timestamp": 1790416517717,
+    "spend": {
+      "cost": 0.411206,
+      "contextTokens": 205603
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_UTXvW0GlOoOo4AGzzSCCwH",
+      "name": "apply_diff",
+      "arguments": {
+        "diff": "<<<<<<< SEARCH\n:start_line:11\n-------\nimport type { FileRecord, GraphEntity } from '../../types/v1'\n=======\nimport type { FileRecord } from '../../types/v1'\n>>>>>>> REPLACE\n\n<<<<<<< SEARCH\n:start_line:342\n-------\n  const fileCount = files.filter(f => true).length\n=======\n  const fileCount = files.length\n>>>>>>> REPLACE\n",
+        "path": "frontend/src/components/tree/RepositoryTree.tsx"
+      }
+    }
+  ]
+}

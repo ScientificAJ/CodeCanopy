@@ -1,0 +1,31 @@
+{
+  "role": "tool",
+  "content": "Contents of file frontend/src/services/api.ts:\n\n1 | import type { HealthResponse, ProjectUploadResponse } from '../types/api'\n2 | import type { File as CodebaseFile, Project } from '../types/codebase'\n3 | \n4 | const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'\n5 | \n6 | async function apiError(response: Response): Promise<Error> {\n7 |   const payload: unknown = await response.json().catch(() => null)\n8 |   const detail =\n9 |     typeof payload === 'object' && payload !== null && 'detail' in payload && typeof payload.detail === 'string'\n10 |       ? payload.detail\n11 |       : `API returned ${response.status}`\n12 |   return new Error(detail)\n13 | }\n14 | \n15 | export async function getHealth(signal: AbortSignal): Promise<HealthResponse> {\n16 |   const response = await fetch(`${apiBaseUrl}/api/health`, { signal })\n17 |   if (!response.ok) {\n18 |     throw new Error(`API returned ${response.status}`)\n19 |   }\n20 |   return response.json() as Promise<HealthResponse>\n21 | }\n22 | \n23 | export async function uploadProject(file: File): Promise<ProjectUploadResponse> {\n24 |   const formData = new FormData()\n25 |   formData.append('file', file)\n26 | \n27 |   const response = await fetch(`${apiBaseUrl}/api/projects`, {\n28 |     method: 'POST',\n29 |     body: formData,\n30 |   })\n31 | \n32 |   if (!response.ok) {\n33 |     throw await apiError(response)\n34 |   }\n35 | \n36 |   return response.json() as Promise<ProjectUploadResponse>\n37 | }\n38 | \n39 | export async function getProject(projectId: string): Promise<Project> {\n40 |   const response = await fetch(`${apiBaseUrl}/api/projects/${encodeURIComponent(projectId)}`)\n41 |   if (!response.ok) {\n42 |     throw await apiError(response)\n43 |   }\n44 |   return response.json() as Promise<Project>\n45 | }\n46 | \n47 | export async function analyzeProject(projectId: string): Promise<CodebaseFile[]> {\n48 |   const response = await fetch(\n49 |     `${apiBaseUrl}/api/projects/${encodeURIComponent(projectId)}/analyze`,\n50 |     { method: 'POST' },\n51 |   )\n52 |   if (!response.ok) {\n53 |     throw await apiError(response)\n54 |   }\n55 |   return response.json() as Promise<CodebaseFile[]>\n56 | }\n57 | ",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_AwwInIVP8CoS374ynDknoh",
+      "name": "read_file",
+      "arguments": {
+        "path": "frontend/src/services/api.ts"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path}",
+      "error": "Failed to read file {path}",
+      "running": "Reading file {path}",
+      "success": "Read file {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/frontend/src/services/api.ts": 1790411117718
+    },
+    "durationMs": 9,
+    "timestamp": 1790414055303,
+    "processes": []
+  },
+  "id": "0d7071224424ab7343ef0adadc0236fb"
+}

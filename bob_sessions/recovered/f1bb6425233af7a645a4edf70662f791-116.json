@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "73b3a948ecfd00cef118411709fdca56",
+  "_meta": {
+    "timestamp": 1790415395311,
+    "spend": {
+      "cost": 0.219794,
+      "contextTokens": 109897
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_RLjd3DE8hkSvOcA8slC2r0",
+      "name": "execute_command",
+      "arguments": {
+        "command": "export NVM_DIR=\"$HOME/.nvm\" && [ -s \"$NVM_DIR/nvm.sh\" ] && source \"$NVM_DIR/nvm.sh\" && nvm install --lts 2>&1 | tail -5",
+        "timeout_seconds": 120
+      }
+    }
+  ]
+}

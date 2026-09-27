@@ -1,0 +1,57 @@
+{
+  "role": "tool",
+  "content": "Error from tool execute_command: Exit code: 6\n\nStderr:\ncurl: (6) Could not resolve host: raw.githubusercontent.com",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_OOf984eF5fvVpe5Tuvi7iZ",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh -o /tmp/install_nvm.sh && bash /tmp/install_nvm.sh 2>&1 | tail -8",
+        "timeout_seconds": 60
+      },
+      "isError": true
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh -o /tmp/install_nvm.sh",
+        "bash /tmp/install_nvm.sh",
+        "tail -8"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh -o /tmp/install_nvm.sh",
+        "curl",
+        "bash /tmp/install_nvm.sh",
+        "bash",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17703,
+    "exitCode": 6,
+    "durationMs": 48398,
+    "timestamp": 1790415471836,
+    "processes": []
+  },
+  "id": "c41dbcde249fb7c0b8ffec40afac0d42"
+}

@@ -1,0 +1,57 @@
+{
+  "role": "tool",
+  "content": "/bin/bash: line 1: npm: command not found",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_IQluu9OWJb26soeRGbEzKK",
+      "name": "execute_command",
+      "arguments": {
+        "command": "cd frontend && npm install react-router-dom@^7.0.0 --save 2>&1 | tail -5",
+        "timeout_seconds": 60
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "cd frontend",
+        "npm install react-router-dom@^7.0.0 --save",
+        "tail -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "cd frontend",
+        "cd",
+        "npm install react-router-dom@^7.0.0 --save",
+        "npm",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17141,
+    "exitCode": 0,
+    "durationMs": 142494,
+    "timestamp": 1790414599338,
+    "processes": []
+  },
+  "id": "e09d92e89ff354f9d002bea75c2a69aa"
+}

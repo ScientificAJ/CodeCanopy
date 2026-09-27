@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "e9d9cfed47804d7f145d599ae0573724",
+  "_meta": {
+    "timestamp": 1790415345756,
+    "spend": {
+      "cost": 0.21784,
+      "contextTokens": 108920
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_2rjoqPK5FfyfdCbPmSe83c",
+      "name": "execute_command",
+      "arguments": {
+        "command": "ls /usr/share/bobide/resources/app/extensions/npm/"
+      }
+    }
+  ]
+}

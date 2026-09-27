@@ -1,0 +1,30 @@
+{
+  "role": "tool",
+  "content": "Tool call to ask_followup_question was cancelled.",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_je9rqjV0aNcmXi7hbNUGcX",
+      "name": "ask_followup_question",
+      "arguments": {
+        "question": "Could you please share the full GitHub URL of the Grepo repository you want to clone? (e.g. `https://github.com/username/Grepo`)",
+        "suggestion_a": "https://github.com/GabLeRoux/Grepo",
+        "suggestion_b": "https://github.com/rahul/Grepo"
+      },
+      "isError": true
+    },
+    "permission": "ask",
+    "labels": {
+      "displayName": "Ask follow up",
+      "success": "Asked follow up",
+      "error": "Skipped",
+      "running": "Asking follow up"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "durationMs": 12850,
+    "timestamp": 1790410924164,
+    "processes": []
+  },
+  "id": "34dd727464a437758811832ec96f3984"
+}

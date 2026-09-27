@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "114a19f6466442451f17cd3a56c99695",
+  "_meta": {
+    "timestamp": 1790414602015,
+    "spend": {
+      "cost": 0.216532,
+      "contextTokens": 108266
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_ARFCwEKuEqkagQFjsuePft",
+      "name": "execute_command",
+      "arguments": {
+        "command": "which node || which nodejs; ls /usr/local/bin/node* 2>/dev/null; ls ~/.nvm/versions/ 2>/dev/null; ls /usr/bin/node* 2>/dev/null"
+      }
+    }
+  ]
+}

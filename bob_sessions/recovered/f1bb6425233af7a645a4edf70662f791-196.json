@@ -1,0 +1,31 @@
+{
+  "role": "tool",
+  "content": "Contents of file frontend/vite.config.ts:\n\n1 | import { defineConfig } from 'vite'\n2 | import react from '@vitejs/plugin-react'\n3 | \n4 | export default defineConfig({\n5 |   plugins: [react()],\n6 | })\n7 | ",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_40NvFi0WyXeGL3eP0A95zd",
+      "name": "read_file",
+      "arguments": {
+        "path": "frontend/vite.config.ts"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path}",
+      "error": "Failed to read file {path}",
+      "running": "Reading file {path}",
+      "success": "Read file {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/frontend/vite.config.ts": 1790411117718
+    },
+    "durationMs": 6,
+    "timestamp": 1790416363799,
+    "processes": []
+  },
+  "id": "202a6160736e0db87430fc691030112d"
+}

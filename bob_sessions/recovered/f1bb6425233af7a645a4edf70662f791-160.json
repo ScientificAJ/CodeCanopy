@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "Now the IntegrationPlaceholder component:",
+  "id": "10a43b0b6249d373bda3d5d20aa221f6",
+  "_meta": {
+    "timestamp": 1790415866775,
+    "spend": {
+      "cost": 0.304008,
+      "contextTokens": 152004
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_50p9hU6dCtD1woK6oYHL5g",
+      "name": "write_file",
+      "arguments": {
+        "content": "/**\n * IntegrationPlaceholder \u2014 renders an intentional \"not connected\" state\n * for deferred feature modules.\n *\n * This is used for all six teammate-owned features:\n *   - AI Summaries\n *   - Dependencies / Change Impact\n *   - Reuse / Duplicates / Unused (Opportunities)\n *   - Ask Grepo\n *   - Proposals & Change Packs\n *\n * The placeholder is:\n *   - Visually intentional (dashed border, explicit badge)\n *   - Accessible (proper heading, descriptive text)\n *   - Developer-informative (shows slot path, contract, registration steps)\n *   - Never presenting fictional success results\n */\n\nimport type { SlotId } from '../../contexts/SlotRegistry'\n\ninterface Props {\n  slotId: SlotId\n  title: string\n  description: string\n  integrationPath?: string\n  /** Show the developer disclosure panel (default: false in user-facing view) */\n  showDevDisclosure?: boolean\n  /** Optional back action (e.g., \"Back to map\") */\n  onBack?: () => void\n  backLabel?: string\n}\n\nexport function IntegrationPlaceholder({\n  slotId,\n  title,\n  description,\n  integrationPath,\n  showDevDisclosure = false,\n  onBack,\n  backLabel = 'Back to Map',\n}: Props) {\n  return (\n    <div className=\"slot-placeholder\" role=\"region\" aria-label={`${title} \u2014 integration slot`}>\n      <span className=\"slot-placeholder__badge\" aria-hidden=\"true\">Integration Slot</span>\n\n      <h2 className=\"slot-placeholder__title\">{title}</h2>\n      <p className=\"slot-placeholder__description\">{description}</p>\n\n      {onBack && (\n        <button\n          type=\"button\"\n          className=\"btn btn--ghost btn--sm\"\n          onClick={onBack}\n        >\n          \u2190 {backLabel}\n        </button>\n      )}\n\n      {showDevDisclosure && (\n        <div className=\"slot-placeholder__dev\" aria-label=\"Developer integration details\">\n          <p className=\"slot-placeholder__dev-title\">Developer integration details</p>\n          <code className=\"slot-placeholder__code\">\n{`Slot ID:       ${slotId}\nModule path:   ${integrationPath ?? '(not set)'}\n\nRegistration:\n  import { registerSlot } from 'src/contexts/SlotRegistry'\n  import { MyFeatureComponent } from './${slotId.split('.')[0]}'\n  registerSlot('${slotId}', MyFeatureComponent)\n\nInput contract: SlotProps (src/contexts/SlotRegistry.ts)\n  - projectId: string\n  - snapshotId: string\n  - snapshot: Snapshot\n  - selectedEntity: SelectedEntity | null\n  - files: FileRecord[]\n\nSee INTEGRATION_GUIDE.md for full registration steps.`}\n          </code>\n        </div>\n      )}\n    </div>\n  )\n}\n",
+        "line_count": 78,
+        "path": "frontend/src/components/slots/IntegrationPlaceholder.tsx"
+      }
+    }
+  ]
+}

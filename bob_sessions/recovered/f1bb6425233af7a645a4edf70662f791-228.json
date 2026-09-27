@@ -1,0 +1,32 @@
+{
+  "role": "tool",
+  "content": "Contents of file frontend/src/contexts/SlotRegistry.ts:\n\n1 | /**\n2 |  * Integration slot registry.\n3 |  *\n4 |  * Feature modules register themselves here so they can be plugged into\n5 |  * the workspace without editing the map or shell internals.\n6 |  *\n7 |  * This is the programmatic integration mechanism. INTEGRATION_SLOT\n8 |  * comments in source files are supplemental markers only.\n9 |  *\n10 |  * \u2500\u2500 How to register a feature module (see INTEGRATION_GUIDE.md) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n11 |  *\n12 |  *   1. Create a component that accepts SlotProps.\n13 |  *   2. Call registerSlot() in your module's init file.\n14 |  *   3. The corresponding workspace page will render your component.\n15 |  *\n16 |  * \u2500\u2500 Contract \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n17 |  *\n18 |  *   - Unregistered slots render an IntegrationPlaceholder component.\n19 |  *   - Registration must not throw; failures are swallowed and the\n20 |  *     placeholder is shown instead.\n21 |  *   - A slot must not import private files from other feature modules.\n22 |  */\n23 | \n24 | import type { ComponentType } from 'react'\n25 | import type { SelectedEntity } from '../contexts/WorkspaceContext'\n26 | \n27 | // \u2500\u2500 Slot identifiers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n28 | \n29 | export type SlotId =\n30 |   | 'summaries.context-panel'\n31 |   | 'dependencies.workspace'\n32 |   | 'reuse.findings'\n33 |   | 'duplicates.compare'\n34 |   | 'unused.review'\n35 |   | 'ask.workspace'\n36 |   | 'proposals.detail'\n37 | \n38 | // \u2500\u2500 Slot props (the public API a feature component receives) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n39 | \n40 | export interface SlotProps {\n41 |   projectId: string\n42 |   snapshotId: string\n43 |   snapshot: import('../types/v1').Snapshot\n44 |   selectedEntity: SelectedEntity | null\n45 |   files: import('../types/v1').FileRecord[]\n46 | }\n47 | \n48 | // \u2500\u2500 Registry \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n49 | \n50 | type SlotComponent = ComponentType<SlotProps>\n51 | \n52 | const _registry = new Map<SlotId, SlotComponent>()\n53 | \n54 | /**\n55 |  * Register a feature component for a slot.",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_OiJ1r4jtHFtSMtJj8mAW1c",
+      "name": "read_file",
+      "arguments": {
+        "path": "frontend/src/contexts/SlotRegistry.ts",
+        "range": "1,55"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path} ({range})",
+      "error": "Failed to read file {path} ({range})",
+      "running": "Reading file {path} ({range})",
+      "success": "Read file {path} ({range})"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/frontend/src/contexts/SlotRegistry.ts": 1790416434263
+    },
+    "durationMs": 4,
+    "timestamp": 1790416476301,
+    "processes": []
+  },
+  "id": "89592730bc0307ccdfe20ae4f4f9cfe7"
+}

@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "6a7bceb72096c5a72ce53abf27bb8443",
+  "_meta": {
+    "timestamp": 1790416463531,
+    "spend": {
+      "cost": 0.397186,
+      "contextTokens": 198593
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_LvEmTKTAV9yLV0YpbYu1Ht",
+      "name": "apply_diff",
+      "arguments": {
+        "diff": "<<<<<<< SEARCH\n:start_line:208\n-------\n    import('../services/v1/api').then(({ listSnapshots }) =>\n      listSnapshots(projectId).then(snaps => {\n        const latest = snaps[snaps.length - 1]\n        if (latest) {\n          navigate(`/p/${projectId}/s/${latest.id}/overview`, { replace: true })\n        } else {\n          navigate('/', { replace: true })\n        }\n      }).catch(() => navigate('/', { replace: true }))\n    )\n=======\n    import('../../services/v1/api').then(({ listSnapshots }) =>\n      listSnapshots(projectId).then((snaps: import('../../types/v1').Snapshot[]) => {\n        const latest = snaps[snaps.length - 1]\n        if (latest) {\n          navigate(`/p/${projectId}/s/${latest.id}/overview`, { replace: true })\n        } else {\n          navigate('/', { replace: true })\n        }\n      }).catch(() => navigate('/', { replace: true }))\n    )\n>>>>>>> REPLACE\n",
+        "path": "frontend/src/pages/workspace/WorkspaceLayout.tsx"
+      }
+    }
+  ]
+}

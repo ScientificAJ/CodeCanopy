@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "fc91fe910ee5eee79c1b954307556b82",
+  "_meta": {
+    "timestamp": 1790416562237,
+    "spend": {
+      "cost": 0.4167,
+      "contextTokens": 208350
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_9GqTwcT5O1W4GVDNIod0w8",
+      "name": "apply_diff",
+      "arguments": {
+        "diff": "<<<<<<< SEARCH\n:start_line:130\n-------\n      const { listSnapshots } = await import('../services/v1/api')\n      const snapshots = await listSnapshots(projectId)\n=======\n      const snapshots = await listSnapshots(projectId)\n>>>>>>> REPLACE\n",
+        "path": "frontend/src/contexts/WorkspaceContext.tsx"
+      }
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "role": "tool",
+  "content": "/bin/bash: line 1: pip: command not found",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_GVQhuAb9Ib1PvlqrB6YHXI",
+      "name": "execute_command",
+      "arguments": {
+        "command": "cd backend && pip install -e \".[dev]\" -q 2>&1 | tail -3 || pip install fastapi uvicorn pydantic pytest httpx -q 2>&1 | tail -3",
+        "timeout_seconds": 60
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "cd backend",
+        "pip install -e \".[dev]\" -q",
+        "tail -3",
+        "pip install fastapi uvicorn pydantic pytest httpx -q",
+        "tail -3"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "cd backend",
+        "cd",
+        "pip install -e \".[dev]\" -q",
+        "pip",
+        "tail",
+        "pip install fastapi uvicorn pydantic pytest httpx -q"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 7329,
+    "exitCode": 0,
+    "durationMs": 14550,
+    "timestamp": 1790416624061,
+    "processes": []
+  },
+  "id": "9be49a689928fc6dba2cca5bc52dd400"
+}

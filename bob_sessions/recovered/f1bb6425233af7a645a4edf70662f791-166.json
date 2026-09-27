@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "Now the source viewer:",
+  "id": "f8f9462c9c94d71f23f27400a5f2c843",
+  "_meta": {
+    "timestamp": 1790415952841,
+    "spend": {
+      "cost": 0.323068,
+      "contextTokens": 161534
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_nDdLSHpoRFK5a8uEYWq8TE",
+      "name": "write_file",
+      "arguments": {
+        "content": "/**\n * SourceViewer \u2014 read-only source display with line numbers.\n *\n * - Shows bounded line ranges with clear truncation notice\n * - Displays path, language, and hash for identity verification\n * - Never executes any code from the analyzed repository\n * - Keyboard navigation within the code table\n */\n\nimport { useEffect, useState } from 'react'\nimport { getSource } from '../../services/v1/api'\nimport type { SourceSlice } from '../../types/v1'\n\ninterface Props {\n  projectId: string\n  snapshotId: string\n  fileId: string\n  path: string\n  language: string\n  lineStart?: number\n  lineEnd?: number\n}\n\ntype State =\n  | { status: 'idle' }\n  | { status: 'loading' }\n  | { status: 'ready'; slice: SourceSlice }\n  | { status: 'error'; message: string }\n\nexport function SourceViewer({\n  projectId,\n  snapshotId,\n  fileId,\n  path,\n  language,\n  lineStart = 1,\n  lineEnd,\n}: Props) {\n  const [state, setState] = useState<State>({ status: 'idle' })\n\n  useEffect(() => {\n    setState({ status: 'loading' })\n    let cancelled = false\n\n    getSource(projectId, snapshotId, fileId, lineStart, lineEnd)\n      .then(slice => {\n        if (!cancelled) setState({ status: 'ready', slice })\n      })\n      .catch(err => {\n        if (!cancelled) setState({ status: 'error', message: err instanceof Error ? err.message : 'Failed to load source.' })\n      })\n\n    return () => { cancelled = true }\n  }, [projectId, snapshotId, fileId, lineStart, lineEnd])\n\n  return (\n    <div className=\"source-viewer\">\n      <div className=\"source-viewer__header\">\n        <span className=\"source-viewer__path\" title={path}>\n          {path}\n        </span>\n        <div className=\"source-viewer__meta\">\n          {language && (\n            <span className=\"source-badge\">{language}</span>\n          )}\n          {state.status === 'ready' && (\n            <span className=\"source-badge\" title={`SHA-256: ${state.slice.content_hash}`}>\n              {state.slice.total_lines} lines\n            </span>\n          )}\n        </div>\n      </div>\n\n      <div className=\"source-viewer__code\" tabIndex={0} aria-label={`Source code: ${path}`}>\n        {state.status === 'loading' && (\n          <div style={{ padding: '24px 16px', color: 'var(--grepo-text-secondary)', fontSize: 12 }}>\n            <div className=\"spinner\" style={{ display: 'inline-block', marginRight: 8 }} aria-hidden=\"true\" />\n            Loading source\u2026\n          </div>\n        )}\n\n        {state.status === 'error' && (\n          <div className=\"alert alert--error\" style={{ margin: 16 }}>\n            {state.message}\n          </div>\n        )}\n\n        {state.status === 'ready' && (\n          <table className=\"source-table\" aria-label={`Source lines ${state.slice.line_start}\u2013${state.slice.line_end}`}>\n            <tbody>\n              {state.slice.content.split('\\n').map((line, idx) => {\n                const lineNum = state.slice.line_start + idx\n                return (\n                  <tr key={lineNum}>\n                    <td className=\"source-table__num\" aria-hidden=\"true\">{lineNum}</td>\n                    <td className=\"source-table__line\">{escapeHtml(line) || '\\u200B'}</td>\n                  </tr>\n                )\n              })}\n            </tbody>\n          </table>\n        )}\n      </div>\n\n      {state.status === 'ready' && state.slice.truncated && (\n        <div className=\"source-viewer__truncation\" role=\"status\">\n          Showing lines {state.slice.line_start}\u2013{state.slice.line_end} of {state.slice.total_lines}.\n          {' '}Use line range controls to navigate.\n        </div>\n      )}\n    </div>\n  )\n}\n\n/** Safely escape HTML characters in source lines.\n *  Repository source is always rendered as escaped text \u2014 never innerHTML. */\nfunction escapeHtml(text: string): string {\n  return text\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;')\n}\n",
+        "line_count": 116,
+        "path": "frontend/src/components/source/SourceViewer.tsx"
+      }
+    }
+  ]
+}

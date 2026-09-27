@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "574ff7e60739f39af1be113bfc229a86",
+  "_meta": {
+    "timestamp": 1790415474008,
+    "spend": {
+      "cost": 0.221036,
+      "contextTokens": 110518
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_mSMTs0URCIvVaPfXOZfuw0",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest 2>&1 | head -5"
+      }
+    }
+  ]
+}

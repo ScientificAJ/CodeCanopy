@@ -1,0 +1,61 @@
+{
+  "role": "tool",
+  "content": "Error from tool execute_command: Exit code: 1\n\nStdout:\npipx not usable",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_dCuC3Jsq8DHB4dE0BbCb3P",
+      "name": "execute_command",
+      "arguments": {
+        "command": "pipx run pytest --version 2>/dev/null || echo \"pipx not usable\"\nls /snap/bin/ 2>/dev/null | grep -i python\nsnap list 2>/dev/null | grep python"
+      },
+      "isError": true
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "pipx run pytest --version",
+        "echo \"pipx not usable\"",
+        "ls /snap/bin/",
+        "grep -i python",
+        "snap list",
+        "grep python"
+      ],
+      "requiresSecurityApproval": true,
+      "commandVariants": [
+        "pipx run pytest --version",
+        "pipx",
+        "echo",
+        "ls",
+        "grep",
+        "snap list",
+        "snap"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 7392,
+    "exitCode": 1,
+    "durationMs": 5679,
+    "timestamp": 1790416683938,
+    "processes": []
+  },
+  "id": "a9542bca1f1e47d5ec76ef37b793aad4"
+}

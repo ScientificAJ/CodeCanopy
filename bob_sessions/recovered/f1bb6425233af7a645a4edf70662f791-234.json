@@ -1,0 +1,32 @@
+{
+  "role": "tool",
+  "content": "Contents of file frontend/src/services/exportService.ts:\n\n1 | /**\n2 |  * Structural HTML Export\n3 |  *\n4 |  * Produces a portable offline HTML snapshot of the structural map.\n5 |  *\n6 |  * Architecture note (PRD \u00a79):\n7 |  *   The full Archify CLI pipeline (validate \u2192 deliver \u2192 visual-check) runs\n8 |  *   server-side as a bounded subprocess.  This client-side module provides:\n9 |  *     1. A lightweight fallback export when the server-side Archify\n10 |  *        renderer is not yet configured (structural HTML only).\n11 |  *     2. The data preparation that feeds the server-side compiler.\n12 |  *\n13 |  * The fallback export:\n14 |  *   - Uses only trusted templates with escaped data\n15 |  *   - Never executes repository code\n16 |  *   - Embeds manifest/provenance information\n17 |  *   - Clearly labels deferred capabilities\n18 |  *   - Works offline with no external requests\n19 |  *\n20 |  * INTEGRATION_SLOT: proposals.detail\n21 |  * When the Archify server-side renderer is connected, replace\n22 |  * triggerFallbackExport() with a call to the export endpoint and\n23 |  * download the validated artifact.\n24 |  */\n25 | \n26 | import type { FilePage, Graph, Snapshot } from '../../types/v1'\n27 | \n28 | export interface ExportManifest {\n29 |   schema_version: '1.0'\n30 |   export_type: 'structural_map'\n31 |   snapshot_id: string\n32 |   project_id: string\n33 |   source_kind: string\n34 |   source_ref?: string\n35 |   exported_at: string",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_O6ILHluADXzSb0ad5rtz0m",
+      "name": "read_file",
+      "arguments": {
+        "path": "frontend/src/services/exportService.ts",
+        "range": "1,35"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path} ({range})",
+      "error": "Failed to read file {path} ({range})",
+      "running": "Reading file {path} ({range})",
+      "success": "Read file {path} ({range})"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/frontend/src/services/exportService.ts": 1790416024297
+    },
+    "durationMs": 7,
+    "timestamp": 1790416490022,
+    "processes": []
+  },
+  "id": "74a6437a98cf2be70ba61bb7096144bf"
+}

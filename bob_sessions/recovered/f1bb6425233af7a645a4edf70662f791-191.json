@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "799ec03b7e263a8427489800b65758e2",
+  "_meta": {
+    "timestamp": 1790416344322,
+    "spend": {
+      "cost": 0.37449,
+      "contextTokens": 187245
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_37B7XhyYgnfLvpnUsI65dh",
+      "name": "write_file",
+      "arguments": {
+        "content": "/**\n * Proposals page \u2014 integration slot for the Proposals & Change Packs feature.\n *\n * INTEGRATION_SLOT: proposals.detail\n *\n * This page is intentionally reserved for the Proposals feature.\n * \"Mark reviewed\" is the correct label \u2014 not \"Approve\" (per PRD \u00a726).\n *\n * To connect: see INTEGRATION_GUIDE.md\n */\n\nimport { useNavigate, useParams } from 'react-router-dom'\nimport { IntegrationPlaceholder } from '../../components/slots/IntegrationPlaceholder'\n\nexport default function ProposalsPage() {\n  const { projectId = '', snapshotId = '' } = useParams<{ projectId: string; snapshotId: string }>()\n  const navigate = useNavigate()\n\n  // INTEGRATION_SLOT: proposals.detail\n  return (\n    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>\n      <div className=\"content-header\">\n        <p className=\"content-header__eyebrow\">Planning</p>\n        <h1 className=\"content-header__title\">Proposals &amp; Change Packs</h1>\n      </div>\n\n      <div className=\"content-scroll\">\n        <IntegrationPlaceholder\n          slotId=\"proposals.detail\"\n          title=\"Proposals &amp; Change Packs\"\n          description=\"Integration slot: put the proposals feature here. Not connected yet. 'Mark reviewed' means marking workspace metadata only \u2014 source files remain unchanged.\"\n          integrationPath=\"app.features.onboarding\"\n          onBack={() => navigate(`/p/${projectId}/s/${snapshotId}/map`)}\n          backLabel=\"Back to Map\"\n          showDevDisclosure={import.meta.env.DEV}\n        />\n      </div>\n    </div>\n  )\n}\n",
+        "line_count": 42,
+        "path": "frontend/src/pages/workspace/ProposalsPage.tsx"
+      }
+    }
+  ]
+}

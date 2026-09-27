@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "62b710f6015dc45d415348a26cb4e88f",
+  "_meta": {
+    "timestamp": 1790410956780,
+    "spend": {
+      "cost": 0.034372,
+      "contextTokens": 17186
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_wZ5NOsszof5SsNxHDfh6w6",
+      "name": "execute_command",
+      "arguments": {
+        "command": "which gh || find /usr /home -name \"gh\" -type f 2>/dev/null | head -5"
+      }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "role": "tool",
+  "content": "Command completed with no output.",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_kVQhbufr3AhQY7Jvq8610r",
+      "name": "execute_command",
+      "arguments": {
+        "command": "find /usr/share/bobide -name \"node\" -type f 2>/dev/null | head -5"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "find /usr/share/bobide -name \"node\" -type f",
+        "head -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "find /usr/share/bobide -name \"node\" -type f",
+        "find",
+        "head"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17599,
+    "exitCode": 0,
+    "durationMs": 119312,
+    "timestamp": 1790415343516,
+    "processes": []
+  },
+  "id": "4bc5507dff947cfa80c939efcdd3511f"
+}

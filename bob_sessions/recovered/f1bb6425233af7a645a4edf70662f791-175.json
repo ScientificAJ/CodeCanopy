@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "8b93a23553e94642460c1a1a8ec27c8b",
+  "_meta": {
+    "timestamp": 1790416206310,
+    "spend": {
+      "cost": 0.335206,
+      "contextTokens": 167603
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_Fs5x8V76S9aiqbdneGFZP0",
+      "name": "read_file",
+      "arguments": {
+        "path": "frontend/package.json"
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "role": "tool",
+  "content": "Contents of file .grepo-reference/Grepo_PRD_Package/design/tokens.css:\n\n1 | /* Grepo design contract v1.0. No font files are distributed. */\n2 | :root {\n3 |   --grepo-canvas: #FAFBF7;\n4 |   --grepo-surface: #FFFFFF;\n5 |   --grepo-surface-muted: #F3F5F0;\n6 |   --grepo-ink: #172019;\n7 |   --grepo-text-secondary: #526057;\n8 |   --grepo-line: #DFE5DA;\n9 |   --grepo-lime: #C6F84A;\n10 |   --grepo-lemon: #F2F85B;\n11 |   --grepo-green-strong: #28643A;\n12 |   --grepo-caution: #7A5200;\n13 |   --grepo-error: #A33232;\n14 |   --grepo-focus: #365A21;\n15 |   --grepo-font-sans: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n16 |   --grepo-font-mono: ui-monospace, \"Cascadia Code\", \"Liberation Mono\", monospace;\n17 |   --grepo-space-1: 4px; --grepo-space-2: 8px; --grepo-space-3: 12px;\n18 |   --grepo-space-4: 16px; --grepo-space-6: 24px; --grepo-space-8: 32px;\n19 |   --grepo-radius-control: 12px; --grepo-radius-card: 20px;\n20 |   --grepo-shadow-card: 0 6px 24px rgba(23,32,25,.055);\n21 |   --grepo-duration-fast: 120ms; --grepo-duration-normal: 180ms;\n22 | }\n23 | /* Native components must still be tested for contrast, focus and reflow. */\n24 | @media (prefers-reduced-motion: reduce) {\n25 |   :root { --grepo-duration-fast: 0ms; --grepo-duration-normal: 0ms; }\n26 | }\n27 | ",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_vyFhBkz6rVjFYKFpNUUVCG",
+      "name": "read_file",
+      "arguments": {
+        "path": ".grepo-reference/Grepo_PRD_Package/design/tokens.css"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path}",
+      "error": "Failed to read file {path}",
+      "running": "Reading file {path}",
+      "success": "Read file {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/.grepo-reference/Grepo_PRD_Package/design/tokens.css": 1790392052000
+    },
+    "durationMs": 9,
+    "timestamp": 1790414040711,
+    "processes": []
+  },
+  "id": "a5fb47fb53daec880c8c10be8e5d7822"
+}

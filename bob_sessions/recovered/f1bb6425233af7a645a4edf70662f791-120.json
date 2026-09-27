@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "35d39359cace1da1fe1f0cabfd39f0e7",
+  "_meta": {
+    "timestamp": 1790415405372,
+    "spend": {
+      "cost": 0.220464,
+      "contextTokens": 110232
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_2Mb7bYtJADyQS6woBKc3ej",
+      "name": "execute_command",
+      "arguments": {
+        "command": "ls ~/.nvm 2>/dev/null && echo \"exists\" || echo \"nvm not installed\"\nls /snap/bin/node 2>/dev/null && /snap/bin/node --version || echo \"no snap node\"\nls /usr/local/bin/node 2>/dev/null && /usr/local/bin/node --version || echo \"no local node\""
+      }
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "role": "tool",
+  "content": "Error from tool execute_command: Exit code: 6\n\nStderr:\ncurl: (6) Could not resolve host: raw.githubusercontent.com",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_EcG96HuewGy4yJa2ghcxgy",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -fsSL https://github.com/nvm-sh/nvm/raw/v0.40.8/install.sh -o /tmp/install_nvm.sh && echo \"downloaded\" && bash /tmp/install_nvm.sh 2>&1 | tail -5",
+        "timeout_seconds": 120
+      },
+      "isError": true
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "curl -fsSL https://github.com/nvm-sh/nvm/raw/v0.40.8/install.sh -o /tmp/install_nvm.sh",
+        "echo \"downloaded\"",
+        "bash /tmp/install_nvm.sh",
+        "tail -5"
+      ],
+      "requiresSecurityApproval": true,
+      "securityReason": "The command downloads a script from an external URL (GitHub) and immediately executes it locally, which is a classic remote code execution risk.",
+      "commandVariants": [
+        "curl -fsSL https://github.com/nvm-sh/nvm/raw/v0.40.8/install.sh -o /tmp/install_nvm.sh",
+        "curl",
+        "echo \"downloaded\"",
+        "echo",
+        "bash /tmp/install_nvm.sh",
+        "bash",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17717,
+    "exitCode": 6,
+    "durationMs": 4404,
+    "timestamp": 1790415488505,
+    "processes": []
+  },
+  "id": "fe1bcd780d25778a948457052d39dd72"
+}

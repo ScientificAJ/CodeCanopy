@@ -155,6 +155,7 @@ roles or semantic edges are added.
 
 ## Storage and bounds
 
+- GitHub: 250 MiB streamed archive download; the extraction limits below still apply.
 - ZIP: 50 MiB upload, 25 MiB per file, 250 MiB extracted, 200,000 raw entries
   and 50,000 retained files. Traversal, unsafe Windows names, special files and
   unsupported compression are rejected. Generated/dependency directories are

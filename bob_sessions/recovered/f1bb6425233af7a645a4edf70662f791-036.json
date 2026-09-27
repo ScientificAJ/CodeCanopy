@@ -1,0 +1,30 @@
+{
+  "role": "tool",
+  "content": "Contents of file backend/app/services/project_analysis.py:\n\n1 | import os\n2 | import tokenize\n3 | from pathlib import Path\n4 | \n5 | from app.core.analyzers import analyzer_service\n6 | from app.models.codebase import File\n7 | from app.services.project_archive import IGNORED_DIRECTORIES\n8 | from app.services.project_storage import (\n9 |     ProjectNotFoundError,\n10 |     get_project_directory,\n11 | )\n12 | \n13 | \n14 | class ProjectAnalysisError(ValueError):\n15 |     pass\n16 | \n17 | \n18 | def analyze_project_files(project_id: str) -> list[File]:\n19 |     project_directory = get_project_directory(project_id)\n20 |     resolved_project_directory = project_directory.resolve()\n21 |     results: list[File] = []\n22 | \n23 |     for current_directory, directories, filenames in os.walk(project_directory, followlinks=False):\n24 |         current_path = Path(current_directory)\n25 |         directories[:] = sorted(\n26 |             directory\n27 |             for directory in directories\n28 |             if directory.casefold() not in IGNORED_DIRECTORIES\n29 |             and not (current_path / directory).is_symlink()\n30 |         )\n31 | \n32 |         for filename in sorted(filenames):\n33 |             source_path = current_path / filename\n34 |             if source_path.is_symlink() or source_path.suffix.lower() != \".py\":\n35 |                 continue\n36 | \n37 |             resolved_source_path = source_path.resolve()\n38 |             try:\n39 |                 relative_path = resolved_source_path.relative_to(resolved_project_directory)\n40 |             except ValueError:\n41 |                 continue\n42 | \n43 |             relative_path_text = relative_path.as_posix()\n44 |             try:\n45 |                 with tokenize.open(source_path) as source_file:\n46 |                     source = source_file.read()\n47 |             except (SyntaxError, UnicodeDecodeError, LookupError) as error:\n48 |                 raise ProjectAnalysisError(f\"Could not read Python source at '{relative_path_text}'.\") from error\n49 | \n50 |             try:\n51 |                 results.append(\n52 |                     analyzer_service.analyze(\n53 |                         relative_path_text,\n54 |                         source,\n55 |                         size=source_path.stat().st_size,\n56 |                     )\n57 |                 )\n58 |             except SyntaxError as error:\n59 |                 raise ProjectAnalysisError(f\"Could not parse Python source at '{relative_path_text}'.\") from error\n60 | \n61 |     return results",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_8Td564SoUbpyDwKLUSgqys",
+      "name": "read_file",
+      "arguments": {
+        "path": "backend/app/services/project_analysis.py"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path}",
+      "error": "Failed to read file {path}",
+      "running": "Reading file {path}",
+      "success": "Read file {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/backend/app/services/project_analysis.py": 1790411117716
+    },
+    "durationMs": 7,
+    "timestamp": 1790414060797
+  },
+  "id": "3cd5527f64971275e63964d4150ee080"
+}

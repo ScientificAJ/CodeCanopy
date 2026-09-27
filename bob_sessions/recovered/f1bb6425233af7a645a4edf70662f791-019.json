@@ -1,0 +1,31 @@
+{
+  "role": "tool",
+  "content": "Contents of file .grepo-reference/Grepo_PRD_Package/reference/archify/UPSTREAM_REFERENCE.md:\n\n1 | # Archify: exact adoption reference\n2 | \n3 | Repository: https://github.com/tt-a1i/archify\n4 | Pinned revision inspected: 9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993\n5 | Skill metadata version observed: 2.17\n6 | Read on: 26 September 2026, through connected GitHub tools.\n7 | \n8 | Exact skill: https://github.com/tt-a1i/archify/blob/9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993/archify/SKILL.md\n9 | Viewer contract: https://github.com/tt-a1i/archify/blob/9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993/archify/references/viewer-runtime.md\n10 | License: https://github.com/tt-a1i/archify/blob/9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993/archify/LICENSE\n11 | Notices: https://github.com/tt-a1i/archify/blob/9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993/archify/THIRD_PARTY_NOTICES.md\n12 | \n13 | ## Required adoption behavior\n14 | \n15 | Read the pinned skill and the relevant schema/example before coding. Preserve the typed JSON IR -> validation -> deterministic HTML/SVG delivery pipeline, five diagram types, stable identities, relationship direction, standalone viewer, static default, explicit finite motion, theme/preset semantics and canonical export rules. Keep the source graph separate from a bounded view projection. Retain notices and attribute Archify. Do not claim its existing viewer behaviors as Grepo inventions.\n16 | \n17 | Use the exact CLI interface from the pinned skill. Showcase acceptance requires all nine artifact checks, zero composition errors and zero warnings. Nonzero delivery is failure; a prior artifact must not be relabeled as a new success. Treat deterministic validation, browser checks and perceptual review separately.\n18 | \n19 | Grepo adds snapshot-grounded source analysis, capability records, evidence validation, Change Trails, counter-evidence, proposal/README synthesis, a React synchronization bridge, citrus styling and a Bob Change Pack. A postMessage/React bridge is a proposed Grepo integration, not an already verified upstream API.\n20 | \n21 | ## Package boundary\n22 | \n23 | This PRD bundle includes an adoption specification and the source/license links. It does not include the complete Archify runtime or claim that it is installed, executed or vendored. Source-file copying into the container was not used as evidence of execution. Vendor the complete approved package at the pinned revision during implementation and preserve its license and third-party notices. Do not copy only SKILL.md and assume the renderer files exist.\n24 | \n25 | Suggested reviewed setup, run by the implementation team only:\n26 | \n27 | ```sh\n28 | git clone https://github.com/tt-a1i/archify vendor/archify\n29 | git -C vendor/archify checkout --detach 9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993\n30 | # Read the pinned source and package instructions before executing its tools.\n31 | ```\n32 | \n33 | Do not auto-update the vendored package during a live user analysis.\n34 | ",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_oabz7dQGDlaIzYz8zPs9PB",
+      "name": "read_file",
+      "arguments": {
+        "path": ".grepo-reference/Grepo_PRD_Package/reference/archify/UPSTREAM_REFERENCE.md"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path}",
+      "error": "Failed to read file {path}",
+      "running": "Reading file {path}",
+      "success": "Read file {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/.grepo-reference/Grepo_PRD_Package/reference/archify/UPSTREAM_REFERENCE.md": 1790392052000
+    },
+    "durationMs": 10,
+    "timestamp": 1790414043433,
+    "processes": []
+  },
+  "id": "bff6a844f42253c2b1743e1c4adf5248"
+}

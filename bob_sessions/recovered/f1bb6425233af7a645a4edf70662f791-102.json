@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "80fa71dcbc2d89bbee293e40eb972a3f",
+  "_meta": {
+    "timestamp": 1790415223886,
+    "spend": {
+      "cost": 0.217668,
+      "contextTokens": 108834
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_kVQhbufr3AhQY7Jvq8610r",
+      "name": "execute_command",
+      "arguments": {
+        "command": "find /usr/share/bobide -name \"node\" -type f 2>/dev/null | head -5"
+      }
+    }
+  ]
+}

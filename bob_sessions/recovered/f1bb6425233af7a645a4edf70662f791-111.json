@@ -1,0 +1,54 @@
+{
+  "role": "tool",
+  "content": "sudo: A terminal is required to authenticate",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_e4pNROpXahp5moZcuQcFHe",
+      "name": "execute_command",
+      "arguments": {
+        "command": "sudo apt-get install -y nodejs npm 2>&1 | tail -5",
+        "timeout_seconds": 120
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "sudo apt-get install -y nodejs npm",
+        "tail -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "sudo apt-get install -y nodejs npm",
+        "sudo",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17638,
+    "exitCode": 0,
+    "durationMs": 3068,
+    "timestamp": 1790415370240,
+    "processes": []
+  },
+  "id": "8288494d7507ea7bdfc2c5a2b552c9dc"
+}

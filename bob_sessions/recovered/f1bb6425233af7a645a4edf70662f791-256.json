@@ -1,0 +1,29 @@
+{
+  "role": "tool",
+  "content": "Found 2 matches\nfrontend/src/contexts/WorkspaceContext.tsx:\n  Line 27: import { listSnapshots } from '../services/v1/api'\n  Line 130:       const { listSnapshots } = await import('../services/v1/api')",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_o30IICLMmxonlRErOPRxZT",
+      "name": "grep",
+      "arguments": {
+        "path": "frontend/src/contexts/WorkspaceContext.tsx",
+        "pattern": "import.*listSnapshots|import.*v1.*api"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Search Files in {path} for \"{pattern}\"",
+      "error": "Failed to search files in {path}",
+      "running": "Searching files in {path} for \"{pattern}\"",
+      "success": "Searched files in {path} for \"{pattern}\""
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "durationMs": 16,
+    "timestamp": 1790416559514,
+    "processes": []
+  },
+  "id": "726249f09eae4d1154a91e8c0012d34c"
+}

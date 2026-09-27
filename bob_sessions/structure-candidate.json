@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Grepo repository structure",
+    "quality_profile": "showcase",
+    "animation": "none",
+    "viewBox": [
+      1100,
+      600
+    ],
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "repo",
+      "type": "external",
+      "label": "Grepo",
+      "sublabel": "Repository",
+      "pos": [
+        420,
+        60
+      ],
+      "size": [
+        260,
+        80
+      ]
+    },
+    {
+      "id": "backend",
+      "type": "external",
+      "label": "backend",
+      "sublabel": "Directory",
+      "pos": [
+        80,
+        360
+      ],
+      "size": [
+        260,
+        80
+      ]
+    },
+    {
+      "id": "frontend",
+      "type": "external",
+      "label": "frontend",
+      "sublabel": "Directory",
+      "pos": [
+        420,
+        360
+      ],
+      "size": [
+        260,
+        80
+      ]
+    },
+    {
+      "id": "docs",
+      "type": "external",
+      "label": "docs",
+      "sublabel": "Directory",
+      "pos": [
+        760,
+        360
+      ],
+      "size": [
+        260,
+        80
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "contains-backend",
+      "from": "repo",
+      "to": "backend",
+      "label": "contains"
+    },
+    {
+      "id": "contains-frontend",
+      "from": "repo",
+      "to": "frontend",
+      "label": "contains",
+      "labelDy": 120
+    },
+    {
+      "id": "contains-docs",
+      "from": "repo",
+      "to": "docs",
+      "label": "contains"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "role": "tool",
+  "content": "/usr/share/wireplumber/scripts/node\n/usr/share/bobide/resources/app/extensions/ms-vscode.js-debug/src/targets/node\n/usr/share/bobide/resources/app/extensions/css-language-features/server/dist/node\n/usr/share/bobide/resources/app/extensions/css-language-features/client/dist/node\n/usr/share/bobide/resources/app/extensions/emmet/dist/node",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_54QagYNn8DhiBc489Y945i",
+      "name": "execute_command",
+      "arguments": {
+        "command": "ls /home/rahul/.nvm 2>/dev/null || ls ~/.local/share/nvm 2>/dev/null || find /usr -name node 2>/dev/null | head -5 || echo \"no node found\""
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "ls /home/rahul/.nvm",
+        "ls ~/.local/share/nvm",
+        "find /usr -name node",
+        "head -5",
+        "echo \"no node found\""
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "ls",
+        "find /usr -name node",
+        "find",
+        "head",
+        "echo \"no node found\"",
+        "echo"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17152,
+    "exitCode": 0,
+    "durationMs": 8365,
+    "timestamp": 1790414614519,
+    "processes": []
+  },
+  "id": "59da64df7e970b840977606357d6d16a"
+}

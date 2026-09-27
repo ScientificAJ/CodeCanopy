@@ -1,0 +1,31 @@
+{
+  "role": "tool",
+  "content": "Contents of file backend/app/api/projects.py:\n\n1 | from fastapi import APIRouter, File, HTTPException, UploadFile, status\n2 | \n3 | from app.models.codebase import File as CodeFile, Project\n4 | from app.models.placeholder import PlaceholderResponse\n5 | from app.models.project import ProjectUploadResponse\n6 | from app.services.project_analysis import ProjectAnalysisError, analyze_project_files\n7 | from app.services.project_archive import ProjectUploadError, ProjectUploadTooLargeError\n8 | from app.services.project_storage import (\n9 |     ProjectNotFoundError,\n10 |     get_project,\n11 |     get_project_files,\n12 |     store_project_archive,\n13 | )\n14 | \n15 | router = APIRouter(prefix=\"/projects\", tags=[\"projects\"])\n16 | \n17 | \n18 | @router.post(\"\", response_model=ProjectUploadResponse, status_code=status.HTTP_201_CREATED)\n19 | async def create_project(file: UploadFile = File(...)) -> ProjectUploadResponse:\n20 |     try:\n21 |         return await store_project_archive(file)\n22 |     except ProjectUploadTooLargeError as error:\n23 |         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=str(error)) from error\n24 |     except ProjectUploadError as error:\n25 |         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error\n26 | \n27 | \n28 | @router.get(\"/{project_id}\", response_model=Project)\n29 | def read_project(project_id: str) -> Project:\n30 |     try:\n31 |         return get_project(project_id)\n32 |     except ProjectNotFoundError as error:\n33 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error\n34 | \n35 | \n36 | @router.get(\"/{project_id}/files\", response_model=list[CodeFile])\n37 | def read_project_files(project_id: str) -> list[CodeFile]:\n38 |     try:\n39 |         return get_project_files(project_id)\n40 |     except ProjectNotFoundError as error:\n41 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error\n42 | \n43 | \n44 | @router.post(\"/{project_id}/analyze\", response_model=list[CodeFile])\n45 | def analyze_project(project_id: str) -> list[CodeFile]:\n46 |     try:\n47 |         return analyze_project_files(project_id)\n48 |     except ProjectNotFoundError as error:\n49 |         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error\n50 |     except ProjectAnalysisError as error:\n51 |         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(error)) from error\n52 | ",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_5Pjapo9WihBDiGAdx3v3iK",
+      "name": "read_file",
+      "arguments": {
+        "path": "backend/app/api/projects.py"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path}",
+      "error": "Failed to read file {path}",
+      "running": "Reading file {path}",
+      "success": "Read file {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/backend/app/api/projects.py": 1790411117715
+    },
+    "durationMs": 12,
+    "timestamp": 1790414058088,
+    "processes": []
+  },
+  "id": "12ddb56a88f2548503652f2a5dce67d0"
+}

@@ -1,0 +1,60 @@
+{
+  "role": "tool",
+  "content": "v24.21.0\n11.19.0",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_iUiVcgb7BNC5yAOm2aj94p",
+      "name": "execute_command",
+      "arguments": {
+        "command": "export NVM_DIR=\"$HOME/.nvm\" && source \"$NVM_DIR/nvm.sh\" && node --version && npm --version"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "export NVM_DIR=\"$HOME/.nvm\"",
+        "source \"$NVM_DIR/nvm.sh\"",
+        "node --version",
+        "npm --version"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "export NVM_DIR=\"$HOME/.nvm\"",
+        "export",
+        "source \"$NVM_DIR/nvm.sh\"",
+        "source",
+        "node --version",
+        "node",
+        "npm --version",
+        "npm"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 18355,
+    "exitCode": 0,
+    "durationMs": 919,
+    "timestamp": 1790415593624,
+    "processes": []
+  },
+  "id": "5aadb59993511c3b7de27c563178a2f4"
+}

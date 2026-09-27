@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "c57e06561f234fc8783399a98be70d8c",
+  "_meta": {
+    "timestamp": 1790416559207,
+    "spend": {
+      "cost": 0.416248,
+      "contextTokens": 208124
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_o30IICLMmxonlRErOPRxZT",
+      "name": "grep",
+      "arguments": {
+        "path": "frontend/src/contexts/WorkspaceContext.tsx",
+        "pattern": "import.*listSnapshots|import.*v1.*api"
+      }
+    }
+  ]
+}

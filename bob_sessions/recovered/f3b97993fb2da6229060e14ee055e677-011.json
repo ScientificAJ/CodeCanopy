@@ -1,0 +1,54 @@
+{
+  "role": "tool",
+  "content": "sudo: A terminal is required to authenticate",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_5zmvyoKxq3yaTiSts8EOp6",
+      "name": "execute_command",
+      "arguments": {
+        "command": "sudo apt-get install -y git 2>&1 | tail -5",
+        "timeout_seconds": 60
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "sudo apt-get install -y git",
+        "tail -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "sudo apt-get install -y git",
+        "sudo",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 12862,
+    "exitCode": 0,
+    "durationMs": 5291,
+    "timestamp": 1790410849789,
+    "processes": []
+  },
+  "id": "7debc8824c19b3e6991c576cd4291e8c"
+}

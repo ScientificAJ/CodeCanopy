@@ -1,0 +1,32 @@
+{
+  "role": "tool",
+  "content": "Contents of file frontend/src/services/exportService.ts:\n\n128 |   const NODE_H = 36\n129 |   const H_GAP = 20\n130 |   const V_GAP = 20\n131 |   const PADDING = 40\n132 | \n133 |   const entityMap = new Map(graph.entities.map(e => [e.id, e]))\n134 |   const childrenMap = new Map<string, string[]>()\n135 |   for (const rel of graph.relations) {\n136 |     if (rel.kind === 'contains') {\n137 |       const list = childrenMap.get(rel.source_id) ?? []\n138 |       list.push(rel.target_id)\n139 |       childrenMap.set(rel.source_id, list)\n140 |     }\n141 |   }\n142 | \n143 |   interface SvgNode {\n144 |     id: string\n145 |     label: string\n146 |     kind: string\n147 |     x: number\n148 |     y: number\n149 |     depth: number\n150 |     children: SvgNode[]\n151 |   }\n152 | \n153 |   let xCounter = PADDING\n154 |   function buildSvgNode(entityId: string, depth: number): SvgNode {\n155 |     const entity = entityMap.get(entityId)\n156 |     const label = entity?.label ?? entityId.slice(0, 12)\n157 |     const kind = entity?.kind ?? 'file'\n158 |     const childIds = childrenMap.get(entityId) ?? []\n159 |     const children = childIds.map(id => buildSvgNode(id, depth + 1))\n160 |     const node: SvgNode = {\n161 |       id: entityId,\n162 |       label,\n163 |       kind,\n164 |       x: 0,\n165 |       y: PADDING + depth * (NODE_H + V_GAP),\n166 |       depth,\n167 |       children,\n168 |     }\n169 |     if (children.length === 0) {\n170 |       node.x = xCounter\n171 |       xCounter += NODE_W + H_GAP\n172 |     } else {\n173 |       const first = children[0]\n174 |       const last = children[children.length - 1]\n175 |       node.x = (first.x + last.x + NODE_W) / 2 - NODE_W / 2\n176 |     }\n177 |     return node\n178 |   }\n179 | \n180 |   const roots = graph.entities.filter(e => !e.parent_id || e.kind === 'repository')\n181 |   const svgRoots = roots.map(r => buildSvgNode(r.id, 0))\n182 | \n183 |   function flattenSvg(nodes: SvgNode[]): SvgNode[] {\n184 |     const result: SvgNode[] = []\n185 |     function visit(n: SvgNode) { result.push(n); n.children.forEach(visit) }\n186 |     nodes.forEach(visit)\n187 |     return result\n188 |   }\n189 | \n190 |   const allSvgNodes = flattenSvg(svgRoots)\n191 |   const svgW = Math.max(600, xCounter + PADDING)\n192 |   const maxDepth = allSvgNodes.reduce((m, n) => Math.max(m, n.depth), 0)\n193 |   const svgH = PADDING * 2 + (maxDepth + 1) * (NODE_H + V_GAP)\n194 | \n195 |   const nodeColors: Record<string, string> = {\n196 |     repository: '#C6F84A',\n197 |     directory: '#F3F5F0',\n198 |     file: '#FFFFFF',\n199 |     virtual_group: '#F2F85B',\n200 |   }\n201 | \n202 |   const svgNodes = allSvgNodes.map(n => {\n203 |     const fill = nodeColors[n.kind] ?? '#FFFFFF'\n204 |     const stroke = n.kind === 'repository' ? '#a0d020' : '#DFE5DA'\n205 |     const label = n.label.length > 18 ? `${n.label.slice(0, 16)}\u2026` : n.label\n206 |     return `<g class=\"map-node\" transform=\"translate(${n.x},${n.y})\">\n207 |       <rect width=\"${NODE_W}\" height=\"${NODE_H}\" rx=\"6\" fill=\"${fill}\" stroke=\"${stroke}\" stroke-width=\"1\"/>\n208 |       <text x=\"${NODE_W / 2}\" y=\"${NODE_H / 2 + 4}\" text-anchor=\"middle\" font-size=\"11\" font-family=\"system-ui,sans-serif\" fill=\"#172019\">${escHtml(label)}</text>\n209 |     </g>`\n210 |   }).join('\\n    ')\n211 | \n212 |   const svgEdges = graph.relations\n213 |     .filter(r => r.kind === 'contains')\n214 |     .map(r => {\n215 |       const src = allSvgNodes.find(n => n.id === r.source_id)\n216 |       const tgt = allSvgNodes.find(n => n.id === r.target_id)\n217 |       if (!src || !tgt) return ''\n218 |       return `<line x1=\"${src.x + NODE_W / 2}\" y1=\"${src.y + NODE_H}\" x2=\"${tgt.x + NODE_W / 2}\" y2=\"${tgt.y}\" stroke=\"#DFE5DA\" stroke-width=\"1\"/>`\n219 |     })\n220 |     .join('\\n    ')\n221 | \n222 |   const deferredList = manifest.deferred_capabilities\n223 |     .map(c => `<li>${escHtml(c)}</li>`)\n224 |     .join('\\n          ')\n225 | \n226 |   // Table of files (top 50 only to keep size reasonable)\n227 |   const fileList = graph.entities\n228 |     .filter(e => e.kind === 'file')\n229 |     .slice(0, 50)\n230 |     .map(e => `<tr><td style=\"font-family:monospace;font-size:11px\">${escHtml(e.path ?? e.label)}</td><td style=\"font-size:11px\">${escHtml(e.metadata?.language as string ?? '')}</td></tr>`)\n231 |     .join('\\n')\n232 | \n233 |   return `<!DOCTYPE html>\n234 | <html lang=\"en\">\n235 | <head>\n236 | <meta charset=\"utf-8\">\n237 | <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n238 | <title>Grepo: ${title} \u2014 Structural Map</title>\n239 | <style>\n240 | body{margin:0;padding:0;font-family:system-ui,sans-serif;background:#FAFBF7;color:#172019;}",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_H3vsCQVudeiUb4Dl7pf7gn",
+      "name": "read_file",
+      "arguments": {
+        "path": "frontend/src/services/exportService.ts",
+        "range": "128,240"
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "Read File {path} ({range})",
+      "error": "Failed to read file {path} ({range})",
+      "running": "Reading file {path} ({range})",
+      "success": "Read file {path} ({range})"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/frontend/src/services/exportService.ts": 1790416495216
+    },
+    "durationMs": 6,
+    "timestamp": 1790416499684,
+    "processes": []
+  },
+  "id": "8ee419df058323827509a42562a0b32a"
+}

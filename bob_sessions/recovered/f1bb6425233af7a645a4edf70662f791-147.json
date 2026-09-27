@@ -1,0 +1,51 @@
+{
+  "role": "tool",
+  "content": "Command completed with no output.",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_FMlmNGwGB5Q9kqDNfNOlmt",
+      "name": "execute_command",
+      "arguments": {
+        "command": "mkdir -p frontend/src/design frontend/src/types/v1 frontend/src/contexts frontend/src/hooks frontend/src/pages/workspace frontend/src/components/map frontend/src/components/tree frontend/src/components/source frontend/src/components/slots frontend/src/services/v1"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "mkdir -p frontend/src/design frontend/src/types/v1 frontend/src/contexts frontend/src/hooks frontend/src/pages/workspace frontend/src/components/map frontend/src/components/tree frontend/src/components/source frontend/src/components/slots frontend/src/services/v1"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "mkdir -p frontend/src/design frontend/src/types/v1 frontend/src/contexts frontend/src/hooks frontend/src/pages/workspace frontend/src/components/map frontend/src/components/tree frontend/src/components/source frontend/src/components/slots frontend/src/services/v1",
+        "mkdir"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 19266,
+    "exitCode": 0,
+    "durationMs": 4819,
+    "timestamp": 1790415696811,
+    "processes": []
+  },
+  "id": "5305d383918d6e5bd726c9fd73dca14e"
+}

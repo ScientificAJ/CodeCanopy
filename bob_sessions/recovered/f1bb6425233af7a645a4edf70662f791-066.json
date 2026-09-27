@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "4c5574dbee44d906026e6db9af542eb3",
+  "_meta": {
+    "timestamp": 1790414253885,
+    "spend": {
+      "cost": 0.181882,
+      "contextTokens": 90941
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_9PTBSg38216ORFHiiaGwSU",
+      "name": "write_file",
+      "arguments": {
+        "content": "\"\"\"V1 integration-slot response models.\n\nThese models define the machine-readable \"not connected\" responses\nreturned by all integration slot endpoints.  They allow frontend\ncomponents to distinguish:\n  - NOT_CONNECTED  : the feature module has not been wired in yet\n  - NOT_IMPLEMENTED: the endpoint exists but the feature is deferred\n  - UNAVAILABLE    : the service is temporarily down\n\nFrontend code MUST NOT treat these as empty-success responses.\n\"\"\"\nfrom __future__ import annotations\n\nfrom typing import Literal\n\nfrom pydantic import BaseModel\n\n\nclass SlotStatus(str):\n    NOT_CONNECTED = \"NOT_CONNECTED\"\n    NOT_IMPLEMENTED = \"NOT_IMPLEMENTED\"\n    UNAVAILABLE = \"UNAVAILABLE\"\n\n\nclass IntegrationSlotResponse(BaseModel):\n    \"\"\"Returned by any deferred-feature endpoint.\n\n    Clients render an explicit placeholder; they must never treat this\n    as a successful analysis result.\n    \"\"\"\n\n    schema_version: Literal[\"1.0\"] = \"1.0\"\n    slot: str          # e.g. \"summaries.context-panel\"\n    status: str        # one of SlotStatus constants\n    title: str\n    description: str\n    integration_path: str | None = None  # import path of the slot module\n    docs_url: str | None = None\n\n\n# ---------------------------------------------------------------------------\n# Pre-built slot definitions for each deferred feature\n# ---------------------------------------------------------------------------\n\nSLOT_SUMMARIES = IntegrationSlotResponse(\n    slot=\"summaries.context-panel\",\n    status=SlotStatus.NOT_CONNECTED,\n    title=\"AI File & Folder Summaries\",\n    description=(\n        \"Integration slot: put the summaries feature here.  \"\n        \"Not connected yet.  The repository map and source browser work independently.\"\n    ),\n    integration_path=\"app.features.summaries\",\n)\n\nSLOT_DEPENDENCIES = IntegrationSlotResponse(\n    slot=\"dependencies.workspace\",\n    status=SlotStatus.NOT_CONNECTED,\n    title=\"Connections & Change Impact\",\n    description=(\n        \"Integration slot: put the dependencies feature here.  \"\n        \"Not connected yet.  Structural containment browsing works independently.\"\n    ),\n    integration_path=\"app.features.relationships\",\n)\n\nSLOT_REUSE = IntegrationSlotResponse(\n    slot=\"reuse.findings\",\n    status=SlotStatus.NOT_CONNECTED,\n    title=\"Reusable & Shared Functions\",\n    description=(\n        \"Integration slot: put the reuse-discovery feature here.  \"\n        \"Not connected yet.\"\n    ),\n    integration_path=\"app.features.reusable_functions\",\n)\n\nSLOT_DUPLICATES = IntegrationSlotResponse(\n    slot=\"duplicates.compare\",\n    status=SlotStatus.NOT_CONNECTED,\n    title=\"Duplicate Code Review\",\n    description=(\n        \"Integration slot: put the duplicate-detection feature here.  \"\n        \"Not connected yet.\"\n    ),\n    integration_path=\"app.features.duplicate_detection\",\n)\n\nSLOT_UNUSED = IntegrationSlotResponse(\n    slot=\"unused.review\",\n    status=SlotStatus.NOT_CONNECTED,\n    title=\"Unused Code Candidates\",\n    description=(\n        \"Integration slot: put the unused-code review feature here.  \"\n        \"Not connected yet.\"\n    ),\n    integration_path=\"app.features.duplicate_detection\",\n)\n\nSLOT_ASK = IntegrationSlotResponse(\n    slot=\"ask.workspace\",\n    status=SlotStatus.NOT_CONNECTED,\n    title=\"Ask Grepo\",\n    description=(\n        \"Integration slot: put the Ask Grepo conversational feature here.  \"\n        \"Not connected yet.  No Watson credentials are required to browse the map.\"\n    ),\n    integration_path=\"app.features.codebase_chat\",\n)\n\nSLOT_PROPOSALS = IntegrationSlotResponse(\n    slot=\"proposals.detail\",\n    status=SlotStatus.NOT_CONNECTED,\n    title=\"Proposals & Change Packs\",\n    description=(\n        \"Integration slot: put the proposals feature here.  \"\n        \"Not connected yet.\"\n    ),\n    integration_path=\"app.features.onboarding\",\n)\n",
+        "line_count": 113,
+        "path": "backend/app/models/v1/slots.py"
+      }
+    }
+  ]
+}

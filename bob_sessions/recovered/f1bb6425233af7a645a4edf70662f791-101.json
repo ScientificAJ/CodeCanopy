@@ -1,0 +1,62 @@
+{
+  "role": "tool",
+  "content": "/usr/share/bobide/resources/app/extensions/npm",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_06O7FQ6CCbyLITBxPKtqvq",
+      "name": "execute_command",
+      "arguments": {
+        "command": "find /usr/share/bobide -name \"npm\" 2>/dev/null | head -3; find /opt -name \"npm\" 2>/dev/null | head -3; find / -name \"npm\" -type f 2>/dev/null | grep -v proc | head -5",
+        "timeout_seconds": 15
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "find /usr/share/bobide -name \"npm\"",
+        "head -3",
+        "find /opt -name \"npm\"",
+        "head -3",
+        "find / -name \"npm\" -type f",
+        "grep -v proc",
+        "head -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "find /usr/share/bobide -name \"npm\"",
+        "find",
+        "head",
+        "find /opt -name \"npm\"",
+        "find / -name \"npm\" -type f",
+        "grep"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17537,
+    "exitCode": 0,
+    "durationMs": 603030,
+    "timestamp": 1790415221170,
+    "processes": []
+  },
+  "id": "0fa42c06ae45445f55c0039cb4fa09fd"
+}

@@ -1,0 +1,62 @@
+{
+  "role": "tool",
+  "content": "#!/bin/bash\n\n# Logger Function\n---\n  \"tag_name\": \"v0.40.8\",",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_vXKSAz5YCXznBJ65kEFsHQ",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -fsSL https://deb.nodesource.com/setup_lts.x 2>/dev/null | head -3; echo \"---\"; curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest 2>/dev/null | grep tag_name | head -1",
+        "timeout_seconds": 15
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "curl -fsSL https://deb.nodesource.com/setup_lts.x",
+        "head -3",
+        "echo \"---\"",
+        "curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest",
+        "grep tag_name",
+        "head -1"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "curl -fsSL https://deb.nodesource.com/setup_lts.x",
+        "curl",
+        "head",
+        "echo \"---\"",
+        "echo",
+        "curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest",
+        "grep"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17642,
+    "exitCode": 0,
+    "durationMs": 3516,
+    "timestamp": 1790415377842,
+    "processes": []
+  },
+  "id": "40cafa98e03f5eff6832f2ae38117c1c"
+}

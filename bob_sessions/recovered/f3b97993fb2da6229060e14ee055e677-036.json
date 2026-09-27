@@ -1,0 +1,58 @@
+{
+  "role": "tool",
+  "content": "git version 2.53.0\nCloning into '/home/rahul/Desktop/Grepo'...",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_7geayMhV2Sw0Ef8bSNZOfC",
+      "name": "execute_command",
+      "arguments": {
+        "command": "export PATH=\"$PATH:/home/rahul/.local/bin\" && git --version && gh repo clone ScientificAJ/Grepo /home/rahul/Desktop/Grepo 2>&1",
+        "timeout_seconds": 60
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "export PATH=\"$PATH:/home/rahul/.local/bin\"",
+        "git --version",
+        "gh repo clone ScientificAJ/Grepo /home/rahul/Desktop/Grepo"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "export PATH=\"$PATH:/home/rahul/.local/bin\"",
+        "export",
+        "git --version",
+        "git",
+        "gh repo clone ScientificAJ/Grepo /home/rahul/Desktop/Grepo",
+        "gh"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 13109,
+    "exitCode": 0,
+    "durationMs": 17888,
+    "timestamp": 1790411117724,
+    "processes": []
+  },
+  "id": "4db0771ea05bedb0f9991f33ea9fd927"
+}

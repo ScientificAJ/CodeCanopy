@@ -1,0 +1,55 @@
+{
+  "content": "Could you please share the full GitHub URL of the Grepo repository you want to clone? (e.g. `https://github.com/username/Grepo`)",
+  "role": "assistant",
+  "_meta": {
+    "renderUI": {
+      "toolCallId": "30dff6c3-b8f4-444d-9e17-b046fe92edc6",
+      "spec": {
+        "title": "Could you please share the full GitHub URL of the Grepo repository you want to clone? (e.g. `https://github.com/username/Grepo`)",
+        "root": "followup",
+        "elements": {
+          "followup": {
+            "type": "FollowUpQuestion",
+            "props": {
+              "question": "Could you please share the full GitHub URL of the Grepo repository you want to clone? (e.g. `https://github.com/username/Grepo`)",
+              "options": {
+                "$bindState": "options"
+              },
+              "allowMultiple": false,
+              "value": {
+                "$bindState": "selectedAnswer"
+              }
+            },
+            "on": {
+              "change": {
+                "action": "answer_selected",
+                "params": {
+                  "selectedAnswer": {
+                    "$state": "/selectedAnswer"
+                  },
+                  "options": {
+                    "$state": "/options"
+                  }
+                }
+              }
+            },
+            "children": []
+          }
+        },
+        "state": {
+          "selectedAnswer": "",
+          "options": [
+            "https://github.com/GabLeRoux/Grepo",
+            "https://github.com/rahul/Grepo"
+          ]
+        }
+      },
+      "state": "output-error",
+      "isCancelled": true
+    },
+    "timestamp": 1790410911314,
+    "stopReason": "user_cancelled"
+  },
+  "id": "df63f31d56584955c00c5d0adf31dffb",
+  "stop": true
+}

@@ -1,0 +1,50 @@
+{
+  "role": "tool",
+  "content": "README.md\ndist\nimages\npackage.json\npackage.nls.json",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_2rjoqPK5FfyfdCbPmSe83c",
+      "name": "execute_command",
+      "arguments": {
+        "command": "ls /usr/share/bobide/resources/app/extensions/npm/"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "ls /usr/share/bobide/resources/app/extensions/npm/"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "ls"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17603,
+    "exitCode": 0,
+    "durationMs": 836,
+    "timestamp": 1790415346817,
+    "processes": []
+  },
+  "id": "c698547b8a0018421ac27be60f415eff"
+}

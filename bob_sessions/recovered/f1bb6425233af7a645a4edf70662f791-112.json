@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "5468295dc0158a42784bd6c58d3d5c75",
+  "_meta": {
+    "timestamp": 1790415373420,
+    "spend": {
+      "cost": 0.219194,
+      "contextTokens": 109597
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_vXKSAz5YCXznBJ65kEFsHQ",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -fsSL https://deb.nodesource.com/setup_lts.x 2>/dev/null | head -3; echo \"---\"; curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest 2>/dev/null | grep tag_name | head -1",
+        "timeout_seconds": 15
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "cbce936bc451caabc21efb353c223aaf",
+  "_meta": {
+    "timestamp": 1790416645622,
+    "spend": {
+      "cost": 0.426078,
+      "contextTokens": 213039
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_PEnbfj5x4rr7Bgj1F4sK5m",
+      "name": "execute_command",
+      "arguments": {
+        "command": "ls /home/rahul/.bob/bob-sessions 2>/dev/null; find / -name \"pytest\" -type f 2>/dev/null | grep -v proc | head -5; find / -name \"uvicorn\" -type f 2>/dev/null | grep -v proc | head -5",
+        "timeout_seconds": 15
+      }
+    }
+  ]
+}

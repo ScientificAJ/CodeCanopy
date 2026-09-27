@@ -1,0 +1,53 @@
+{
+  "role": "tool",
+  "content": "{\n  \"url\": \"https://api.github.com/repos/nvm-sh/nvm/releases/392658142\",\n  \"assets_url\": \"https://api.github.com/repos/nvm-sh/nvm/releases/392658142/assets\",\n  \"upload_url\": \"https://uploads.github.com/repos/nvm-sh/nvm/releases/392658142/assets{?name,label}\",\n  \"html_url\": \"https://github.com/nvm-sh/nvm/releases/tag/v0.40.8\",",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_mSMTs0URCIvVaPfXOZfuw0",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest 2>&1 | head -5"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest",
+        "head -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest",
+        "curl",
+        "head"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17707,
+    "exitCode": 0,
+    "durationMs": 952,
+    "timestamp": 1790415475322,
+    "processes": []
+  },
+  "id": "ed55325a9da1170028cc036538516511"
+}

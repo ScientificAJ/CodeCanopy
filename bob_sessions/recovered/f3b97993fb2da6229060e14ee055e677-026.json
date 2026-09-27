@@ -1,0 +1,55 @@
+{
+  "role": "tool",
+  "content": "/usr/share/xkeyboard-config-2/symbols/gh\n/home/rahul/.local/bin/gh",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_wZ5NOsszof5SsNxHDfh6w6",
+      "name": "execute_command",
+      "arguments": {
+        "command": "which gh || find /usr /home -name \"gh\" -type f 2>/dev/null | head -5"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "which gh",
+        "find /usr /home -name \"gh\" -type f",
+        "head -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "which",
+        "find /usr /home -name \"gh\" -type f",
+        "find",
+        "head"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 12910,
+    "exitCode": 0,
+    "durationMs": 10072,
+    "timestamp": 1790410967261,
+    "processes": []
+  },
+  "id": "64cd1fcd11218b9aed3878ce3e740f86"
+}

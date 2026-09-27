@@ -1,0 +1,64 @@
+{
+  "role": "tool",
+  "content": "ok\n=> Appending bash_completion source string to /home/rahul/.bashrc\n=> Close and reopen your terminal to start using nvm or run the following to use it now:\n\nexport NVM_DIR=\"$HOME/.nvm\"\n[ -s \"$NVM_DIR/nvm.sh\" ] && \\. \"$NVM_DIR/nvm.sh\"  # This loads nvm\n[ -s \"$NVM_DIR/bash_completion\" ] && \\. \"$NVM_DIR/bash_completion\"  # This loads nvm bash_completion",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_HBsA7JCcmkZyPYrEZvnum0",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -s \"https://api.github.com/repos/nvm-sh/nvm/contents/install.sh?ref=v0.40.8\" 2>&1 | python3 -c \"import sys,json,base64; d=json.load(sys.stdin); open('/tmp/install_nvm.sh','w').write(base64.b64decode(d['content']).decode())\" && echo \"ok\" && bash /tmp/install_nvm.sh 2>&1 | tail -6",
+        "timeout_seconds": 120
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "curl -s \"https://api.github.com/repos/nvm-sh/nvm/contents/install.sh?ref=v0.40.8\"",
+        "python3 -c \"import sys,json,base64; d=json.load(sys.stdin); open('/tmp/install_nvm.sh','w').write(base64.b64decode(d['content']).decode())\"",
+        "echo \"ok\"",
+        "bash /tmp/install_nvm.sh",
+        "tail -6"
+      ],
+      "requiresSecurityApproval": true,
+      "securityReason": "Command downloads a script from an external URL and then executes it locally, which allows arbitrary code execution from an untrusted source.",
+      "commandVariants": [
+        "curl -s \"https://api.github.com/repos/nvm-sh/nvm/contents/install.sh?ref=v0.40.8\"",
+        "curl",
+        "python3 -c \"import sys,json,base64; d=json.load(sys.stdin); open('/tmp/install_nvm.sh','w').write(base64.b64decode(d['content']).decode())\"",
+        "python3",
+        "echo \"ok\"",
+        "echo",
+        "bash /tmp/install_nvm.sh",
+        "bash",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17736,
+    "exitCode": 0,
+    "durationMs": 50319,
+    "timestamp": 1790415551339,
+    "processes": []
+  },
+  "id": "7c828ff6eb8bc5b1150b20acd4a11a63"
+}

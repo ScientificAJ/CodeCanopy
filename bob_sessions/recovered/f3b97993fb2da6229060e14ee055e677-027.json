@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "c01a2c15edc14612f35aa547836d7492",
+  "_meta": {
+    "timestamp": 1790410968824,
+    "spend": {
+      "cost": 0.034594,
+      "contextTokens": 17297
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_gj2g2MhcnauLBhMhA0V4uM",
+      "name": "execute_command",
+      "arguments": {
+        "command": "export PATH=\"$PATH:/home/rahul/.local/bin\" && gh auth status"
+      }
+    }
+  ]
+}

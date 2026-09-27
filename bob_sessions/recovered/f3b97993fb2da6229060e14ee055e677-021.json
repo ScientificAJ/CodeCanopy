@@ -1,0 +1,13 @@
+{
+  "role": "assistant",
+  "content": "To clone your private repository, I'll need a few things:\n\n1. **Your GitHub username** \u2014 so I can construct the correct URL (e.g. `github.com/your-username/Grepo`)\n2. **Authentication** \u2014 one of:\n   - A **Personal Access Token (PAT)** from GitHub (Settings \u2192 Developer settings \u2192 Personal access tokens)\n   - Or confirm if you have an **SSH key** already set up on this machine (`~/.ssh/id_rsa` or `~/.ssh/id_ed25519`)\n\nAlso, please confirm **git is now installed** by running `git --version` in your terminal.\n\nOnce I have these, I can clone the repo and set up the remote for you!",
+  "id": "e5bccd41a36b394900ba623bdd0980ca",
+  "_meta": {
+    "timestamp": 1790410938373,
+    "spend": {
+      "cost": 0.033962,
+      "contextTokens": 16981
+    }
+  },
+  "stop": true
+}

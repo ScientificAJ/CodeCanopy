@@ -1,0 +1,29 @@
+{
+  "fixture_only": true,
+  "workspace": "http://127.0.0.1:5173/p/c7af31af163a489f9b0930404d6570e5/s/265eb77f2fdc45ac8c39ee85ecab69c5",
+  "screen_sizes": [
+    [
+      1672,
+      941
+    ],
+    [
+      1440,
+      900
+    ],
+    [
+      1920,
+      1080
+    ],
+    [
+      1600,
+      1000
+    ],
+    [
+      2048,
+      1320
+    ]
+  ],
+  "offline_network_requests": [],
+  "console_errors": [],
+  "export_sha256": "61c08e82bbd517abb770ded967d4dc08fce16bb098f28568a44e253841ed8540"
+}

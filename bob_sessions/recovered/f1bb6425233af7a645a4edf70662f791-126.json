@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "db7c7015bbe41d43cb5a52e72bb0f153",
+  "_meta": {
+    "timestamp": 1790415477994,
+    "spend": {
+      "cost": 0.221488,
+      "contextTokens": 110744
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_q8CCZpdNa3g1rJOZ43VajB",
+      "name": "execute_command",
+      "arguments": {
+        "command": "curl -s https://github.com/nvm-sh/nvm 2>&1 | head -3"
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "Now the main App.tsx with routing and vite.config.ts update for vitest:",
+  "id": "b0b3aed938a54fd8fad454c061be9970",
+  "_meta": {
+    "timestamp": 1790416352393,
+    "spend": {
+      "cost": 0.376392,
+      "contextTokens": 188196
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_gzUyvCUxPgIPlPHZtwC0W2",
+      "name": "write_file",
+      "arguments": {
+        "content": "/**\n * Grepo application root \u2014 sets up routing and the app shell.\n *\n * Route structure (PRD \u00a77.1):\n *   /                                       \u2014 Import page\n *   /p/:projectId                           \u2014 Project root (redirects to latest snapshot)\n *   /p/:projectId/s/:snapshotId/overview    \u2014 Repository overview\n *   /p/:projectId/s/:snapshotId/map         \u2014 Structure map\n *   /p/:projectId/s/:snapshotId/dependencies \u2014 Dependencies (integration slot)\n *   /p/:projectId/s/:snapshotId/opportunities/:kind \u2014 Opportunities (integration slot)\n *   /p/:projectId/s/:snapshotId/ask         \u2014 Ask Grepo (integration slot)\n *   /p/:projectId/s/:snapshotId/proposals   \u2014 Proposals (integration slot)\n */\n\nimport { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'\nimport ImportPage from './pages/ImportPage'\nimport { ProjectRoot, WorkspaceLayout } from './pages/workspace/WorkspaceLayout'\nimport OverviewPage from './pages/workspace/OverviewPage'\nimport MapPage from './pages/workspace/MapPage'\nimport DependenciesPage from './pages/workspace/DependenciesPage'\nimport OpportunitiesPage from './pages/workspace/OpportunitiesPage'\nimport AskPage from './pages/workspace/AskPage'\nimport ProposalsPage from './pages/workspace/ProposalsPage'\nimport './styles.css'\n\nexport default function App() {\n  return (\n    <BrowserRouter>\n      <Routes>\n        {/* Import landing page */}\n        <Route path=\"/\" element={<ImportPage />} />\n\n        {/* Project root \u2014 redirects to latest snapshot */}\n        <Route path=\"/p/:projectId\" element={<ProjectRoot />} />\n\n        {/* Workspace \u2014 all routes under a snapshot */}\n        <Route path=\"/p/:projectId/s/:snapshotId\" element={<WorkspaceLayout />}>\n          <Route index element={<Navigate to=\"overview\" replace />} />\n          <Route path=\"overview\" element={<OverviewPage />} />\n          <Route path=\"map\" element={<MapPage />} />\n          <Route path=\"dependencies\" element={<DependenciesPage />} />\n          <Route path=\"opportunities\" element={<Navigate to=\"reuse\" replace />} />\n          <Route path=\"opportunities/:kind\" element={<OpportunitiesPage />} />\n          <Route path=\"ask\" element={<AskPage />} />\n          <Route path=\"proposals\" element={<ProposalsPage />} />\n          <Route path=\"proposals/:proposalId\" element={<ProposalsPage />} />\n        </Route>\n\n        {/* Fallback */}\n        <Route path=\"*\" element={<Navigate to=\"/\" replace />} />\n      </Routes>\n    </BrowserRouter>\n  )\n}\n",
+        "line_count": 53,
+        "path": "frontend/src/App.tsx"
+      }
+    }
+  ]
+}

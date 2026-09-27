@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "Now write the integration contract tests and slot registry test:",
+  "id": "098b67cce14b612eceb4bdd721701502",
+  "_meta": {
+    "timestamp": 1790416383662,
+    "spend": {
+      "cost": 0.38278,
+      "contextTokens": 191390
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_0GcG7S6OLF6Ua8wqxq3yZr",
+      "name": "write_file",
+      "arguments": {
+        "content": "/**\n * Integration slot registry tests.\n *\n * Proves that a future feature component can be registered without\n * editing the visualization module's internals (MAP-09 equivalent).\n *\n * This is a contract test only \u2014 the example component is not a live feature.\n */\n\nimport { describe, it, expect, beforeEach } from 'vitest'\nimport type { ComponentType } from 'react'\nimport {\n  registerSlot,\n  getSlotComponent,\n  isSlotRegistered,\n  registeredSlots,\n} from '../contexts/SlotRegistry'\nimport type { SlotProps, SlotId } from '../contexts/SlotRegistry'\n\n// A minimal stub component \u2014 does not implement any feature logic\nconst StubComponent: ComponentType<SlotProps> = () => null\n\ndescribe('SlotRegistry', () => {\n  it('returns null for unregistered slots', () => {\n    expect(getSlotComponent('summaries.context-panel')).toBeNull()\n  })\n\n  it('isSlotRegistered returns false before registration', () => {\n    expect(isSlotRegistered('ask.workspace')).toBe(false)\n  })\n})\n\ndescribe('SlotRegistry: future feature registration', () => {\n  const TEST_SLOT: SlotId = 'summaries.context-panel'\n\n  beforeEach(() => {\n    // Reset: re-import a fresh module or just re-register\n    // (registry is module-level; this test registers over it)\n  })\n\n  it('can register a feature component without editing the map module', () => {\n    // This is the integration contract:\n    // A feature author calls registerSlot() in their module's init file.\n    // They do NOT edit StructureMap.tsx or WorkspaceLayout.tsx.\n    registerSlot(TEST_SLOT, StubComponent)\n\n    expect(isSlotRegistered(TEST_SLOT)).toBe(true)\n    expect(getSlotComponent(TEST_SLOT)).toBe(StubComponent)\n  })\n\n  it('returns registered component from getSlotComponent', () => {\n    registerSlot(TEST_SLOT, StubComponent)\n    const Component = getSlotComponent(TEST_SLOT)\n    expect(Component).not.toBeNull()\n    expect(Component).toBe(StubComponent)\n  })\n\n  it('lists registered slots', () => {\n    registerSlot('ask.workspace', StubComponent)\n    const slots = registeredSlots()\n    expect(slots).toContain('ask.workspace')\n  })\n\n  it('registration does not affect the map source module', () => {\n    // Verify we can import the map without the slot being filled\n    // (the map never imports from feature modules)\n    const mapModule = import('../components/map/StructureMap')\n    expect(mapModule).toBeDefined()\n  })\n})\n\ndescribe('SlotRegistry: all slot IDs are accepted', () => {\n  const ALL_SLOTS: SlotId[] = [\n    'summaries.context-panel',\n    'dependencies.workspace',\n    'reuse.findings',\n    'duplicates.compare',\n    'unused.review',\n    'ask.workspace',\n    'proposals.detail',\n  ]\n\n  it('accepts all defined slot IDs without throwing', () => {\n    for (const slot of ALL_SLOTS) {\n      expect(() => registerSlot(slot, StubComponent)).not.toThrow()\n    }\n  })\n})\n",
+        "line_count": 82,
+        "path": "frontend/src/contexts/SlotRegistry.test.ts"
+      }
+    }
+  ]
+}

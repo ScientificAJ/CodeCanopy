@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "dfad7bc19c094bd788a3d928e0d0cec6",
+  "_meta": {
+    "timestamp": 1790416574899,
+    "spend": {
+      "cost": 0.419208,
+      "contextTokens": 209604
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_XsAW5okPgoIvT1n4XFPXRh",
+      "name": "apply_diff",
+      "arguments": {
+        "diff": "<<<<<<< SEARCH\n:start_line:206\n-------\n    import('../../services/v1/api').then(({ listSnapshots }) =>\n      listSnapshots(projectId).then((snaps: import('../../types/v1').Snapshot[]) => {\n=======\n    listSnapshots(projectId).then((snaps) => {\n      const convertedSnaps = snaps\n      return Promise.resolve(convertedSnaps)\n    }).then((snaps) => {\n      // convert to explicit block form\n      return snaps\n    })\n\n    listSnapshots(projectId).then((snaps) => {\n>>>>>>> REPLACE\n",
+        "path": "frontend/src/pages/workspace/WorkspaceLayout.tsx"
+      }
+    }
+  ]
+}

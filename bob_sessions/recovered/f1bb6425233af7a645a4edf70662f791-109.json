@@ -1,0 +1,60 @@
+{
+  "role": "tool",
+  "content": "/usr/share/wireplumber/scripts/node\n/usr/share/bobide/resources/app/extensions/ms-vscode.js-debug/src/targets/node\n/usr/share/bobide/resources/app/extensions/css-language-features/server/dist/node\n/usr/share/bobide/resources/app/extensions/css-language-features/client/dist/node\n/usr/share/bobide/resources/app/extensions/emmet/dist/node\n\nStderr:\ndpkg-query: no packages found matching nodejs",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_NpmNVbr5mix365AkSoL2F0",
+      "name": "execute_command",
+      "arguments": {
+        "command": "dpkg -l nodejs | tail -2; find /usr -name node -o -name nodejs 2>/dev/null | grep -v proc | head -5"
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "dpkg -l nodejs",
+        "tail -2",
+        "find /usr -name node -o -name nodejs",
+        "grep -v proc",
+        "head -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "dpkg -l nodejs",
+        "dpkg",
+        "tail",
+        "find /usr -name node -o -name nodejs",
+        "find",
+        "grep",
+        "head"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 17632,
+    "exitCode": 0,
+    "durationMs": 6824,
+    "timestamp": 1790415364628,
+    "processes": []
+  },
+  "id": "612756bcae08a380bcd4aca4b29c570a"
+}

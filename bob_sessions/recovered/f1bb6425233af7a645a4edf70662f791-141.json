@@ -1,0 +1,63 @@
+{
+  "role": "tool",
+  "content": "found 0 vulnerabilities\nnpm warn install-scripts 1 package has install scripts not yet covered by allowScripts:\nnpm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)\nnpm warn install-scripts\nnpm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_FfAiYmXrqzUcd3PIR5B94h",
+      "name": "execute_command",
+      "arguments": {
+        "command": "export NVM_DIR=\"$HOME/.nvm\" && source \"$NVM_DIR/nvm.sh\" && cd frontend && npm install vitest @vitest/coverage-v8 @testing-library/react @testing-library/user-event jsdom --save-dev 2>&1 | tail -5",
+        "timeout_seconds": 120
+      },
+      "isError": false
+    },
+    "permission": "execute",
+    "labels": {
+      "displayName": "Execute Command",
+      "error": "Command failed",
+      "running": "Executing",
+      "success": "Ran",
+      "runningLong": [
+        "Still running...",
+        "Command in progress...",
+        "Some commands take a while...",
+        "Waiting on the process...",
+        "The terminal is thinking...",
+        "Not all commands are fast...",
+        "Patiently waiting..."
+      ]
+    },
+    "commandUse": {
+      "unverifiable": false,
+      "commands": [
+        "export NVM_DIR=\"$HOME/.nvm\"",
+        "source \"$NVM_DIR/nvm.sh\"",
+        "cd frontend",
+        "npm install vitest @vitest/coverage-v8 @testing-library/react @testing-library/user-event jsdom --save-dev",
+        "tail -5"
+      ],
+      "requiresSecurityApproval": false,
+      "commandVariants": [
+        "export NVM_DIR=\"$HOME/.nvm\"",
+        "export",
+        "source \"$NVM_DIR/nvm.sh\"",
+        "source",
+        "cd frontend",
+        "cd",
+        "npm install vitest @vitest/coverage-v8 @testing-library/react @testing-library/user-event jsdom --save-dev",
+        "npm",
+        "tail"
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "cwd": ".",
+    "pid": 18796,
+    "exitCode": 0,
+    "durationMs": 38107,
+    "timestamp": 1790415653511,
+    "processes": []
+  },
+  "id": "1411fd057e9f8bb5ce02b3f43a0741d9"
+}

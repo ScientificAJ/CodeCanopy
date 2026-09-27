@@ -1,0 +1,22 @@
+{
+  "role": "assistant",
+  "content": "Now fix WorkspaceContext to export Snapshot type:",
+  "id": "008bb9ca4f54b599d838133ba5fbbb55",
+  "_meta": {
+    "timestamp": 1790416470316,
+    "spend": {
+      "cost": 0.398152,
+      "contextTokens": 199076
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_XcVAHmIGjmw8dCTkPKpLoX",
+      "name": "apply_diff",
+      "arguments": {
+        "diff": "<<<<<<< SEARCH\n:start_line:1\n-------\n/**\n * WorkspaceContext \u2014 shared application state for the active project/snapshot.\n=======\n/**\n * WorkspaceContext \u2014 shared application state for the active project/snapshot.\n * @module WorkspaceContext\n>>>>>>> REPLACE\n",
+        "path": "frontend/src/contexts/WorkspaceContext.tsx"
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "e13fd110abd11a4d80dbb760c50b3ab3",
+  "_meta": {
+    "timestamp": 1790414240641,
+    "spend": {
+      "cost": 0.179408,
+      "contextTokens": 89704
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_lqHzLAFMailgYoqXh5eD0v",
+      "name": "write_file",
+      "arguments": {
+        "content": "\"\"\"V1 structural graph model.\n\nThe graph returned here is a *structural containment* graph derived from\nthe file/directory hierarchy and any available import relationships.\nIt is NOT a semantic dependency graph; edges only represent observed\nstructural facts (containment, imports where resolved).\n\nThis model is the shared contract that the Map and future Dependencies\nfeatures consume.  The Dependencies feature will add its own relation\nkinds and overlay data through its integration slot.\n\"\"\"\nfrom __future__ import annotations\n\nfrom enum import Enum\nfrom typing import Literal\n\nfrom pydantic import BaseModel, Field\n\n\nclass EntityKind(str, Enum):\n    REPOSITORY = \"repository\"\n    DIRECTORY = \"directory\"\n    FILE = \"file\"\n    # VIRTUAL_GROUP is user-created; it maps to real underlying entities\n    VIRTUAL_GROUP = \"virtual_group\"\n\n\nclass RelationKind(str, Enum):\n    CONTAINS = \"contains\"\n    IMPORTS = \"imports\"       # observed import statement (may be unresolved)\n    CALLS = \"calls\"           # future: resolved call site\n    DECLARES_DEPENDENCY = \"declares_dependency\"  # manifest entry\n\n\nclass RelationBasis(str, Enum):\n    OBSERVED = \"observed\"\n    RESOLVED = \"resolved\"\n    INFERRED = \"inferred\"\n    UNKNOWN = \"unknown\"\n\n\nclass GraphEntity(BaseModel):\n    id: str\n    kind: EntityKind\n    label: str\n    path: str | None = None   # present for files and directories\n    file_id: str | None = None  # present for FILE entities; links to FileRecord\n    parent_id: str | None = None\n    child_count: int = 0\n    metadata: dict = Field(default_factory=dict)\n\n\nclass GraphRelation(BaseModel):\n    id: str\n    source_id: str\n    target_id: str\n    kind: RelationKind\n    basis: RelationBasis\n    evidence_ids: list[str] = Field(default_factory=list)\n    unresolved: bool = False\n\n\nclass GraphCoverage(BaseModel):\n    inventoried_files: int\n    parsed_files: int\n    unresolved_references: int\n    excluded_paths: list[str] = Field(default_factory=list)\n    limitations: list[str] = Field(default_factory=list)\n    truncated: bool = False\n    total_entities: int = 0\n    returned_entities: int = 0\n\n\nclass Graph(BaseModel):\n    \"\"\"Bounded structural graph for a snapshot.\n\n    Clients should inspect `coverage.truncated` and `coverage.limitations`\n    before presenting this as a complete picture of the repository.\n    \"\"\"\n\n    schema_version: Literal[\"1.0\"] = \"1.0\"\n    snapshot_id: str\n    fixture_only: bool = False\n    entities: list[GraphEntity]\n    relations: list[GraphRelation]\n    coverage: GraphCoverage\n\n\nclass ViewState(BaseModel):\n    \"\"\"User-local view preferences stored separately from source facts.\"\"\"\n\n    schema_version: Literal[\"1.0\"] = \"1.0\"\n    snapshot_id: str\n    # Virtual group definitions created by the user\n    virtual_groups: list[dict] = Field(default_factory=list)\n    # Entity display overrides (label renames, color choices)\n    display_overrides: dict[str, dict] = Field(default_factory=dict)\n    # Last camera state for the map\n    camera: dict = Field(default_factory=dict)\n",
+        "line_count": 101,
+        "path": "backend/app/models/v1/graph.py"
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "role": "tool",
+  "content": "Created file: backend/app/models/v1/source.py\n\n<result>\n\"\"\"V1 source and capability models.\"\"\"\nfrom __future__ import annotations\n\nfrom typing import Literal\n\n\n...51 lines truncated. You do not need to re-read the file. The complete file was written successfully. Use read_file if you need to see the full contents.\n</result>",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_K5dLErmogIRHvVr3TCFTWa",
+      "name": "write_file",
+      "arguments": {
+        "content": "\"\"\"V1 source and capability models.\"\"\"\nfrom __future__ import annotations\n\nfrom typing import Literal\n\nfrom pydantic import BaseModel, Field\n\n\nclass SourceSlice(BaseModel):\n    \"\"\"A bounded read of source lines from a file in a snapshot.\n\n    Line numbers are 1-based and inclusive.\n    \"\"\"\n\n    schema_version: Literal[\"1.0\"] = \"1.0\"\n    file_id: str\n    snapshot_id: str\n    path: str\n    line_start: int\n    line_end: int\n    total_lines: int\n    content: str\n    truncated: bool = False\n    content_hash: str  # SHA-256 of *entire* file bytes (not just the slice)\n\n\nclass CapabilityLevel(str):\n    \"\"\"Describes what Grepo can do with a given file.\"\"\"\n    FULL = \"full\"\n    TEXT_ONLY = \"text_only\"\n    BINARY = \"binary\"\n    EXCLUDED = \"excluded\"\n\n\nclass FileCapability(BaseModel):\n    file_id: str\n    path: str\n    language: str\n    syntax_extraction: bool = False\n    reference_resolution: bool = False\n    summary_eligible: bool = False\n    level: str = CapabilityLevel.TEXT_ONLY\n    parser_name: str | None = None\n    limitations: list[str] = Field(default_factory=list)\n\n\nclass CapabilityReport(BaseModel):\n    schema_version: Literal[\"1.0\"] = \"1.0\"\n    snapshot_id: str\n    files: list[FileCapability]\n    parsed_count: int\n    text_only_count: int\n    binary_count: int\n    excluded_count: int\n    limitations: list[str] = Field(default_factory=list)\n",
+        "line_count": 57,
+        "path": "backend/app/models/v1/source.py"
+      },
+      "isError": false
+    },
+    "permission": "edit",
+    "labels": {
+      "displayName": "Write File {path}",
+      "error": "Failed to write file {path}",
+      "running": "Writing file {path}",
+      "success": "Wrote file {path}",
+      "runningLong": [
+        "Still writing...",
+        "Writing takes time...",
+        "Nearly written...",
+        "A lot of content to write...",
+        "Committing every character...",
+        "Writing like my life depends on it..."
+      ]
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "changes": {
+      "file:///home/rahul/Desktop/Grepo/backend/app/models/v1/source.py": {
+        "before": "",
+        "after": "\"\"\"V1 source and capability models.\"\"\"\nfrom __future__ import annotations\n\nfrom typing import Literal\n\nfrom pydantic import BaseModel, Field\n\n\nclass SourceSlice(BaseModel):\n    \"\"\"A bounded read of source lines from a file in a snapshot.\n\n    Line numbers are 1-based and inclusive.\n    \"\"\"\n\n    schema_version: Literal[\"1.0\"] = \"1.0\"\n    file_id: str\n    snapshot_id: str\n    path: str\n    line_start: int\n    line_end: int\n    total_lines: int\n    content: str\n    truncated: bool = False\n    content_hash: str  # SHA-256 of *entire* file bytes (not just the slice)\n\n\nclass CapabilityLevel(str):\n    \"\"\"Describes what Grepo can do with a given file.\"\"\"\n    FULL = \"full\"\n    TEXT_ONLY = \"text_only\"\n    BINARY = \"binary\"\n    EXCLUDED = \"excluded\"\n\n\nclass FileCapability(BaseModel):\n    file_id: str\n    path: str\n    language: str\n    syntax_extraction: bool = False\n    reference_resolution: bool = False\n    summary_eligible: bool = False\n    level: str = CapabilityLevel.TEXT_ONLY\n    parser_name: str | None = None\n    limitations: list[str] = Field(default_factory=list)\n\n\nclass CapabilityReport(BaseModel):\n    schema_version: Literal[\"1.0\"] = \"1.0\"\n    snapshot_id: str\n    files: list[FileCapability]\n    parsed_count: int\n    text_only_count: int\n    binary_count: int\n    excluded_count: int\n    limitations: list[str] = Field(default_factory=list)\n",
+        "patch": "Index: file:///home/rahul/Desktop/Grepo/backend/app/models/v1/source.py\n===================================================================\n--- file:///home/rahul/Desktop/Grepo/backend/app/models/v1/source.py\n+++ file:///home/rahul/Desktop/Grepo/backend/app/models/v1/source.py\n@@ -0,0 +1,55 @@\n+\"\"\"V1 source and capability models.\"\"\"\n+from __future__ import annotations\n+\n+from typing import Literal\n+\n+from pydantic import BaseModel, Field\n+\n+\n+class SourceSlice(BaseModel):\n+    \"\"\"A bounded read of source lines from a file in a snapshot.\n+\n+    Line numbers are 1-based and inclusive.\n+    \"\"\"\n+\n+    schema_version: Literal[\"1.0\"] = \"1.0\"\n+    file_id: str\n+    snapshot_id: str\n+    path: str\n+    line_start: int\n+    line_end: int\n+    total_lines: int\n+    content: str\n+    truncated: bool = False\n+    content_hash: str  # SHA-256 of *entire* file bytes (not just the slice)\n+\n+\n+class CapabilityLevel(str):\n+    \"\"\"Describes what Grepo can do with a given file.\"\"\"\n+    FULL = \"full\"\n+    TEXT_ONLY = \"text_only\"\n+    BINARY = \"binary\"\n+    EXCLUDED = \"excluded\"\n+\n+\n+class FileCapability(BaseModel):\n+    file_id: str\n+    path: str\n+    language: str\n+    syntax_extraction: bool = False\n+    reference_resolution: bool = False\n+    summary_eligible: bool = False\n+    level: str = CapabilityLevel.TEXT_ONLY\n+    parser_name: str | None = None\n+    limitations: list[str] = Field(default_factory=list)\n+\n+\n+class CapabilityReport(BaseModel):\n+    schema_version: Literal[\"1.0\"] = \"1.0\"\n+    snapshot_id: str\n+    files: list[FileCapability]\n+    parsed_count: int\n+    text_only_count: int\n+    binary_count: int\n+    excluded_count: int\n+    limitations: list[str] = Field(default_factory=list)\n"
+      }
+    },
+    "fileMtimes": {
+      "file:///home/rahul/Desktop/Grepo/backend/app/models/v1/source.py": 1790414237588
+    },
+    "durationMs": 1009,
+    "timestamp": 1790414238592,
+    "processes": []
+  },
+  "id": "47a3dd5bfd6fbd567eaae6f08cf9ddbf"
+}

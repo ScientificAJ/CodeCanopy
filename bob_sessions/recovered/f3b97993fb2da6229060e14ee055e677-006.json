@@ -1,0 +1,21 @@
+{
+  "role": "assistant",
+  "content": "",
+  "id": "6b9a188c6ffe2ce4f684b624c280a9d1",
+  "_meta": {
+    "timestamp": 1790410827805,
+    "spend": {
+      "cost": 0.029536,
+      "contextTokens": 14768
+    }
+  },
+  "toolCalls": [
+    {
+      "id": "tooluse_Z5W7532hZAdfClQC9Qk2an",
+      "name": "execute_command",
+      "arguments": {
+        "command": "which git && git --version && wget --version 2>/dev/null | head -1"
+      }
+    }
+  ]
+}

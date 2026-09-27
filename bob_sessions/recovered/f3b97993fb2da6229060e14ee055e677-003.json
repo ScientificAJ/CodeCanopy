@@ -1,0 +1,28 @@
+{
+  "role": "tool",
+  "content": "No files or directories found in ..",
+  "toolUsage": {
+    "signature": {
+      "id": "tooluse_NK0ZN5EF4WF1GPsrmfRRzV",
+      "name": "list_files",
+      "arguments": {
+        "path": "."
+      },
+      "isError": false
+    },
+    "permission": "read",
+    "labels": {
+      "displayName": "List Files in {path}",
+      "error": "Failed to list files in {path}",
+      "running": "Listing files in {path}",
+      "success": "Listed files in {path}"
+    },
+    "isOutsideWorkspace": false
+  },
+  "_meta": {
+    "durationMs": 5,
+    "timestamp": 1790410699971,
+    "processes": []
+  },
+  "id": "224f45fd4078b6cf14fbdef34fcb83ab"
+}

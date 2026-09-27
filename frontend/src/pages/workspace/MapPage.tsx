@@ -18,7 +18,7 @@ export default function MapPage() {
   const focus = params.get('focus') ?? ws.preferences.focus
   const rawCursor = Number(params.get('page') ?? 0)
   const pageSize:3|8 = ws.preferences.density === 'comfortable' || (ws.preferences.density !== 'expanded' && width < 640) ? 3 : 8
-  const cursor = Number.isSafeInteger(rawCursor) && rawCursor >= 0 && rawCursor <= 10000 ? Math.floor(rawCursor/pageSize)*pageSize : 0
+  const cursor = Number.isSafeInteger(rawCursor) && rawCursor >= 0 ? Math.floor(rawCursor/pageSize)*pageSize : 0
   const [artifact,setArtifact] = useState<MapArtifact|null>(null); const [error,setError] = useState(''); const [loading,setLoading] = useState(true)
   const [retry,setRetry] = useState(0); const [saving,setSaving] = useState(false); const [label,setLabel] = useState('')
   const lastSelection = useRef<string|undefined>(undefined)

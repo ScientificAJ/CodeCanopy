@@ -8,7 +8,7 @@ from app.services.v1_errors import WorkspaceError
 
 
 def inventory_entities(snapshot_id: str) -> list[GraphEntity]:
-    records = get_inventory(snapshot_id, limit=10000).files
+    records = get_inventory(snapshot_id, limit=None).files
     snap = get_snapshot(snapshot_id)
     directories = {'.'}
     for rec in records:

@@ -3,13 +3,15 @@
  * Reads context from WorkspaceContext — no prop drilling needed.
  */
 import { useState } from 'react'
-import { useWorkspace } from '../../contexts/WorkspaceContext'
+import { useNavigate } from 'react-router-dom'
+import { useWorkspace, selectionFor } from '../../contexts/WorkspaceContext'
 import { Icon } from '../ui/Icon'
 import { useChatState } from '../../features/ask/useChatState'
 import { ChatModal } from '../../features/ask/ChatModal'
 
 export function ChatButton({ label = 'GREPO' }: { label?: string }) {
   const ws = useWorkspace()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [prefill, setPrefill] = useState<string | undefined>()
 
@@ -57,6 +59,12 @@ export function ChatButton({ label = 'GREPO' }: { label?: string }) {
           scopeIcon={scopeIcon}
           prefillQuestion={prefill}
           onClose={() => setOpen(false)}
+          onOpenSource={source => {
+            const entity = ws.entities.find(e => e.file_id === source.file_id)
+            if (!entity || source.line_start < 1 || source.line_end < source.line_start) return
+            ws.selectEntity({...selectionFor(entity), lineRange: {start: source.line_start, end: source.line_end}})
+            navigate(`/p/${projectId}/s/${snapshotId}/map`)
+          }}
         />
       )}
     </>

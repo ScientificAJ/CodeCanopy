@@ -50,7 +50,7 @@ async def get_summaries_slot(
 
 # INTEGRATION_SLOT: dependencies.workspace
 @router.get(
-    _SNAPSHOT_PATH + "/dependencies",
+    _SNAPSHOT_PATH + "/dependency-overlay",
     response_model=DependencyOverlay,
     status_code=status.HTTP_200_OK,
 )

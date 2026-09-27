@@ -3,9 +3,9 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createHash } from 'node:crypto'
-const evidence = resolve('../bob_sessions/local-verification/browser-evidence')
+const evidence = resolve(process.env.CODECANOPY_EVIDENCE_DIR ?? 'test-results/browser-evidence')
 mkdirSync(evidence,{recursive:true})
-const fixture = resolve('../bob_sessions/local-verification/verification-fixture.zip')
+const fixture = resolve('node_modules/.cache/grepo-e2e/verification-fixture.zip')
 execFileSync(process.env.PYTHON ?? (process.platform === 'win32' ? 'python' : 'python3'), ['../scripts/make_test_zip.py',fixture])
 const sizes = [[1672,941],[1440,900],[1920,1080],[1600,1000],[2048,1320]]
 test('ZIP workspace, source, issues, organization and offline export', async ({page,browser}) => {
@@ -120,7 +120,7 @@ test('ZIP workspace, source, issues, organization and offline export', async ({p
   await expect(page.getByText('Potentially unused',{exact:true}).first()).toBeVisible()
   const connectedFindingPaths = [...new Set(deferredRequests.map(url => new URL(url).pathname).filter(path => /\/findings\/(duplicates|unused|reuse)$/.test(path)).map(path => path.slice(path.lastIndexOf('/') + 1)))].sort()
   expect(connectedFindingPaths).toEqual(['duplicates','reuse','unused'])
-  expect(deferredRequests.filter(url => !/(\/findings\/(duplicates|unused|reuse)|\/dependencies)$/.test(new URL(url).pathname))).toEqual([])
+  expect(deferredRequests.filter(url => !/(\/findings\/(duplicates|unused|reuse)|\/dependencies|\/ask|\/summaries)$/.test(new URL(url).pathname))).toEqual([])
   await page.goto(workspace + '/map'); await expect(page.getByRole('button',{name:'Export HTML',exact:true})).toBeEnabled()
   await page.setViewportSize({width:390,height:844})
   await page.getByRole('button',{name:'Files',exact:true}).click()

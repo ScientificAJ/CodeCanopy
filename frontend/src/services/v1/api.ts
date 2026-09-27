@@ -30,7 +30,7 @@ export const cancelRun = (id: string) => request<AnalysisRun>(`/runs/${id}/cance
 export const getInventory = (p: string, s: string, cursor?: string, limit = 500, signal?: AbortSignal) => request<FilePage>(`${snapshotPath(p, s)}/files?${new URLSearchParams({ limit: String(limit), ...(cursor ? { cursor } : {}) })}`, { signal })
 export async function getAllFiles(p: string, s: string, signal?: AbortSignal) {
   const files: FilePage['files'] = []; let cursor: string | undefined
-  do { const page = await getInventory(p, s, cursor, 500, signal); files.push(...page.files); cursor = page.cursor ?? undefined } while (cursor)
+  do { const page = await getInventory(p, s, cursor, 2000, signal); files.push(...page.files); cursor = page.cursor ?? undefined } while (cursor)
   return files
 }
 export const getEntities = (p: string, s: string, signal?: AbortSignal) => request<GraphEntity[]>(snapshotPath(p, s) + '/entities', { signal })

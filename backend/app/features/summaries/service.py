@@ -7,6 +7,8 @@ construction.
 """
 from __future__ import annotations
 
+import asyncio
+
 import uuid
 from pathlib import Path
 
@@ -105,7 +107,7 @@ def _extract_docstring_lines(content: str) -> tuple[int, int] | None:
 def _summarise_file(snapshot_id: str, path: str) -> SummaryPayload:
     """Build a deterministic summary for a single file."""
     rec = None
-    for r in get_inventory(snapshot_id, limit=10000).files:
+    for r in get_inventory(snapshot_id, limit=None).files:
         if r.path == path:
             rec = r
             break
@@ -183,7 +185,7 @@ def _summarise_file(snapshot_id: str, path: str) -> SummaryPayload:
 
 def _summarise_folder(snapshot_id: str, path: str) -> SummaryPayload:
     """Build a deterministic summary for a folder (or repository root '.')."""
-    all_records = get_inventory(snapshot_id, limit=10000).files
+    all_records = get_inventory(snapshot_id, limit=None).files
     # Filter files under this folder
     if path == '.':
         children = all_records
@@ -256,12 +258,12 @@ async def enrich(claims: str) -> str | None:
     return None
 
 
-async def build_summary(snapshot_id: str, path: str | None) -> SummaryPayload:
+def _build_summary(snapshot_id: str, path: str | None) -> SummaryPayload:
     """Entry point: build a deterministic summary and optionally enrich it."""
     resolved_path = path or '.'
 
     # Determine whether this is a file or folder by checking the inventory
-    inventory = get_inventory(snapshot_id, limit=10000)
+    inventory = get_inventory(snapshot_id, limit=None)
     file_paths = {r.path for r in inventory.files}
     folder_paths: set[str] = {'.'}
     for p in file_paths:
@@ -276,6 +278,11 @@ async def build_summary(snapshot_id: str, path: str | None) -> SummaryPayload:
     else:
         raise WorkspaceError('NOT_FOUND', f"Path '{resolved_path}' is not in this snapshot.", 404)
 
+    return payload
+
+
+async def build_summary(snapshot_id: str, path: str | None) -> SummaryPayload:
+    payload = await asyncio.to_thread(_build_summary, snapshot_id, path)
     enriched = await enrich(payload.text)
     if enriched is not None:
         payload = payload.model_copy(update={'text': enriched})

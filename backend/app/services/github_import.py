@@ -119,7 +119,7 @@ def download_archive(owner: str, repo: str, commit: str, dest_dir: Path, check_c
     return archive
 
 
-def import_github_repository(url: str, ref: str = 'HEAD', check_cancel=lambda: None):
+def import_github_repository(url: str, ref: str = 'HEAD', check_cancel=lambda: None, on_skip=lambda path: None):
     owner, repo = parse_github_url(url)
     commit, display_ref = resolve_ref_to_commit(owner, repo, ref)
     check_cancel()
@@ -128,8 +128,8 @@ def import_github_repository(url: str, ref: str = 'HEAD', check_cancel=lambda: N
     try:
         archive_path = download_archive(owner, repo, commit, staging, check_cancel)
         with zipfile.ZipFile(archive_path) as archive:
-            entries = _validated_entries(archive)
-            _extract_entries(archive, entries, extraction)
+            entries = _validated_entries(archive, check_cancel, skip_symlinks=True, on_skip=on_skip)
+            _extract_entries(archive, entries, extraction, check_cancel)
         # Strip only after safe extraction; do not modify ZipInfo header names.
         children = list(extraction.iterdir())
         files = children[0] if len(children) == 1 and children[0].is_dir() else extraction

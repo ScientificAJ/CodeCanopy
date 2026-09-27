@@ -65,21 +65,25 @@ cd backend
 
 ## Measured, not estimated
 
-Import cost, measured on real repositories with the harness in
-`backend/scripts/stress_test.py`:
+Measurements from the local verification run on September 27, 2026:
 
-| Repository | Files | Import | Dependency analysis |
-| --- | --- | --- | --- |
-| `sindresorhus/slugify` | ~10 | instant | — |
-| `chanjoongx/atlas` | 155 | 24s | 1.7s — 88 edges, 64 unresolved |
-| `pallets/click` | 178 | fast | fast |
-| `shadcn-ui/ui` (packages only) | 726 | 125s | 8s |
+| Workload | Result |
+| --- | --- |
+| 120 small Python/TypeScript files, snapshot creation | 21.404s before → 0.150s after; all 120 parsed |
+| DeepSeek Harness, extracted source at `477b4f420553` | 13,835 retained files, 5,209 parsed; snapshot creation 45.233s |
+| DeepSeek Harness capability report | 0.511s first read, 0.090s repeat |
 
-**The boundary is real and stated.** Archives are capped at 10,000 entries,
-25 MiB per file, and 250 MiB total uncompressed. Repositories in the thousands
-of files complete but exceed a live demo's time budget; scope them to a single
-package, or use the harness above to warm a snapshot before presenting. This
-is a deliberate limit on a local, bounded parser, not a failure.
+The DeepSeek parsing measurement excludes network download and ZIP extraction;
+the two secret-excluded records in the original 13,837-file inventory are not
+copied into its stored source. Network conditions and repository complexity
+still affect end-to-end time. Reusable isolated parser workers remove per-file
+process startup, use two workers per import, and retain per-file time/memory
+limits. The loader shows real file progress, elapsed time, and cancellation.
+
+Archives allow up to 200,000 raw entries and 50,000 retained files after ignored
+dependency/build directories. Compressed, per-file and total extracted byte
+limits remain enforced. Pre-import a large repository before recording if you
+want to start directly in its workspace.
 
 ## Run locally
 
@@ -151,9 +155,11 @@ roles or semantic edges are added.
 
 ## Storage and bounds
 
-- ZIP: 50 MiB upload, 25 MiB per file, 250 MiB extracted, 10,000 entries.
-  Traversal, unsafe Windows names, symlinks, special files and unsupported
-  compression are rejected. Generated/dependency directories are skipped.
+- ZIP: 50 MiB upload, 25 MiB per file, 250 MiB extracted, 200,000 raw entries
+  and 50,000 retained files. Traversal, unsafe Windows names, special files and
+  unsupported compression are rejected. Generated/dependency directories are
+  skipped. v1 imports skip symbolic links with a visible warning, without
+  extracting or following their targets; the legacy API rejects them.
 - GitHub: unauthenticated public HTTPS only. Requests and redirects are checked
   against `github.com`, `api.github.com`, and `codeload.github.com` **before**
   following them. Metadata and archive downloads are bounded. No git hooks or
@@ -170,14 +176,27 @@ roles or semantic edges are added.
 - Known secret filenames and private-key material are excluded. This is **not
   complete secret detection**; inspect archives before importing sensitive data.
 - Valid UTF-8 text of any language is browsable; Python also honors encoding
-  declarations. Binary/unsupported encodings have metadata only. Python syntax
-  extraction reuses the existing analyzer, isolated to 1 MiB input, 384 MiB
-  address space, 2 CPU seconds and a 4-second wall timeout per file. It never
-  executes repository code. Other languages are honestly marked text-only.
+  declarations. Binary/unsupported encodings have metadata only. Syntax extraction
+  supports Python, JavaScript/TypeScript, Go, Rust, Java, Kotlin, C/C++, C#, Ruby,
+  PHP, Bash and SQL, with 1 MiB input, 384 MiB address space, approximately two
+  CPU seconds and a 10-second wall timeout per file. Workers recycle after 128
+  files. Repository code never executes; unsupported or failed files remain
+  text-only with coverage diagnostics.
 - Source previews verify the full content hash and return at most 2,000 lines
   and 256 KiB. UI pages use 200 lines. Two imports run concurrently with four
   admitted jobs; processing has a three-minute deadline. Run status is durable;
   interrupted runs report failure after a server restart. Run **one** API worker.
+- Semantic duplicate scoring uses complete function bodies: up to eight pairs,
+  12,000 characters per function, and 48,000 characters in total. Larger functions
+  retain their structural results and an explicit semantic-coverage limitation.
+  Duplicate search bounds (10,000 candidate comparisons and 80 displayed matches)
+  are reported rather than presented as exhaustive results.
+- AI chat searches complete eligible source files in the selected scope, including
+  code beyond the first 3,000 characters. It selects up to ten line-cited passages
+  for an 18,000-character model context; a 25-second search budget and oversized
+  lines are explicitly reported when they limit coverage. Overview questions
+  prioritize top-level documentation. Citations identify real retrieved ranges,
+  but do not constitute semantic proof that every model claim is correct.
 - HTML runs in an opaque sandboxed iframe. A checked source-window, nonce,
   snapshot, view and entity bridge synchronizes selection. Export CSP prohibits
   network connections. No provider keys belong in browser code.
@@ -203,7 +222,8 @@ All new behavior is under `/api/v1`:
 | `GET …/{s}/files`, `/entities`, `/capabilities` | Inventory and honest coverage |
 | `GET …/{s}/source/{file_id}` | Validated bounded line ranges |
 | `GET …/{s}/summaries` | Cited summaries with verified evidence |
-| `GET …/{s}/dependencies` | Verified import edges, unresolved refs, change impact |
+| `GET …/{s}/dependencies` | Function/file dependency graph, unresolved refs, change impact |
+| `GET …/{s}/dependency-overlay` | Separate verified import overlay contract |
 | `GET …/{s}/reuse`, `/duplicates`, `/unused` | Reuse, duplicate and unused findings |
 | `GET …/{s}/ask`, `POST …/{s}/chat` | Capability greeting and grounded answers |
 | `GET …/{s}/graph` | Bounded observed containment graph |

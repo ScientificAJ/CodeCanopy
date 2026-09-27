@@ -7,11 +7,12 @@ from pathlib import Path, PureWindowsPath
 from fastapi import UploadFile
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
-MAX_ARCHIVE_ENTRIES = 10_000
+MAX_ARCHIVE_ENTRIES = 200_000
+MAX_PROJECT_FILES = 50_000
 MAX_FILE_BYTES = 25 * 1024 * 1024
 MAX_TOTAL_UNCOMPRESSED_BYTES = 250 * 1024 * 1024
 CHUNK_SIZE = 64 * 1024
-IGNORED_DIRECTORIES = {".git", "node_modules", "__pycache__", ".venv", "dist", "build"}
+IGNORED_DIRECTORIES = {".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build", ".next", ".nuxt", ".pytest_cache", "coverage"}
 WINDOWS_RESERVED_NAMES = {
     "CON", "PRN", "AUX", "NUL",
     *(f"COM{index}" for index in range(1, 10)),
@@ -36,7 +37,7 @@ class ArchiveEntry:
     is_directory: bool
 
 
-def _member_path(info: zipfile.ZipInfo) -> tuple[Path, tuple[str, ...], bool]:
+def _member_path(info: zipfile.ZipInfo, allow_symlink: bool = False) -> tuple[Path, tuple[str, ...], bool]:
     name = info.filename
     if not name or "\x00" in name or any(ord(character) < 32 for character in name):
         raise ProjectUploadError("The archive contains an invalid path.")
@@ -66,9 +67,9 @@ def _member_path(info: zipfile.ZipInfo) -> tuple[Path, tuple[str, ...], bool]:
 
     unix_mode = info.external_attr >> 16
     file_type = stat.S_IFMT(unix_mode)
-    if stat.S_ISLNK(unix_mode) or info.external_attr & 0xFFFF & 0x400:
+    if (stat.S_ISLNK(unix_mode) or info.external_attr & 0xFFFF & 0x400) and not allow_symlink:
         raise ProjectUploadError("Symbolic links are not allowed in project archives.")
-    if file_type not in (0, stat.S_IFREG, stat.S_IFDIR):
+    if file_type not in (0, stat.S_IFREG, stat.S_IFDIR) and not (allow_symlink and file_type == stat.S_IFLNK):
         raise ProjectUploadError("The archive contains a non-regular file.")
 
     is_directory = has_trailing_separator or info.is_dir() or file_type == stat.S_IFDIR
@@ -78,7 +79,7 @@ def _member_path(info: zipfile.ZipInfo) -> tuple[Path, tuple[str, ...], bool]:
     return Path(*parts), parts, is_directory
 
 
-def _validated_entries(archive: zipfile.ZipFile) -> list[ArchiveEntry]:
+def _validated_entries(archive: zipfile.ZipFile, check_cancel=lambda: None, *, skip_symlinks=False, on_skip=lambda path: None) -> list[ArchiveEntry]:
     infos = archive.infolist()
     if not infos:
         raise ProjectUploadError("The ZIP archive is empty.")
@@ -88,9 +89,15 @@ def _validated_entries(archive: zipfile.ZipFile) -> list[ArchiveEntry]:
     entries: list[ArchiveEntry] = []
     path_types: dict[str, bool] = {}
     declared_uncompressed_bytes = 0
+    file_count = 0
 
-    for info in infos:
-        relative_path, parts, is_directory = _member_path(info)
+    for index, info in enumerate(infos):
+        if index % 256 == 0:
+            check_cancel()
+        relative_path, parts, is_directory = _member_path(info, allow_symlink=skip_symlinks)
+        if skip_symlinks and (stat.S_ISLNK(info.external_attr >> 16) or info.external_attr & 0xFFFF & 0x400):
+            on_skip(relative_path.as_posix())
+            continue
         if info.flag_bits & 0x1:
             raise ProjectUploadError("Encrypted ZIP entries are not supported.")
         if info.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED):
@@ -108,6 +115,9 @@ def _validated_entries(archive: zipfile.ZipFile) -> list[ArchiveEntry]:
         path_types[path_key] = is_directory
 
         if not is_directory:
+            file_count += 1
+            if file_count > MAX_PROJECT_FILES:
+                raise ProjectUploadError(f"The project may contain at most {MAX_PROJECT_FILES:,} files after dependency and build folders are excluded. Import a smaller package.")
             if info.file_size > MAX_FILE_BYTES:
                 raise ProjectUploadError(f"A file exceeds the {MAX_FILE_BYTES // (1024 * 1024)} MiB limit.")
             declared_uncompressed_bytes += info.file_size
@@ -145,6 +155,7 @@ def _extract_entries(
     archive: zipfile.ZipFile,
     entries: list[ArchiveEntry],
     extraction_root: Path,
+    check_cancel=lambda: None,
 ) -> int:
     extraction_root.mkdir()
     resolved_root = extraction_root.resolve()
@@ -152,6 +163,7 @@ def _extract_entries(
     file_count = 0
 
     for entry in entries:
+        check_cancel()
         destination = (extraction_root / entry.relative_path).resolve()
         try:
             destination.relative_to(resolved_root)
@@ -166,6 +178,7 @@ def _extract_entries(
         file_bytes = 0
         with archive.open(entry.info, "r") as source, destination.open("xb") as output:
             while chunk := source.read(CHUNK_SIZE):
+                check_cancel()
                 file_bytes += len(chunk)
                 extracted_bytes += len(chunk)
                 if file_bytes > MAX_FILE_BYTES or extracted_bytes > MAX_TOTAL_UNCOMPRESSED_BYTES:

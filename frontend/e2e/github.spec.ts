@@ -5,10 +5,11 @@ import { resolve } from 'node:path'
 test('live public GitHub import resolves an immutable revision', async ({ page }) => {
   test.skip(process.env.CODECANOPY_LIVE_GITHUB !== '1', 'Opt in to the external GitHub integration check')
   test.setTimeout(180000)
-  const evidence = resolve('../bob_sessions/local-verification/browser-evidence')
+  const repository = process.env.CODECANOPY_TEST_REPOSITORY ?? 'https://github.com/deepseek-ai/deepseek-harness'
+  const evidence = resolve(process.env.CODECANOPY_EVIDENCE_DIR ?? 'test-results/browser-evidence')
   mkdirSync(evidence, { recursive: true })
   await page.goto('/')
-  await page.getByLabel('GitHub repository URL', { exact: true }).fill('https://github.com/ScientificAJ/CodeCanopy')
+  await page.getByLabel('GitHub repository URL', { exact: true }).fill(repository)
   await page.getByRole('button', { name: 'Explore repository', exact: true }).click()
   await page.waitForURL(/\/overview$/, { timeout: 150000 })
   await page.getByRole('link', {name:'Explore architecture',exact:true}).click()
@@ -22,5 +23,5 @@ test('live public GitHub import resolves an immutable revision', async ({ page }
   await page.getByRole('treeitem', { name: 'README.md', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Source: README.md', exact: true })).toBeVisible()
   await page.screenshot({ path: `${evidence}/github-workspace-1672.png` })
-  writeFileSync(`${evidence}/github-result.json`, JSON.stringify({ repository: 'https://github.com/ScientificAJ/CodeCanopy', snapshot, workspace: page.url() }, null, 2))
+  writeFileSync(`${evidence}/github-result.json`, JSON.stringify({ repository, snapshot, workspace: page.url() }, null, 2))
 })

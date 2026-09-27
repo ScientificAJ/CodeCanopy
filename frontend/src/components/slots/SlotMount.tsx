@@ -13,6 +13,12 @@ class Boundary extends Component<{children: ReactNode; id: SlotId}, {failed: boo
   render() {return this.state.failed ? <Unavailable id={this.props.id} message="This extension could not be displayed. The repository and source browser are still available."/> : this.props.children}
 }
 export function SlotMount({id}: {id: SlotId}) {
+  const ws = useWorkspace()
+  // Route changes can reuse this mount. Reset the request with the feature so
+  // its next component never renders a previous feature's incompatible data.
+  return <SlotContent key={`${id}:${ws.projectId}:${ws.snapshot?.id}`} id={id}/>
+}
+function SlotContent({id}: {id: SlotId}) {
   const ws = useWorkspace(); const navigate = useNavigate()
   useSyncExternalStore(subscribeSlots, slotRevision)
   const feature = getSlot(id)

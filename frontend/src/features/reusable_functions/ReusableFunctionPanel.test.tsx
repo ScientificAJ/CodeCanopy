@@ -55,3 +55,16 @@ it('shows loading state', () => {
   render(<ReusableFunctionPanel {...makeProps({ status: 'loading' })} />)
   expect(screen.getByRole('status')).toBeDefined()
 })
+
+
+it('pages large call-site lists without discarding later evidence', () => {
+  const data: ReusableFunctionResult = {
+    snapshot_id: 'snap', analyzed_files: 31, ambiguous_names: 0, limitations: [], total_reusable: 1,
+    groups: [{function_name:'helper', defined_in:'a.py', defined_file_id:'file-a-id', defined_line_start:1, defined_line_end:2,
+      called_from:['b.py'], call_sites:Array.from({length:30}, (_, i) => ({file_id:'b',path:'b.py',line_start:i+1,line_end:i+1}))}],
+  }
+  render(<ReusableFunctionPanel {...makeProps({status:'ready',data})}/>)
+  expect(screen.queryByRole('button',{name:'b.py:30'})).toBeNull()
+  fireEvent.click(screen.getByRole('button',{name:'Show more call sites for helper'}))
+  expect(screen.getByRole('button',{name:'b.py:30'})).toBeDefined()
+})

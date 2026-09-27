@@ -38,6 +38,8 @@ Both versions are **1:58 · 1080p · Background music, no narration**.
 V1 remains available unchanged. The footage shows the local demo workspace on
 September 27, 2026; pauses and unsuccessful retries are edited out.
 
+The [pitch presentation v2](docs/demo/GREPO-Presentation-v2.pdf) includes Hero's IBM Bob reflection and five screenshot excerpts. The [full original evidence](bob_sessions/09-hero-template-audit-reusable-functions/session-summary.md) follows the same task archive naming convention.
+
 ## What it looks like
 
 | | |

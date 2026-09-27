@@ -28,6 +28,20 @@ All captures are the live application. The architecture map and the 88-edge
 dependency panel are `chanjoongx/atlas`; the panel at the top of this file is
 this project's own source.
 
+## Built with IBM Bob
+
+The verifier, the dependency resolver, the summaries engine and the Ask slot
+were written in Bob IDE, task by task, with the briefs and the resulting panels
+archived in [`bob_sessions/`](bob_sessions/README.md). Ten sessions, 39.88 of
+the 40 Bobcoin budget.
+
+![IBM Bob IDE with the dependency verifier open](docs/images/bob-ide-workspace.png)
+
+*Bob IDE with `backend/app/features/dependencies/verifier.py` open and the task
+panel beside it. This is the guard that rejects an edge whose target does not
+exist — the check described below, written by Bob against a brief that
+described the attack rather than the fix.*
+
 ## Why that matters
 
 Most tools in this space produce a summary and hope it drifted. A summary that

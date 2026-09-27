@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from app.models.codebase import File, Project
 from app.models.project import ProjectUploadResponse
+from app.services.inventory_service import LANGUAGES
 from app.services.project_archive import IGNORED_DIRECTORIES, extract_project_archive
 
 PROJECT_ID_PATTERN = re.compile(r"^[a-f0-9]{32}$")
@@ -53,21 +54,7 @@ def get_project(project_id: str) -> Project:
 
 
 def _language_for_path(path: Path) -> str:
-    return {
-        ".py": "python",
-        ".js": "javascript",
-        ".jsx": "javascript",
-        ".mjs": "javascript",
-        ".ts": "typescript",
-        ".tsx": "typescript",
-        ".json": "json",
-        ".md": "markdown",
-        ".toml": "toml",
-        ".yaml": "yaml",
-        ".yml": "yaml",
-        ".html": "html",
-        ".css": "css",
-    }.get(path.suffix.lower(), "unknown")
+    return LANGUAGES.get(path.suffix.lower(), "unknown")
 
 
 def get_project_files(project_id: str) -> list[File]:

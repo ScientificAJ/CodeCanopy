@@ -15,6 +15,13 @@ class Function(BaseModel):
         return f"{self.file}:{self.name}:{self.line_start}"
 
 
+class CallSite(BaseModel):
+    callee_name: str
+    file: str
+    line_start: int
+    line_end: int
+
+
 class Class(BaseModel):
     name: str
     file: str
@@ -30,6 +37,7 @@ class File(BaseModel):
     functions: list[Function] = Field(default_factory=list)
     classes: list[Class] = Field(default_factory=list)
     imports: list[str] = Field(default_factory=list)
+    call_sites: list[CallSite] = Field(default_factory=list)
     references: list[str] = Field(default_factory=list, exclude=True)
 
 

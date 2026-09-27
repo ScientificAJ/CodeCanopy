@@ -1,4 +1,5 @@
 /** Teammate payloads reuse the PRD's generated evidence and result contracts. */
+import type { ReusableFunctionResult } from '../types/codebase'
 import type { ComponentType } from 'react'
 import type { Answer, ChangePack, Evidence, Finding, Graph as PrdGraph } from '../types/v1/prd.generated'
 import type { DuplicateDetectionResult, Graph, UnusedDetectionResult } from '../types/v1'
@@ -11,7 +12,7 @@ export interface FeaturePayloads {
   'summaries.context-panel': SummaryPayload
   'dependencies.workspace': DependencyOverlay
   'map.overlay': DependencyOverlay
-  'reuse.findings': FindingPage
+  'reuse.findings': ReusableFunctionResult
   'duplicates.compare': DuplicateDetectionResult
   'unused.review': UnusedDetectionResult
   'ask.workspace': Answer

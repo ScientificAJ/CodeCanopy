@@ -88,3 +88,28 @@ def map_artifact(request: MapRequest, snap: Snapshot = Depends(snapshot_access))
 def entities(snap: Snapshot = Depends(snapshot_access)):
     from app.services.graph_service import inventory_entities
     return inventory_entities(snap.id)
+
+
+from app.features.reusable_functions import (
+    ConcreteReusableFunctionService,
+    ReusableFunctionRequest,
+    ReusableFunctionResult,
+)
+
+
+@router.get(
+    '/{project_id}/snapshots/{snapshot_id}/findings/reuse',
+    response_model=ReusableFunctionResult,
+)
+@router.get(
+    '/{project_id}/snapshots/{snapshot_id}/reusable-functions',
+    response_model=ReusableFunctionResult,
+)
+async def reusable_functions(
+    snap: Snapshot = Depends(snapshot_access),
+    min_callers: int = Query(1, ge=1, le=50),
+):
+    service = ConcreteReusableFunctionService()
+    return await service.execute(
+        ReusableFunctionRequest(snapshot_id=snap.id, min_callers=min_callers)
+    )

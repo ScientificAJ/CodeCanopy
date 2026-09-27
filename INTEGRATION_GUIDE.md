@@ -12,7 +12,7 @@ under `backend/app/features` are preserved.
 | `summaries.context-panel` | `frontend/src/pages/workspace/WorkspaceLayout.tsx` | `SummaryPayload`; `GET …/{snapshot}/summaries` |
 | `dependencies.workspace` | `…/DependenciesPage.tsx` | `DependencyOverlay`; `GET …/{snapshot}/dependencies` |
 | `map.overlay` | `…/MapPage.tsx` when registered | `DependencyOverlay`; same graph/evidence contract; inspector region below the structural map |
-| `reuse.findings` | `…/OpportunitiesPage.tsx`, route `/opportunities/reuse` | `FindingPage`; `GET …/{snapshot}/findings/reuse` |
+| `reuse.findings` | `…/OpportunitiesPage.tsx`, route `/opportunities/reuse` | `ReusableFunctionResult`; `GET …/{snapshot}/findings/reuse` |
 | `duplicates.compare` | `…/OpportunitiesPage.tsx`, route `/opportunities/duplicates` | `DuplicateDetectionResult`; `GET …/{snapshot}/findings/duplicates` |
 | `unused.review` | `…/OpportunitiesPage.tsx`, route `/opportunities/unused` | `UnusedDetectionResult`; `GET …/{snapshot}/findings/unused` |
 | `ask.workspace` | `…/AskPage.tsx` | PRD `Answer`; `POST …/{snapshot}/answers` |
@@ -22,7 +22,7 @@ under `backend/app/features` are preserved.
 All mounts use `components/slots/SlotMount.tsx`. Unregistered or explicitly
 unavailable features render `Unavailable`; they do not fetch anything. The
 unimplemented v1 slots return 501 with `IntegrationSlotResponse` and
-`NOT_CONNECTED`. Duplicate and potentially-unused findings are connected and
+`NOT_CONNECTED`. Reuse, duplicate and potentially-unused findings are connected and
 return snapshot-scoped analysis results. Do not return 200 with dummy findings
 or an empty successful analysis.
 
@@ -168,3 +168,5 @@ reported as a limitation.
 - `frontend/e2e/workspace.spec.ts`: real ZIP endpoints, map/tree/source behavior,
   persisted groups/labels, all deferred routes, five desktop sizes, mobile
   source access, and an interactive export with networking disabled.
+
+Reuse findings use cached AST call sites, canonical file IDs and source ranges. Matches are same-language name candidates; ambiguous definitions are omitted. See docs/reusable-functions.md for coverage and compatibility details.

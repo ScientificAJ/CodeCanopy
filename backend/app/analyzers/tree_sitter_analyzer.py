@@ -10,7 +10,7 @@ import warnings
 from tree_sitter import Node
 from tree_sitter_languages import get_parser
 
-from app.models.codebase import File, Function
+from app.models.codebase import CallSite, File, Function
 
 FUNCTION_NODE_TYPES = {
     'javascript': {'function_declaration', 'function_expression', 'arrow_function', 'method_definition'},
@@ -267,11 +267,26 @@ class TreeSitterAnalyzer:
             if reference:
                 references.add(reference)
 
+        imports = []
+        for node in _walk(root):
+            if parser_name == 'java' and node.type == 'import_declaration':
+                imports.append(re.sub(r'^import\s+(?:static\s+)?|;\s*$', '', _source_text(node, source)).strip())
+            elif parser_name in {'javascript', 'typescript', 'tsx'} and node.type == 'import_statement':
+                module = node.child_by_field_name('source')
+                if module is not None:
+                    imports.append(_source_text(module, source).strip('\"\''))
         return File(
             path=path,
             name=Path(path).name,
             language=language,
             size=size if size is not None else len(source),
+            imports=imports,
             functions=sorted(functions, key=lambda item: (item.line_start, item.name.casefold())),
+            call_sites=[
+                CallSite(callee_name=name, file=path,
+                         line_start=node.start_point[0] + 1, line_end=node.end_point[0] + 1)
+                for node in _walk(root) if node.type in CALL_NODE_TYPES
+                if (name := _call_name(node, source)) is not None
+            ],
             references=sorted(references),
         )

@@ -16,7 +16,6 @@ from app.models.v1.slots import (
     SLOT_ASK,
     SLOT_DEPENDENCIES,
     SLOT_PROPOSALS,
-    SLOT_REUSE,
     SLOT_SUMMARIES,
     IntegrationSlotResponse,
 )
@@ -50,17 +49,6 @@ def get_summaries_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResp
 def get_dependencies_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:
     """Slot endpoint for the connections/change-impact feature."""
     return SLOT_DEPENDENCIES
-
-
-# INTEGRATION_SLOT: reuse.findings
-@router.get(
-    _SNAPSHOT_PATH + "/findings/reuse",
-    response_model=IntegrationSlotResponse,
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
-)
-def get_reuse_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:
-    """Slot endpoint for reusable/shared function discovery."""
-    return SLOT_REUSE
 
 
 # INTEGRATION_SLOT: ask.workspace

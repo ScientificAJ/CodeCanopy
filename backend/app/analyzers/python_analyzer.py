@@ -4,7 +4,7 @@ import hashlib
 from pathlib import Path
 
 from app.analyzers.base import SourceAnalyzer
-from app.models.codebase import Class, File, Function
+from app.models.codebase import CallSite, Class, File, Function
 
 
 class _StructureNormalizer(ast.NodeTransformer):
@@ -69,18 +69,14 @@ class PythonAnalyzer(SourceAnalyzer):
         functions: list[Function] = []
         classes: list[Class] = []
         imports: list[str] = []
+        call_sites: list[CallSite] = []
         references: set[str] = set()
         file_size = size if size is not None else len(source.encode("utf-8"))
 
-        relevant_nodes = (
-            node
-            for node in ast.walk(module)
-            if isinstance(
-                node,
-                (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Import, ast.ImportFrom),
-            )
+        nodes = sorted(
+            (node for node in ast.walk(module) if hasattr(node, 'lineno')),
+            key=lambda node: (node.lineno, node.col_offset),
         )
-        nodes = sorted(relevant_nodes, key=lambda node: (node.lineno, node.col_offset))
         for node in nodes:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 calls = sorted(
@@ -115,6 +111,20 @@ class PythonAnalyzer(SourceAnalyzer):
                 imports.extend(alias.name for alias in node.names)
             elif isinstance(node, ast.ImportFrom):
                 imports.append(f"{'.' * node.level}{node.module or ''}")
+            elif isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name):
+                    callee = node.func.id
+                elif isinstance(node.func, ast.Attribute):
+                    callee = node.func.attr
+                else:
+                    callee = None
+                if callee:
+                    call_sites.append(CallSite(
+                        callee_name=callee,
+                        file=path,
+                        line_start=node.lineno,
+                        line_end=getattr(node, 'end_lineno', None) or node.lineno,
+                    ))
 
         for node in ast.walk(module):
             if isinstance(node, ast.Call):
@@ -129,8 +139,9 @@ class PythonAnalyzer(SourceAnalyzer):
             name=Path(path).name,
             language=self.language,
             size=file_size,
-            functions=functions,
-            classes=classes,
+            functions=sorted(functions, key=lambda item: item.line_start),
+            classes=sorted(classes, key=lambda item: item.line_start),
             imports=imports,
+            call_sites=call_sites,
             references=sorted(references),
         )

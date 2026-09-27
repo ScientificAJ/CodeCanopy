@@ -1,6 +1,6 @@
 /* Generated from contracts/prd.schema.json. Run npm run contracts; do not edit. */
 
-export type GrepoCoreDesignContracts10 = Graph | Answer | Finding | ChangePack | AnalysisRun | ApiError;
+export type GREPOCoreDesignContracts10 = Graph | Answer | Finding | ChangePack | AnalysisRun | ApiError;
 
 export interface Graph {
   schema_version: "1.0";

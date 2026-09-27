@@ -38,7 +38,7 @@ and 2048×1320, with both endpoint themes captured. The diagnosed initial expand
 layout overflow was corrected by compacting authored vertical spacing, without
 changing the vendor, hiding overflow or shrinking typography.
 
-Final expanded-export receipt (local evidence is ignored under `bob_sessions`):
+Final expanded-export receipt (original output path recorded at the time):
 
 ```text
 diagram_type: architecture
@@ -104,15 +104,17 @@ measurement to keep changing; placing it in the existing header fixed the
 loop. Explicit valid `?theme=light|dark` values now take precedence over the
 saved view theme, with an E2E assertion for the empty-storage dark case.
 
-Evidence receipts and screenshots remain ignored under
-`bob_sessions/browser-evidence`. The current browser receipts are
+Archived evidence receipts and screenshots are tracked under
+[`bob_sessions/07-arjun-structure-workspace/supporting-evidence/browser-evidence`](../bob_sessions/07-arjun-structure-workspace/supporting-evidence/browser-evidence).
+The archived browser receipts are
 `upstream-root.visual-check.json`, `codecanopy-root.visual-check.json`, and
 `structural-export.visual-check.json`; the root delivery receipt and exact
 source files are `delivery.json`, `upstream-root.html`, `codecanopy-root.html`,
 `view.architecture.json`, and `root-render-result.json`.
 
-No raw conversation logs, imported repositories or bulk design archive are
-included in the commit.
+The foundation commit did not include raw conversation logs, imported repositories
+or the bulk design archive. Recovered BOB session records were added separately
+in commit `2046087` and are now linked from the [session index](../bob_sessions/README.md).
 
 To repeat the optional live network check:
 

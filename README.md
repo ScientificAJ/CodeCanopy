@@ -1,8 +1,8 @@
-# CodeCanopy
+# GREPO
 
 **See the structure. Find your path through the code.**
 
-CodeCanopy imports a public GitHub repository or ZIP into a read-only snapshot,
+GREPO imports a public GitHub repository or ZIP into a read-only snapshot,
 then connects a searchable file tree, an interactive structure map, and bounded
 source previews. Organize your view with labels and virtual groups, and export
 that view as an interactive, offline HTML file.
@@ -163,8 +163,9 @@ npm run test:e2e
 
 The browser test uses an explicitly synthetic ZIP, exercises real endpoints,
 and checks selection, source pagination, organization, deferred pages, responsive
-access and offline export. Screenshots and receipts stay in ignored
-`bob_sessions/browser-evidence`. The container test configuration uses
+access and offline export. New screenshots and receipts go to
+`bob_sessions/local-verification/browser-evidence`. Archived task evidence is
+organized in the [BOB session index](bob_sessions/README.md). The container test configuration uses
 `--no-sandbox`; normal desktop Chromium can use its own sandbox.
 
 ## Archify and licenses
@@ -172,11 +173,11 @@ access and offline export. Screenshots and receipts stay in ignored
 Structure maps use the **complete, unmodified** `archify/` package from
 [tt-a1i/archify](https://github.com/tt-a1i/archify/tree/9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993/archify),
 pinned to `9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993`.
-`vendor/archify.lock.json` records every file hash. CodeCanopy's compiler and
+`vendor/archify.lock.json` records every file hash. GREPO's compiler and
 bridge are separate. No fallback diagram renderer is used. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Archify is MIT licensed, copyright tt-a1i and Cocoon AI; its license and bundled
 font notices are retained. A license for the project's original application
 code has not yet been selected. The supplied gecko image master is preserved
-byte-for-byte; CSS viewports show the gecko beside the CodeCanopy wordmark.
+byte-for-byte; CSS viewports show the gecko beside the GREPO wordmark.

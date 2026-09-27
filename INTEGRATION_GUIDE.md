@@ -1,4 +1,4 @@
-# Connecting a feature to CodeCanopy
+# Connecting a feature to GREPO
 
 This slice implements structural browsing and shared UI. Add feature behavior
 through the public surfaces below; do not create another inventory, identity,
@@ -146,11 +146,11 @@ canonical allowlisted entity. Opaque origins require postMessage target `*`;
 the source/nonce checks are therefore mandatory. Imported text never becomes
 script. JSON is escaped before embedding; the HTML CSP blocks network access.
 
-Upstream HTML remains byte-identical to the pinned renderer output. CodeCanopy
+Upstream HTML remains byte-identical to the pinned renderer output. GREPO
 adds a separately hashed wrapper, bridge, provenance manifest, CSP and embedded
 viewport styling; `upstream_sha256` and `html_sha256` are separate. Upstream
 `deliver`, automated `visual-check`, and image review are separate verification
-claims. Do not edit vendor source to repair a CodeCanopy compiler issue.
+claims. Do not edit vendor source to repair a GREPO compiler issue.
 
 ## Optional semantic scoring
 

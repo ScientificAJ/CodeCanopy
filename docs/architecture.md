@@ -1,4 +1,4 @@
-# CodeCanopy architecture
+# GREPO architecture
 
 ## Structure workspace (v1)
 
@@ -31,7 +31,7 @@ publication locks are process-local.
 `graph_service` produces observed containment only. `view_service` adds view-only
 labels/groups and compiles small chapters through the complete pinned Archify
 package. Deterministic delivery receipts are distinct from browser evidence.
-CodeCanopy wraps the output with provenance, license notices, CSP and a checked
+GREPO wraps the output with provenance, license notices, CSP and a checked
 selection bridge; the upstream package is unchanged. Source bytes are excluded
 from exports.
 

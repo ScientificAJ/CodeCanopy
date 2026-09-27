@@ -15,7 +15,7 @@ TOKEN = re.compile(r'^[a-f0-9]{64}$')
 def workspace_session(request: Request) -> str:
     token = request.cookies.get(COOKIE, '')
     if not TOKEN.fullmatch(token):
-        raise WorkspaceError('SESSION_REQUIRED', 'Open CodeCanopy to start a workspace session.', 401)
+        raise WorkspaceError('SESSION_REQUIRED', 'Open GREPO to start a workspace session.', 401)
     return hashlib.sha256(token.encode()).hexdigest()
 
 

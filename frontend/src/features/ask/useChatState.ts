@@ -151,7 +151,7 @@ export function useChatState({ projectId, snapshotId, fileId, scope, folderPath 
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = `codecanopy-chat-${Date.now()}.txt`
+    a.href = url; a.download = `grepo-chat-${Date.now()}.txt`
     a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
   }, [messages])
 

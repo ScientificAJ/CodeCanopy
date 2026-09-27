@@ -1,4 +1,4 @@
-"""Stress-test CodeCanopy against a real repository.
+"""Stress-test GREPO against a real repository.
 
 Run from the backend directory with the venv python. Prints one JSON line per
 stage so a long import is visible rather than silent.

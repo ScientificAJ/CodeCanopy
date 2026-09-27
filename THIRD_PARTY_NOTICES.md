@@ -2,7 +2,7 @@
 
 ## Archify
 
-CodeCanopy vendors the complete `archify/` directory from
+GREPO vendors the complete `archify/` directory from
 https://github.com/tt-a1i/archify at commit
 `9e35d2b0b39b155553ba9fcfe0b4f2a5198dd993`.
 
@@ -12,7 +12,7 @@ https://github.com/tt-a1i/archify at commit
 - Package and bundled font notices remain in the unmodified upstream directory.
 - `vendor/archify.lock.json` records the archive digest and all 219 file hashes.
 
-The Python compiler and JavaScript bridge under `backend/app` are CodeCanopy
+The Python compiler and JavaScript bridge under `backend/app` are GREPO
 adaptations. They do not modify the upstream package. Upstream attribution and
 license notices remain in generated HTML. Export manifests identify the exact
 upstream commit and distinguish its validated output hash from wrapper output.

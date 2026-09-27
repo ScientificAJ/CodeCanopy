@@ -84,7 +84,7 @@ it('renders ready state without crashing', () => {
 })
 
 it('renders the slot greeting from request.data.answer when ready and no prior chat', () => {
-  const greeting = 'Ask Grepo is your AI assistant for this repository.'
+  const greeting = 'Ask GREPO is your AI assistant for this repository.'
   // Cast through unknown to satisfy the Answer type constraint while providing the real shape
   render(<CodeChat {...makeProps({ status: 'ready', data: { answer: greeting, context_hint: 'Snapshot abc123' } as unknown as Answer })} />)
   expect(screen.getByTestId('ask-slot-greeting')).toBeDefined()

@@ -25,7 +25,7 @@ class SourceSlice(BaseModel):
 
 
 class CapabilityLevel(str):
-    """Describes what CodeCanopy can do with a given file."""
+    """Describes what GREPO can do with a given file."""
     FULL = "full"
     TEXT_ONLY = "text_only"
     BINARY = "binary"

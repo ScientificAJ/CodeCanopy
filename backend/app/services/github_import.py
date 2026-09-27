@@ -43,7 +43,7 @@ class AllowlistedRedirects(urllib.request.HTTPRedirectHandler):
 
 def _open(url: str):
     _validate_transport_url(url)
-    request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'CodeCanopy-read-only/1.0'})
+    request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'GREPO-read-only/1.0'})
     try:
         return urllib.request.build_opener(AllowlistedRedirects()).open(request, timeout=20)
     except urllib.error.HTTPError as error:

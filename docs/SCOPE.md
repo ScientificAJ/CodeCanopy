@@ -1,12 +1,12 @@
-# CodeCanopy visualization/shared-UI scope
+# GREPO visualization/shared-UI scope
 
 Recovered from IBM Bob's implementation session
 `f1bb6425233af7a645a4edf70662f791` and its preceding clone session. Bob stopped
 at its budget limit after initial frontend build/tests; its GitHub import,
 source storage, renderer and extension mounts still needed implementation.
-Original session data and the supplied reference package remain local and
-ignored. The subsequent user instruction renamed the product and GitHub
-repository to CodeCanopy.
+Original session data is indexed in [bob_sessions](../bob_sessions/README.md);
+the supplied reference package remains local and ignored. The GitHub repository
+is `ScientificAJ/CodeCanopy`; the current displayed product name is **GREPO**.
 
 | Area | Decision |
 | --- | --- |

@@ -7,6 +7,6 @@ export async function verifyArtifact(artifact: MapArtifact): Promise<boolean> {
 export async function downloadStructuralExport(artifact: MapArtifact) {
   if (!await verifyArtifact(artifact)) throw new Error('Export integrity check failed. Reload the map and try again.')
   const url = URL.createObjectURL(new Blob([artifact.html], {type: 'text/html;charset=utf-8'}))
-  const link = document.createElement('a'); link.href = url; link.download = `codecanopy-map-${artifact.graph.snapshot_id.slice(0,8)}-${artifact.view_id.slice(0,8)}.html`
+  const link = document.createElement('a'); link.href = url; link.download = `grepo-map-${artifact.graph.snapshot_id.slice(0,8)}-${artifact.view_id.slice(0,8)}.html`
   link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

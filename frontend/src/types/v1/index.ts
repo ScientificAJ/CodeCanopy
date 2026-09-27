@@ -1,6 +1,6 @@
 /**
  * V1 API types — mirrors backend/app/models/v1/*.py
- * These are the canonical shared types for the CodeCanopy v1 API.
+ * These are the canonical shared types for the GREPO v1 API.
  * Feature modules must reference these types rather than inventing
  * parallel project/snapshot/entity types.
  */

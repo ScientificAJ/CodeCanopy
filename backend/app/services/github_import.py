@@ -12,7 +12,10 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from app.services.project_archive import MAX_UPLOAD_BYTES, _validated_entries, _extract_entries
+from app.services.project_archive import _validated_entries, _extract_entries
+
+MAX_GITHUB_ARCHIVE_BYTES = 250 * 1024 * 1024
+DOWNLOAD_CHUNK_BYTES = 1024 * 1024
 
 ALLOWED_HOSTS = {'api.github.com', 'codeload.github.com', 'github.com'}
 _OWNER_RE = re.compile(r'^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$')
@@ -104,22 +107,32 @@ def download_archive(owner: str, repo: str, commit: str, dest_dir: Path, check_c
         raise GitHubImportError('Invalid immutable commit.')
     archive = dest_dir / 'github.zip'
     size, started = 0, time.monotonic()
-    with _open(f'https://codeload.github.com/{owner}/{repo}/zip/{commit}') as response, archive.open('xb') as target:
-        while True:
-            check_cancel()
-            if time.monotonic() - started > 120:
-                raise GitHubImportError('GitHub archive download timed out.')
-            chunk = response.read(65536)
-            if not chunk:
-                break
-            size += len(chunk)
-            if size > MAX_UPLOAD_BYTES:
-                raise GitHubImportTooLargeError('GitHub archive exceeds the 50 MiB download limit.')
-            target.write(chunk)
+    created = False
+    try:
+        with _open(f'https://codeload.github.com/{owner}/{repo}/zip/{commit}') as response, archive.open('xb') as target:
+            created = True
+            while True:
+                check_cancel()
+                if time.monotonic() - started > 120:
+                    raise GitHubImportError('GitHub archive download timed out.')
+                # Read at most one byte beyond the cap, even without Content-Length.
+                chunk = response.read(min(DOWNLOAD_CHUNK_BYTES, MAX_GITHUB_ARCHIVE_BYTES - size + 1))
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > MAX_GITHUB_ARCHIVE_BYTES:
+                    raise GitHubImportTooLargeError(
+                        f'GitHub archive exceeds the {MAX_GITHUB_ARCHIVE_BYTES // (1024 * 1024)} MiB download limit.'
+                    )
+                target.write(chunk)
+    except Exception:
+        if created:
+            archive.unlink(missing_ok=True)
+        raise
     return archive
 
 
-def import_github_repository(url: str, ref: str = 'HEAD', check_cancel=lambda: None):
+def import_github_repository(url: str, ref: str = 'HEAD', check_cancel=lambda: None, on_skip=lambda path: None):
     owner, repo = parse_github_url(url)
     commit, display_ref = resolve_ref_to_commit(owner, repo, ref)
     check_cancel()
@@ -128,8 +141,8 @@ def import_github_repository(url: str, ref: str = 'HEAD', check_cancel=lambda: N
     try:
         archive_path = download_archive(owner, repo, commit, staging, check_cancel)
         with zipfile.ZipFile(archive_path) as archive:
-            entries = _validated_entries(archive)
-            _extract_entries(archive, entries, extraction)
+            entries = _validated_entries(archive, check_cancel, skip_symlinks=True, on_skip=on_skip)
+            _extract_entries(archive, entries, extraction, check_cancel)
         # Strip only after safe extraction; do not modify ZipInfo header names.
         children = list(extraction.iterdir())
         files = children[0] if len(children) == 1 and children[0].is_dir() else extraction

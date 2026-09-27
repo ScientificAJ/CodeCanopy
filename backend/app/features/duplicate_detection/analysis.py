@@ -1,9 +1,10 @@
 """Cached duplicate and potentially-unused analysis for immutable snapshots."""
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from difflib import SequenceMatcher
 from functools import lru_cache
 
@@ -16,12 +17,14 @@ from app.features.duplicate_detection import (
     UnusedDetectionResult,
 )
 from app.features.duplicate_detection.provider import SemanticSimilarityProvider, configured_provider
-from app.models.codebase import Function, Relationship
-from app.services.snapshot_service import get_inventory, get_syntax_records, read_source_lines
+from app.models.codebase import Function
+from app.services.snapshot_service import get_inventory, get_syntax_records, read_source_text
 
 MAX_CANDIDATES = 80
 MAX_PAIR_COMPARISONS = 10000
 MAX_SEMANTIC_PAIRS = 8
+MAX_SEMANTIC_FUNCTION_CHARS = 12_000
+MAX_SEMANTIC_CONTEXT_CHARS = 48_000
 _STOP_NAME_WORDS = {'are', 'check', 'ensure', 'find', 'get', 'has', 'is', 'make', 'test', 'valid', 'validate', 'verify'}
 _semantic_cache: dict[tuple[str, str, tuple[str, ...]], list[float]] = {}
 
@@ -46,9 +49,9 @@ def _evidence(function: Function, file_id: str) -> FunctionEvidence:
     )
 
 
-@lru_cache(maxsize=24)
+@lru_cache(maxsize=2)
 def _static_analysis(snapshot_id: str):
-    inventory = get_inventory(snapshot_id, limit=10000).files
+    inventory = get_inventory(snapshot_id, limit=None).files
     syntax = get_syntax_records(snapshot_id)
     records = [
         (file_id, function)
@@ -97,9 +100,10 @@ def _static_analysis(snapshot_id: str):
         right_file_id, right_function = records[right]
         left_signature = left_function.structural_signature
         right_signature = right_function.structural_signature
-        structural = SequenceMatcher(None, left_signature, right_signature, autojunk=False).ratio()
         if left_function.structural_hash and left_function.structural_hash == right_function.structural_hash:
             structural = 1.0
+        else:
+            structural = SequenceMatcher(None, left_signature, right_signature, autojunk=False).ratio()
         if structural < 0.62:
             continue
         pair_id = _stable_id(snapshot_id, left_file_id, left_function.name, str(left_function.line_start),
@@ -113,29 +117,31 @@ def _static_analysis(snapshot_id: str):
             method='normalized_ast_structure_and_call_shape',
         ))
     candidates.sort(key=lambda candidate: (candidate.structural_similarity, candidate.id), reverse=True)
+    candidate_count = len(candidates)
     candidates = candidates[:MAX_CANDIDATES]
 
     by_name_functions: dict[tuple[str, str], list[tuple[str, Function]]] = defaultdict(list)
     for file_id, function in records:
         language = syntax[file_id].language
         by_name_functions[(language, function.name)].append((file_id, function))
-    relationships: list[Relationship] = []
-    for file_id, parsed_file in syntax.items():
-        for caller in parsed_file.functions:
-            for called_name in caller.calls:
-                for target_file_id, target in by_name_functions.get((parsed_file.language, called_name), ()):
-                    relationships.append(Relationship(
-                        source=_evidence(caller, file_id).id,
-                        target=_evidence(target, target_file_id).id,
-                        type='calls',
-                    ))
-
+    # Count name-based candidates without allocating a Relationship per possible
+    # target. Common names in monorepos otherwise create millions of objects.
+    call_counts = Counter((parsed_file.language, called_name)
+                          for parsed_file in syntax.values()
+                          for caller in parsed_file.functions
+                          for called_name in caller.calls)
+    referenced_ids = set()
+    relationship_count = 0
+    for key, count in call_counts.items():
+        targets = by_name_functions.get(key, ())
+        relationship_count += count * len(targets)
+        referenced_ids.update(_evidence(target, file_id).id for file_id, target in targets)
     referenced_names = {
         (parsed_file.language, name)
         for parsed_file in syntax.values()
         for name in parsed_file.references
     }
-    referenced_ids = {relationship.target for relationship in relationships}
+
     unused = []
     for file_id, function in records:
         function_id = _evidence(function, file_id).id
@@ -157,7 +163,11 @@ def _static_analysis(snapshot_id: str):
         'Call resolution is name-based and cannot see reflection, dynamic dispatch, framework registration, or external callers.',
         'Unused results are candidates for review, not proof that a function is unused.',
     ]
-    return inventory, syntax, candidates, unused, len(relationships), limitations
+    if len(pairs) >= MAX_PAIR_COMPARISONS:
+        limitations.append(f'Duplicate comparison reached its {MAX_PAIR_COMPARISONS:,}-pair budget; results are partial.')
+    if candidate_count > MAX_CANDIDATES:
+        limitations.append(f'Showing the strongest {MAX_CANDIDATES} of {candidate_count} structural candidates.')
+    return inventory, syntax, candidates, unused, relationship_count, limitations
 
 
 def get_unused_findings(snapshot_id: str) -> UnusedDetectionResult:
@@ -172,34 +182,44 @@ def get_unused_findings(snapshot_id: str) -> UnusedDetectionResult:
     return UnusedDetectionResult(snapshot_id=snapshot_id, findings=unused, coverage=coverage)
 
 
-def _candidate_source(snapshot_id: str, evidence: FunctionEvidence) -> str:
-    selected_end = min(evidence.line_end, evidence.line_start + 79)
-    source = read_source_lines(snapshot_id, evidence.file_id, evidence.line_start, selected_end, max_lines=80)
-    return source.content[:4000]
+def _candidate_source(snapshot_id: str, evidence: FunctionEvidence) -> str | None:
+    _, text = read_source_text(snapshot_id, evidence.file_id)
+    content = '\n'.join(text.splitlines()[evidence.line_start - 1:evidence.line_end])
+    # Never assign a whole-function semantic score to just its prefix.
+    return content if len(content) <= MAX_SEMANTIC_FUNCTION_CHARS else None
+
+
+def _semantic_inputs(snapshot_id, candidates):
+    selected, pairs, size = [], [], 0
+    for candidate in candidates:
+        code_a = _candidate_source(snapshot_id, candidate.functions[0])
+        code_b = _candidate_source(snapshot_id, candidate.functions[1])
+        if code_a is None or code_b is None or size + len(code_a) + len(code_b) > MAX_SEMANTIC_CONTEXT_CHARS:
+            continue
+        selected.append(candidate)
+        pairs.append({'name_a': candidate.functions[0].name, 'code_a': code_a,
+                      'name_b': candidate.functions[1].name, 'code_b': code_b})
+        size += len(code_a) + len(code_b)
+        if len(selected) >= MAX_SEMANTIC_PAIRS:
+            break
+    return selected, pairs
 
 
 async def get_duplicate_findings(snapshot_id: str) -> DuplicateDetectionResult:
-    inventory, syntax, candidates, _, relationship_count, limitations = _static_analysis(snapshot_id)
+    inventory, syntax, candidates, _, relationship_count, limitations = await asyncio.to_thread(_static_analysis, snapshot_id)
     candidates = [candidate.model_copy(deep=True) for candidate in candidates]
     provider: SemanticSimilarityProvider | None = configured_provider()
     if provider is None:
         limitations = [*limitations, 'Semantic comparison is not configured; scores use static AST and call structure only.']
     elif candidates:
-        selected = candidates[:MAX_SEMANTIC_PAIRS]
+        selected, pairs = await asyncio.to_thread(_semantic_inputs, snapshot_id, candidates)
+        if len(selected) < len(candidates):
+            limitations = [*limitations, f'Semantic comparison covers {len(selected)} of {len(candidates)} candidates using complete function bodies; pair and context budgets exclude the remainder.']
         key = (snapshot_id, provider.cache_key, tuple(candidate.id for candidate in selected))
         scores = _semantic_cache.get(key)
         if scores is None:
-            pairs = [
-                {
-                    'name_a': candidate.functions[0].name,
-                    'code_a': _candidate_source(snapshot_id, candidate.functions[0]),
-                    'name_b': candidate.functions[1].name,
-                    'code_b': _candidate_source(snapshot_id, candidate.functions[1]),
-                }
-                for candidate in selected
-            ]
             try:
-                scores = await provider.score_pairs(pairs)
+                scores = await provider.score_pairs(pairs) if pairs else []
                 if len(_semantic_cache) >= 64:
                     _semantic_cache.pop(next(iter(_semantic_cache)))
                 _semantic_cache[key] = scores

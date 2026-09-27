@@ -6,7 +6,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { Icon } from '../../components/ui/Icon'
 import { renderMarkdown } from './markdown'
-import type { useChatState } from './useChatState'
+import type { useChatState, SourceCitation } from './useChatState'
 
 // Starter question chips shown when chat is empty
 const STARTERS = [
@@ -21,10 +21,11 @@ interface Props {
   scopeLabel: string
   scopeIcon: 'file' | 'folder'
   prefillQuestion?: string
+  onOpenSource?: (source: SourceCitation) => void
   onClose(): void
 }
 
-export function ChatModal({ state, scopeLabel, scopeIcon, prefillQuestion, onClose }: Props) {
+export function ChatModal({ state, scopeLabel, scopeIcon, prefillQuestion, onClose, onOpenSource }: Props) {
   const { messages, input, setInput, loading, error, copied, submit, cancel, clear, copyMessage, exportChat } = state
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -39,10 +40,10 @@ export function ChatModal({ state, scopeLabel, scopeIcon, prefillQuestion, onClo
     if (prefillQuestion && messages.length === 0) {
       setInput(prefillQuestion)
     }
-  }, [prefillQuestion])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [prefillQuestion, messages.length, setInput])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    bottomRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
   }, [messages, loading])
 
   useEffect(() => {
@@ -148,6 +149,8 @@ export function ChatModal({ state, scopeLabel, scopeIcon, prefillQuestion, onClo
                 ? <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{m.content}</p>
                 : <div className="md-body">{renderMarkdown(m.content)}</div>
               }
+              {m.role === 'assistant' && m.sources?.length ? <div className="chat-sources" aria-label="Answer sources">{m.sources.map(source => <button className="btn small" key={source.id} onClick={() => {onClose(); onOpenSource?.(source)}} disabled={!onOpenSource} title={`Open ${source.path} at lines ${source.line_start}–${source.line_end}`}>[{source.id}] {source.path}:{source.line_start}–{source.line_end}</button>)}</div> : null}
+              {m.limitations?.map((limitation, index) => <p className="chat-limitation" key={index}>{limitation}</p>)}
             </div>
           ))}
 
@@ -174,6 +177,7 @@ export function ChatModal({ state, scopeLabel, scopeIcon, prefillQuestion, onClo
             onKeyDown={handleKey}
             placeholder="Ask about the code… (Enter to send, Shift+Enter for newline)"
             rows={2}
+            maxLength={4000}
             disabled={loading}
             aria-label="Chat input"
           />

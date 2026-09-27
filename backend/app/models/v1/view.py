@@ -26,4 +26,4 @@ class MapRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
     focus: str = Field(default='.', max_length=1024)
     page_size: Literal[3, 8] = 8
-    cursor: int = Field(default=0, ge=0, le=10000)
+    cursor: int = Field(default=0, ge=0)

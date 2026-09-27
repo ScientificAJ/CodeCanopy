@@ -1,6 +1,7 @@
 """Conservative, snapshot-scoped cross-file call candidates from cached syntax."""
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from typing import Protocol
 
@@ -48,6 +49,9 @@ class ReusableFunctionService(FeatureService[ReusableFunctionRequest, ReusableFu
 
 class ConcreteReusableFunctionService:
     async def execute(self, request: ReusableFunctionRequest) -> ReusableFunctionResult:
+        return await asyncio.to_thread(self._execute_sync, request)
+
+    def _execute_sync(self, request: ReusableFunctionRequest) -> ReusableFunctionResult:
         try:
             syntax = get_syntax_records(request.snapshot_id)
         except (OSError, ValueError):

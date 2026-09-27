@@ -2,7 +2,7 @@
 import type { ComponentType } from 'react'
 import type { CapabilityReport, FileRecord, Graph, GraphEntity, Snapshot } from '../types/v1'
 import type { SelectedEntity, ViewState } from './WorkspaceContext'
-export type SlotId = 'summaries.context-panel' | 'dependencies.workspace' | 'reuse.findings' | 'duplicates.compare' | 'unused.review' | 'ask.workspace' | 'proposals.detail' | 'docs.generated' | 'map.overlay'
+export type SlotId = 'summaries.context-panel' | 'dependencies.workspace' | 'reuse.findings' | 'duplicates.compare' | 'unused.review' | 'ask.workspace' | 'proposals.detail' | 'proposals.derived' | 'docs.generated' | 'map.overlay'
 export type FeatureAvailability = 'connected' | 'not-connected' | 'unavailable'
 export type RequestState<T = unknown> = {status: 'idle'} | {status: 'loading'} | {status: 'ready'; data: T} | {status: 'error'; message: string}
 export interface SlotContext {

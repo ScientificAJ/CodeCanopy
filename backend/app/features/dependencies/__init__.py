@@ -6,9 +6,9 @@ from app.models.v1.dependencies import DependencyResult
 from app.services.inventory_service import entity_id
 from app.services.snapshot_service import get_inventory, get_syntax_records
 
-MAX_NODES = 5000
-MAX_EDGES = 15000
-MAX_UNRESOLVED = 3000
+MAX_NODES = 100_000
+MAX_EDGES = 150_000
+MAX_UNRESOLVED = 20_000
 LIMITATIONS = [
     'Static bindings show possible connections, not proof that a call runs or a change causes a failure.',
     'Resolves Python imports from the repository root and relative imports; resolves JavaScript/TypeScript relative ES imports. Custom source roots, path aliases, package exports and re-exports are not followed.',
@@ -18,7 +18,7 @@ LIMITATIONS = [
 
 
 def analyze(snapshot_id):
-    inventory = get_inventory(snapshot_id, limit=10000)
+    inventory = get_inventory(snapshot_id, limit=None)
     records = {r.path: r for r in inventory.files if r.is_text and not r.excluded}
     syntax = {item.path: item for item in get_syntax_records(snapshot_id).values()}
     nodes, edges, unresolved = [], [], []

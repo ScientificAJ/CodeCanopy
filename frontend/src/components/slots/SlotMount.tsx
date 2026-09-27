@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useWorkspace, selectionFor } from '../../contexts/WorkspaceContext'
 import { getSlot, slotRevision, subscribeSlots, type RequestState, type SlotContext, type SlotId } from '../../contexts/SlotRegistry'
 import { Icon } from '../ui/Icon'
-export const slotNames: Record<SlotId, string> = {'summaries.context-panel': 'File & folder summaries', 'dependencies.workspace': 'Dependencies & change impact', 'reuse.findings': 'Reusable code', 'duplicates.compare': 'Duplicate code', 'unused.review': 'Unused code', 'ask.workspace': 'Ask GREPO', 'proposals.detail': 'Proposals & change packs', 'docs.generated': 'Generated documentation', 'map.overlay': 'Map insights'}
+export const slotNames: Record<SlotId, string> = {'summaries.context-panel': 'File & folder summaries', 'dependencies.workspace': 'Dependencies & change impact', 'reuse.findings': 'Reusable code', 'duplicates.compare': 'Duplicate code', 'unused.review': 'Unused code', 'ask.workspace': 'Ask GREPO', 'proposals.detail': 'AI-assisted change plan', 'proposals.derived': 'Source-derived suggestions', 'docs.generated': 'Generated documentation', 'map.overlay': 'Map insights'}
 export function Unavailable({id, message}: {id: SlotId; message?: string}) {
-  return <section className="slot-placeholder" aria-label={slotNames[id]}><div className="slot-icon"><Icon name="spark" size={24}/></div><span className="badge">Not connected</span><h2>{slotNames[id]}</h2><p>{message ?? 'This feature is not connected in this workspace yet. You can explore the repository map and read source files now.'}</p><details><summary>Integration details</summary><p>Extension: <code>{id}</code></p><p>Register a component and optional data adapter through SlotRegistry. See INTEGRATION_GUIDE.md.</p></details></section>
+  return <section className="slot-placeholder" aria-label={slotNames[id]}><div className="slot-icon"><Icon name="spark" size={24}/></div><span className="badge">Not connected</span><h2>{slotNames[id]}</h2><p>{message ?? 'This feature is not connected in this workspace yet. You can explore the repository map and read source files now.'}</p></section>
 }
 class Boundary extends Component<{children: ReactNode; id: SlotId}, {failed: boolean}> {
   state = {failed: false}
@@ -13,6 +13,12 @@ class Boundary extends Component<{children: ReactNode; id: SlotId}, {failed: boo
   render() {return this.state.failed ? <Unavailable id={this.props.id} message="This extension could not be displayed. The repository and source browser are still available."/> : this.props.children}
 }
 export function SlotMount({id}: {id: SlotId}) {
+  const ws = useWorkspace()
+  // Route changes can reuse this mount. Reset the request with the feature so
+  // its next component never renders a previous feature's incompatible data.
+  return <SlotContent key={`${id}:${ws.projectId}:${ws.snapshot?.id}`} id={id}/>
+}
+function SlotContent({id}: {id: SlotId}) {
   const ws = useWorkspace(); const navigate = useNavigate()
   useSyncExternalStore(subscribeSlots, slotRevision)
   const feature = getSlot(id)

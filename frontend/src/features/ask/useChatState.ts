@@ -5,13 +5,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { request, snapshotPath } from '../../services/v1/api'
 
+import type { AskResponse, SourceCitation } from '../../types/v1/chat'
+export type { SourceCitation } from '../../types/v1/chat'
+
 export interface ChatMsg {
   role: 'user' | 'assistant'
   content: string
+  sources?: SourceCitation[]
+  limitations?: string[]
   hint?: string          // context_hint stored per assistant message
 }
 
-interface AskResponse { answer: string; context_hint: string }
 
 interface StoredChat {
   messages: ChatMsg[]
@@ -57,7 +61,7 @@ function sendQuestion(
   signal: AbortSignal,
 ): Promise<AskResponse> {
   // Strip hint field before sending — backend only needs role + content
-  const apiHistory = history.map(({ role, content }) => ({ role, content }))
+  const apiHistory = history.slice(-10).map(({ role, content }) => ({ role, content: content.slice(0, 8000) }))
   return request<AskResponse>(
     snapshotPath(projectId, snapshotId) + '/chat',
     {
@@ -83,28 +87,35 @@ export interface ChatStateOptions {
 }
 
 export function useChatState({ projectId, snapshotId, fileId, scope, folderPath }: ChatStateOptions) {
-  const [messages, setMessages] = useState<ChatMsg[]>(() =>
-    projectId && snapshotId ? loadStored(projectId, snapshotId) : []
-  )
+  const key = storageKey(projectId, snapshotId)
+  const [chat, setChat] = useState(() => ({key, messages: projectId && snapshotId ? loadStored(projectId, snapshotId) : []}))
+  const messages = chat.key === key ? chat.messages : []
+  const setMessages = useCallback((messages: ChatMsg[]) => setChat({key, messages}), [key])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<number | null>(null)  // index of copied message
   const abortRef = useRef<AbortController | null>(null)
+  const requestVersion = useRef(0)
 
   // Re-load from storage when projectId/snapshotId change (workspace switch)
   useEffect(() => {
     if (projectId && snapshotId) {
       setMessages(loadStored(projectId, snapshotId))
     }
-  }, [projectId, snapshotId])
+  }, [projectId, snapshotId, setMessages])
 
   // Persist messages to localStorage whenever they change
   useEffect(() => {
-    if (projectId && snapshotId && messages.length > 0) {
+    if (projectId && snapshotId && chat.key === key && messages.length > 0) {
       saveStored(projectId, snapshotId, messages)
     }
-  }, [messages, projectId, snapshotId])
+  }, [messages, projectId, snapshotId, chat.key, key])
+
+  useEffect(() => {
+    setLoading(false); setError(''); setInput('')
+    return () => {requestVersion.current += 1; abortRef.current?.abort()}
+  }, [projectId, snapshotId, fileId, folderPath, scope])
 
   const submit = useCallback(async () => {
     const q = input.trim()
@@ -114,28 +125,33 @@ export function useChatState({ projectId, snapshotId, fileId, scope, folderPath 
     const next: ChatMsg[] = [...messages, { role: 'user', content: q }]
     setMessages(next)
     setLoading(true)
+    const version = ++requestVersion.current
     abortRef.current = new AbortController()
     try {
       const res = await sendQuestion(
         projectId, snapshotId, q, messages,
         fileId, scope, folderPath, abortRef.current.signal,
       )
-      setMessages([...next, { role: 'assistant', content: res.answer, hint: res.context_hint }])
+      if (requestVersion.current !== version) return
+      setMessages([...next, { role: 'assistant', content: res.answer, hint: res.context_hint, sources: res.sources, limitations: res.limitations }])
     } catch (e: unknown) {
+      if (requestVersion.current !== version) return
+      setMessages(messages); setInput(q)
       if (e instanceof Error && e.name === 'AbortError') return
       setError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
-      setLoading(false)
+      if (requestVersion.current === version) setLoading(false)
     }
-  }, [input, loading, projectId, snapshotId, messages, fileId, scope, folderPath])
+  }, [input, loading, projectId, snapshotId, messages, fileId, scope, folderPath, setMessages])
 
   const cancel = useCallback(() => abortRef.current?.abort(), [])
 
   const clear = useCallback(() => {
+    requestVersion.current += 1; abortRef.current?.abort(); setLoading(false)
     setMessages([])
     setError('')
     clearStored(projectId, snapshotId)
-  }, [projectId, snapshotId])
+  }, [projectId, snapshotId, setMessages])
 
   const copyMessage = useCallback((index: number, content: string) => {
     navigator.clipboard.writeText(content).then(() => {

@@ -2,7 +2,7 @@
   <img src="frontend/public/codecanopy-logo.png" alt="GREPO" width="260" />
 </div>
 
-**Every generated claim is checkable against the source it came from.**
+**Explore repository structure with source evidence in view.**
 
 [![Verified dependency edges](docs/images/dependencies-panel.png)](docs/images/dependencies-panel.png)
 
@@ -11,11 +11,10 @@ connects a searchable file tree, an interactive structure map, and bounded
 source previews. It summarises files and folders, traces how files and functions
 connect, and highlights reusable, duplicated and unused code.
 
-What separates it from the other repository analysers in this category is a
-single decision: **GREPO does not ask a model to be correct and hope.** It
-computes claims from an AST walk, cites the exact line each one came from, and
-then re-reads that line through the snapshot service before showing it to you.
-Anything it cannot prove is reported as unproven, with the reason.
+Deterministic summaries and dependency edges use parsed source facts with
+checked line references. AI chat, proposal drafts and generated documentation
+use retrieved source excerpts and expose their citations and coverage limits;
+review those drafts against the source before relying on them.
 
 ## Watch the demo
 
@@ -69,7 +68,11 @@ changes with it?
 
 ![Proposals derived from verified import edges](docs/images/proposals-panel.png)
 
-Each proposal is derived from edges the dependency verifier already accepted,
+The **AI-assisted plan** view creates editable, cited drafts for a goal you
+supply. **Source-derived suggestions** preserves the deterministic change-impact
+view shown above and requires no AI key.
+
+Each source-derived suggestion uses edges the dependency verifier already accepted,
 so a proposal cannot cite an import that would fail verification. A file nothing
 imports gets a `review first` entry rather than an invented blast radius, and a
 truncated walk is marked with a `+` and the cap stated, so a count is never
@@ -79,8 +82,10 @@ presented as exact when it is a lower bound.
 
 The verifier, the dependency resolver, the summaries engine and the Ask slot
 were written in Bob IDE, task by task, with the briefs and the resulting panels
-archived in [`bob_sessions/`](bob_sessions/README.md). Ten sessions, 39.88 of
-the 40 Bobcoin budget.
+archived in [`bob_sessions/`](bob_sessions/README.md). The evidence covers
+Arjun’s repository foundation, Jae’s analysis and targeted fixes, and Sajid’s
+chat implementation. Subsequent integration, QA and demo work also used Codex
+and manual review; the archive is not a team-wide billing statement.
 
 ![IBM Bob IDE with the dependency verifier open](docs/images/bob-ide-workspace.png)
 
@@ -109,8 +114,8 @@ empty list *and says why* instead of returning a confident zero.
 ## The verifier, attacked
 
 The claims above are only worth something if they were tested adversarially,
-not just demonstrated on a happy-path repository. Six forgery attempts, each
-constructed by hand, each run against the real verifier:
+not just demonstrated on a happy-path repository. One honest control and five forgery attempts, each
+constructed by hand and run against the real verifier:
 
 | Attack | Result |
 | --- | --- |
@@ -136,8 +141,28 @@ cd backend
 
 ## Measured, not estimated
 
-Import cost, measured on real repositories with the harness in
-`backend/scripts/stress_test.py`:
+Measurements from the local verification run on September 27, 2026:
+
+| Workload | Result |
+| --- | --- |
+| 120 small Python/TypeScript files, snapshot creation | 21.404s before → 0.150s after; all 120 parsed |
+| DeepSeek Harness, extracted source at `477b4f420553` | 13,835 retained files, 5,209 parsed; snapshot creation 45.233s |
+| DeepSeek Harness capability report | 0.511s first read, 0.090s repeat |
+
+The DeepSeek parsing measurement excludes network download and ZIP extraction;
+the two secret-excluded records in the original 13,837-file inventory are not
+copied into its stored source. Network conditions and repository complexity
+still affect end-to-end time. Reusable isolated parser workers remove per-file
+process startup, use two workers per import, and retain per-file time/memory
+limits. The loader shows real file progress, elapsed time, and cancellation.
+
+Archives allow up to 200,000 raw entries and 50,000 retained files after ignored
+dependency/build directories. Compressed, per-file and total extracted byte
+limits remain enforced. Pre-import a large repository before recording if you
+want to start directly in its workspace.
+
+Earlier baseline measurements, before the reusable parser-worker optimization,
+remain below for comparison; they are not current latency guarantees.
 
 | Repository | Files | Import | Dependency analysis |
 | --- | --- | --- | --- |
@@ -153,14 +178,6 @@ be three or four files higher than a raw `find` on the same checkout. The edge
 counts are the ones the running application shows, and they match the harness
 exactly.
 
-**The boundary is real and stated.** Archives are capped at 10,000 entries,
-25 MiB per file, and 250 MiB total uncompressed. `tiangolo/fastapi` is the real
-scale test: 3,142 files, 327 seconds to import, then 98 seconds of dependency
-analysis to produce 1,001 verified edges. It works, and it takes longer than a
-live demo allows. Scope a large repository to one package, or warm the snapshot
-with the harness before presenting. This is a deliberate limit on a local,
-bounded parser, not a failure.
-
 ## How it is built
 
 | Layer | Choice | Why this one |
@@ -169,8 +186,8 @@ bounded parser, not a failure.
 | Parsing | `tree-sitter` + `tree-sitter-language-pack` | Concrete grammars give real AST nodes. Regex cannot tell an import from a string that looks like one |
 | Frontend | React 19 + TypeScript + Vite 6 | Strict types generated from the PRD contracts, so a payload change breaks the build rather than the UI |
 | Routing | React Router 7 | Slot-per-feature registry; each feature registers itself and mounts independently |
-| Tests | pytest (149) + Vitest (38) + Testing Library | The verifier table is reproducible, not asserted |
-| AI (optional) | Groq, server-side only | The one hosted dependency, and only the chat module needs it |
+| Tests | pytest + Vitest + Testing Library | The verifier table is reproducible, not asserted |
+| AI (optional) | Groq, server-side only | Chat, AI-assisted proposals and generated documentation; deterministic analysis works without it |
 
 Languages parsed at import: Python, JavaScript, TypeScript/TSX, Java, C#, C, C++,
 Go, Rust, Kotlin, Swift, Ruby, PHP and SQL. Anything else is inventoried as
@@ -200,7 +217,7 @@ CodeCanopy/
 │   │   │   ├── duplicate_detection/    ── (findings route)
 │   │   │   ├── codebase_chat/          ── ask.workspace
 │   │   │   ├── relationships/
-│   │   │   └── onboarding/             ── proposals.detail
+│   │   │   └── onboarding/             ── proposals.derived
 │   │   ├── analyzers/
 │   │   │   ├── tree_sitter_analyzer.py grammar dispatch, 15 languages
 │   │   │   ├── dependency_syntax.py    import and call extraction
@@ -221,7 +238,7 @@ CodeCanopy/
 │   │   ├── models/
 │   │   ├── rendering/                  pinned Archify compile
 │   │   └── core/
-│   ├── tests/                          149 passing
+│   ├── tests/                          backend regression checks
 │   └── scripts/
 │       ├── demo_verifier.py            reproduces the attack table
 │       └── stress_test.py              import cost harness
@@ -233,6 +250,7 @@ CodeCanopy/
 │       │   ├── ask/                    CodeChat.tsx
 │       │   ├── reusable_functions/     ReusableFunctionPanel.tsx
 │       │   ├── duplicate_detection/
+│       │   ├── drafts/                 AI proposal and documentation drafts
 │       │   └── onboarding/             ProposalsPanel.tsx
 │       ├── components/
 │       │   ├── map/                    structure map
@@ -251,7 +269,7 @@ CodeCanopy/
 │   ├── architecture.md                 pipeline diagram
 │   ├── VERIFICATION.md                 dated verification record
 │   └── images/                         README captures
-└── bob_sessions/                       one numbered folder per Bob task
+└── bob_sessions/                       grouped transcripts and task evidence
 ```
 
 **The two `features/` directories are a mirror, and that is the whole
@@ -265,11 +283,10 @@ sharing a slot name and a type generated from `contracts/prd.schema.json`:
                         registered in both, mounted independently
 ```
 
-A feature registers itself; it does not edit the workspace layout, the map, the
-tree, or the slot registry. That is why six people built six features in
-parallel without colliding, and why the dependency panel could be rebuilt
-twice, by two people, for two different designs, without touching a shared
-file.
+A feature registers a component and optional data loader at a named slot.
+Shared slot types and navigation are updated when a new destination is added.
+The proposal page exposes separate slots for AI drafts and deterministic
+suggestions so neither implementation overrides the other.
 
 ## Run locally
 
@@ -345,9 +362,12 @@ roles or semantic edges are added.
 
 ## Storage and bounds
 
-- ZIP: 50 MiB upload, 25 MiB per file, 250 MiB extracted, 10,000 entries.
-  Traversal, unsafe Windows names, symlinks, special files and unsupported
-  compression are rejected. Generated/dependency directories are skipped.
+- GitHub: 250 MiB streamed archive download; the extraction limits below still apply.
+- ZIP: 50 MiB upload, 25 MiB per file, 250 MiB extracted, 200,000 raw entries
+  and 50,000 retained files. Traversal, unsafe Windows names, special files and
+  unsupported compression are rejected. Generated/dependency directories are
+  skipped. v1 imports skip symbolic links with a visible warning, without
+  extracting or following their targets; the legacy API rejects them.
 - GitHub: unauthenticated public HTTPS only. Requests and redirects are checked
   against `github.com`, `api.github.com`, and `codeload.github.com` **before**
   following them. Metadata and archive downloads are bounded. No git hooks or
@@ -364,14 +384,27 @@ roles or semantic edges are added.
 - Known secret filenames and private-key material are excluded. This is **not
   complete secret detection**; inspect archives before importing sensitive data.
 - Valid UTF-8 text of any language is browsable; Python also honors encoding
-  declarations. Binary/unsupported encodings have metadata only. Python syntax
-  extraction reuses the existing analyzer, isolated to 1 MiB input, 384 MiB
-  address space, 2 CPU seconds and a 4-second wall timeout per file. It never
-  executes repository code. Other languages are honestly marked text-only.
+  declarations. Binary/unsupported encodings have metadata only. Syntax extraction
+  supports Python, JavaScript/TypeScript, Go, Rust, Java, Kotlin, C/C++, C#, Ruby,
+  PHP, Bash and SQL, with 1 MiB input, 384 MiB address space, approximately two
+  CPU seconds and a 10-second wall timeout per file. Workers recycle after 128
+  files. Repository code never executes; unsupported or failed files remain
+  text-only with coverage diagnostics.
 - Source previews verify the full content hash and return at most 2,000 lines
   and 256 KiB. UI pages use 200 lines. Two imports run concurrently with four
   admitted jobs; processing has a three-minute deadline. Run status is durable;
   interrupted runs report failure after a server restart. Run **one** API worker.
+- Semantic duplicate scoring uses complete function bodies: up to eight pairs,
+  12,000 characters per function, and 48,000 characters in total. Larger functions
+  retain their structural results and an explicit semantic-coverage limitation.
+  Duplicate search bounds (10,000 candidate comparisons and 80 displayed matches)
+  are reported rather than presented as exhaustive results.
+- AI chat searches complete eligible source files in the selected scope, including
+  code beyond the first 3,000 characters. It selects up to ten line-cited passages
+  for an 18,000-character model context; a 25-second search budget and oversized
+  lines are explicitly reported when they limit coverage. Overview questions
+  prioritize top-level documentation. Citations identify real retrieved ranges,
+  but do not constitute semantic proof that every model claim is correct.
 - HTML runs in an opaque sandboxed iframe. A checked source-window, nonce,
   snapshot, view and entity bridge synchronizes selection. Export CSP prohibits
   network connections. No provider keys belong in browser code.
@@ -422,7 +455,8 @@ All new behavior is under `/api/v1`:
 | `GET …/{s}/files`, `/entities`, `/capabilities` | Inventory and honest coverage |
 | `GET …/{s}/source/{file_id}` | Validated bounded line ranges |
 | `GET …/{s}/summaries` | Cited summaries with verified evidence |
-| `GET …/{s}/dependencies` | Verified import edges, unresolved refs, change impact |
+| `GET …/{s}/dependencies` | Function/file dependency graph, unresolved refs, change impact |
+| `GET …/{s}/dependency-overlay` | Separate verified import overlay contract |
 | `GET …/{s}/reuse`, `/duplicates`, `/unused` | Reuse, duplicate and unused findings |
 | `GET …/{s}/ask`, `POST …/{s}/chat` | Capability greeting and grounded answers |
 | `GET …/{s}/graph` | Bounded observed containment graph |
@@ -480,3 +514,18 @@ Archify is MIT licensed, copyright tt-a1i and Cocoon AI; its license and bundled
 font notices are retained. A license for the project's original application
 code has not yet been selected. The supplied gecko image master is preserved
 byte-for-byte; CSS viewports show the gecko beside the GREPO wordmark.
+
+### Proposals and documentation
+
+The Proposals page generates an editable, cited change plan from a goal. The
+Documentation page offers repository overview, getting-started, and developer
+reference drafts. Both use the existing authenticated source-retrieval endpoint
+and server-side Groq configuration, with generation triggered explicitly by the
+user. Draft requests have a separate 4,000-token output budget; chat keeps its
+1,600-token budget.
+
+Drafts are saved in browser storage per project, immutable snapshot, and feature.
+Users can inspect cited source ranges, edit the draft, and export Markdown with
+revision, scope, sources, and limitations. Plans do not apply patches or run tests;
+generated documentation is a draft for review. Generation failures and truncated
+responses remain visible.

@@ -92,6 +92,7 @@ def submit_import(run: AnalysisRun, workspace: str, *, archive: Path | None = No
 def _import(run, workspace, archive, name, github_url, ref):
     staging = archive.parent if archive else None
     snapshot = None
+    skipped_links = []
     deadline = time.monotonic() + 180
 
     def check_cancel():
@@ -104,27 +105,42 @@ def _import(run, workspace, archive, name, github_url, ref):
         with _lock:
             check_cancel()
             run.stage = value
+            run.stage_progress = None
             run.status = RunStatus.RUNNING
             run.event_sequence += 1
             _save(run, workspace)
+
+    last_progress = 0.0
+
+    def report_progress(done, total):
+        nonlocal last_progress
+        now = time.monotonic()
+        if done not in (0, total) and now - last_progress < 0.4:
+            return
+        with _lock:
+            check_cancel()
+            run.stage_progress = done / total if total else 1
+            run.event_sequence += 1
+            _save(run, workspace)
+        last_progress = now
 
     try:
         stage(RunStage.SNAPSHOT)
         if github_url:
             from app.services.github_import import import_github_repository
-            owner, repo, commit, display_ref, name, files, staging = import_github_repository(github_url, ref, check_cancel)
+            owner, repo, commit, display_ref, name, files, staging = import_github_repository(github_url, ref, check_cancel, skipped_links.append)
             stage(RunStage.INVENTORY)
             _, snapshot, _ = create_snapshot_from_github(owner, repo, commit, display_ref, name, files,
-                project_id=run.project_id, workspace_id=workspace, run_id=run.id, check_cancel=check_cancel)
+                project_id=run.project_id, workspace_id=workspace, run_id=run.id, check_cancel=check_cancel, report_progress=report_progress)
         else:
             files = staging / 'files'
             with archive.open('rb') as uploaded:
                 digest = hashlib.file_digest(uploaded, 'sha256').hexdigest()
             with zipfile.ZipFile(archive) as zf:
-                _extract_entries(zf, _validated_entries(zf), files)
+                _extract_entries(zf, _validated_entries(zf, check_cancel, skip_symlinks=True, on_skip=skipped_links.append), files, check_cancel)
             stage(RunStage.INVENTORY)
             snapshot, _ = create_snapshot_from_project(run.project_id, files, digest, name,
-                workspace_id=workspace, run_id=run.id, check_cancel=check_cancel)
+                workspace_id=workspace, run_id=run.id, check_cancel=check_cancel, report_progress=report_progress)
         # Publish the terminal run under the cancellation lock. If cancellation won
         # the race, remove the just-created project instead of exposing a late result.
         with _lock:
@@ -132,11 +148,10 @@ def _import(run, workspace, archive, name, github_url, ref):
             run.snapshot_id = snapshot.id
             run.result_snapshot_id = snapshot.id
             run.diagnostics = [RunDiagnostic.model_validate(d) for d in _read_json(_v1_root() / snapshot.id / 'diagnostics.json')]
-            # A diagnostic is not the same as a failure. A binary file or a file
-            # above the parse budget still imports in full: the source is
-            # readable, only its syntax could not be extracted. Labelling the
-            # whole run PARTIAL for those means a repo of screenshots and a repo
-            # with a genuinely broken import look identical in the UI.
+            if skipped_links:
+                run.diagnostics.append(RunDiagnostic(stage='import', message=f'{len(skipped_links)} symbolic link(s) skipped; link targets were not followed.'))
+            # Informational diagnostics disclose coverage limits without making
+            # a completed import appear broken; errors still mark degradation.
             degraded = [d for d in run.diagnostics if d.severity == 'error']
             run.status = RunStatus.PARTIAL if degraded else RunStatus.COMPLETED
             run.stage = RunStage.INVENTORY

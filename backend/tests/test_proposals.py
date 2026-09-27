@@ -109,3 +109,27 @@ def test_empty_snapshot_raises_instead_of_returning_nothing():
     # a file with no imports is not an error; it is a disclosed coverage limit
     assert result.proposals == []
     assert result.limitations
+
+
+def test_affected_files_after_first_inventory_page_are_retained(monkeypatch):
+    from types import SimpleNamespace
+    from app.features.onboarding import service
+
+    def inventory(snapshot_id, *, limit):
+        # The importer sorts inventory by path: the actual importer can appear
+        # beyond the old 10,000-file page in a large repository.
+        records = [SimpleNamespace(id=f'unrelated-{i}', path=f'a/{i}.txt') for i in range(10_000)]
+        records.append(SimpleNamespace(id='late-importer', path='z/client.py'))
+        return SimpleNamespace(files=records if limit is None else records[:limit])
+
+    graph = SimpleNamespace(edges=[SimpleNamespace(source=SimpleNamespace(path='z/client.py'), target=SimpleNamespace(path='lib.py'), evidence_id='citation')], evidence=[])
+
+    async def dependencies(*args):
+        return SimpleNamespace(graph=graph, limitations=[])
+
+    monkeypatch.setattr(service, 'get_inventory', inventory)
+    monkeypatch.setattr(service, 'build_dependencies', dependencies)
+    monkeypatch.setattr(service, 'compute_impact', lambda *args: (['late-importer'], False))
+    result = asyncio.run(build_proposals('large', subject='lib.py'))
+    assert result.proposals[0].affected_paths == ['z/client.py']
+    assert result.proposals[0].affected_count == 1

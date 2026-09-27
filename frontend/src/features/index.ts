@@ -8,4 +8,5 @@ import './ask/register'
 import './summaries/register'
 import './dependencies/register'
 import './onboarding/register'
+import './drafts/register'
 export {}

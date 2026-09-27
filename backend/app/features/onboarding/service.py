@@ -104,7 +104,7 @@ def _evidence_for(graph: DependencyGraph, path: str, cap: int = 4) -> list[Propo
 
 async def build_proposals(snapshot_id: str, subject: str | None = None) -> ProposalsResponse:
     """Build change proposals for a snapshot, or for one subject path."""
-    inventory = get_inventory(snapshot_id, limit=10_000)
+    inventory = get_inventory(snapshot_id, limit=None)
     if not inventory.files:
         raise WorkspaceError('NOT_FOUND', 'This snapshot has no files to propose changes for.', 404)
 

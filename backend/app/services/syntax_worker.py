@@ -1,5 +1,6 @@
 """Trusted parser subprocess. Reads text on stdin; never imports repository code."""
 import json
+import math
 from pathlib import Path
 import sys
 
@@ -10,13 +11,15 @@ except ImportError:
 
 if resource is not None:
     resource.setrlimit(resource.RLIMIT_AS, (384 * 1024 * 1024, 384 * 1024 * 1024))
-    resource.setrlimit(resource.RLIMIT_CPU, (2, 3))
+    resource.setrlimit(resource.RLIMIT_CPU, (2, resource.RLIM_INFINITY))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from app.analyzers.python_analyzer import PythonAnalyzer
 from app.analyzers.tree_sitter_analyzer import TreeSitterAnalyzer
 
-if __name__ == '__main__':
-    payload = json.load(sys.stdin)
+def analyze(payload):
+    if resource is not None:
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        resource.setrlimit(resource.RLIMIT_CPU, (math.ceil(usage.ru_utime + usage.ru_stime) + 2, resource.RLIM_INFINITY))
     language = payload['language']
     if language == 'python':
         result = PythonAnalyzer().analyze(payload['text'], payload['path'], payload['size'])
@@ -36,4 +39,16 @@ if __name__ == '__main__':
             'structural_hash': function.structural_hash,
             'structural_signature': function.structural_signature,
         })
-    print(json.dumps(serialized, ensure_ascii=True))
+    return serialized
+
+
+if __name__ == '__main__':
+    if '--persistent' in sys.argv:
+        for line in sys.stdin:
+            try:
+                result = analyze(json.loads(line))
+            except Exception:
+                result = {'error': 'Syntax extraction failed.'}
+            print(json.dumps(result, ensure_ascii=True), flush=True)
+    else:
+        print(json.dumps(analyze(json.load(sys.stdin)), ensure_ascii=True))

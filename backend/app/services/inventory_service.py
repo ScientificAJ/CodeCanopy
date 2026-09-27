@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import hashlib
+from collections import deque
 import io
-import json
 import subprocess
-import sys
 import os
 import tokenize
 from pathlib import Path
@@ -13,6 +12,7 @@ from pathlib import Path
 from app.analyzers.tree_sitter_analyzer import parser_language
 from app.models.v1.snapshot import FileRecord, RunDiagnostic
 from app.services.project_archive import IGNORED_DIRECTORIES
+from app.services.syntax_process import SyntaxPool
 
 LANGUAGES = {
     '.py': 'python', '.js': 'javascript', '.jsx': 'javascript', '.mjs': 'javascript',
@@ -52,19 +52,33 @@ def exclusion_reason(path: Path, data: bytes) -> str | None:
     return None
 
 
-def build_inventory(snapshot_id: str, source: Path, destination: Path, check_cancel=lambda: None):
+def build_inventory(snapshot_id: str, source: Path, destination: Path, check_cancel=lambda: None, report_progress=lambda done, total: None):
     records: list[FileRecord] = []
     diagnostics: list[RunDiagnostic] = []
     parsed: dict[str, dict] = {}
+    files = []
     for current, dirs, names in os.walk(source, followlinks=False):
         check_cancel()
         directory = Path(current)
         dirs[:] = sorted(d for d in dirs if d.casefold() not in IGNORED_DIRECTORIES and not (directory / d).is_symlink())
         for name in sorted(names):
-            check_cancel()
             file = directory / name
-            if file.is_symlink() or not file.is_file():
-                continue
+            if not file.is_symlink() and file.is_file():
+                files.append(file)
+    report_progress(0, len(files))
+    pending = deque()
+
+    def collect():
+        record, future = pending.popleft()
+        try:
+            parsed[record.id] = future.result()
+        except (ValueError, OSError, subprocess.SubprocessError):
+            diagnostics.append(RunDiagnostic(file_path=record.path, stage='parse', message='Syntax extraction failed or exceeded its resource budget; original text remains browsable.'))
+
+    with SyntaxPool() as parser:
+        for index, file in enumerate(files):
+            check_cancel()
+            name = file.name
             path = file.relative_to(source).as_posix()
             data = file.read_bytes()
             language = LANGUAGES.get(file.suffix.lower(), LANGUAGES.get(name.lower(), 'unknown'))
@@ -77,6 +91,7 @@ def build_inventory(snapshot_id: str, source: Path, destination: Path, check_can
             )
             records.append(record)
             if reason:
+                report_progress(index + 1 - len(pending), len(files))
                 continue
             target = destination / path
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -88,10 +103,13 @@ def build_inventory(snapshot_id: str, source: Path, destination: Path, check_can
                 if len(data) > MAX_PARSE_BYTES:
                     diagnostics.append(RunDiagnostic(file_path=path, stage='parse', message='Syntax extraction skipped above 1 MiB; source remains browsable.'))
                 else:
-                    try:
-                        result = subprocess.run([sys.executable, '-I', str(Path(__file__).with_name('syntax_worker.py'))], input=json.dumps({'text': text, 'path': path, 'size': len(data), 'language': language}), capture_output=True, text=True, timeout=10, check=True)
-                        parsed[record.id] = json.loads(result.stdout)
-                    except (ValueError, OSError, subprocess.SubprocessError):
-                        diagnostics.append(RunDiagnostic(file_path=path, stage='parse', message='Syntax extraction failed or exceeded its resource budget; original text remains browsable.'))
+                    pending.append((record, parser.submit({'text': text, 'path': path, 'size': len(data), 'language': language}, check_cancel)))
+                    if len(pending) >= 4:
+                        collect()
+            report_progress(index + 1 - len(pending), len(files))
+        while pending:
+            check_cancel()
+            collect()
+            report_progress(len(files) - len(pending), len(files))
     return sorted(records, key=lambda r: r.path), parsed, diagnostics
 

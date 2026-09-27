@@ -24,7 +24,7 @@ function slotGreeting(request: SlotProps['request']): string {
   return (d && typeof d.answer === 'string') ? d.answer : ''
 }
 
-export default function CodeChat({ projectId, snapshotId, selectedEntity, files, request }: SlotProps) {
+export default function CodeChat({ projectId, snapshotId, selectedEntity, files, request, openSource }: SlotProps) {
   const [open, setOpen] = useState(false)
   const [prefill, setPrefill] = useState<string | undefined>()
 
@@ -112,6 +112,7 @@ export default function CodeChat({ projectId, snapshotId, selectedEntity, files,
           scopeIcon={scopeIcon}
           prefillQuestion={prefill}
           onClose={() => setOpen(false)}
+          onOpenSource={source => openSource(source.file_id, {start: source.line_start, end: source.line_end})}
         />
       )}
     </>

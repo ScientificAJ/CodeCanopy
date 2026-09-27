@@ -15,7 +15,7 @@ under `backend/app/features` are preserved.
 | `reuse.findings` | `…/OpportunitiesPage.tsx`, route `/opportunities/reuse` | `ReusableFunctionResult`; `GET …/{snapshot}/findings/reuse` |
 | `duplicates.compare` | `…/OpportunitiesPage.tsx`, route `/opportunities/duplicates` | `DuplicateDetectionResult`; `GET …/{snapshot}/findings/duplicates` |
 | `unused.review` | `…/OpportunitiesPage.tsx`, route `/opportunities/unused` | `UnusedDetectionResult`; `GET …/{snapshot}/findings/unused` |
-| `ask.workspace` | `…/AskPage.tsx` | PRD `Answer`; `POST …/{snapshot}/answers` |
+| `ask.workspace` | `…/AskPage.tsx` | `AskResponse`; greeting `GET …/{snapshot}/ask`, conversation `POST …/{snapshot}/chat` |
 | `proposals.detail` | `…/ProposalsPage.tsx` | PRD `ChangePack`; `GET …/{snapshot}/proposals` |
 | `docs.generated` | `frontend/src/App.tsx`, route `/docs` | `GeneratedDocument`; teammate adds an authorized document endpoint |
 
@@ -106,7 +106,7 @@ registerFeature('dependencies.workspace', {
 
 The dependency workspace uses `DependencyResult` with function nodes; see
 [dependency analysis](docs/dependency-analysis.md). A future `map.overlay` adapter
-must project its data into the separate `DependencyOverlay` contract. It receives
+can load `/dependency-overlay`, the separate `DependencyOverlay` contract. It receives
 canonical visible graph IDs and full inventory context. Semantic relations are
 not merged into the structural diagram automatically: the adapter is the
 explicit boundary for a future validated projection, not an authorization to
@@ -188,3 +188,11 @@ reported as a limitation.
   source access, and an interactive export with networking disabled.
 
 Reuse findings use cached AST call sites, canonical file IDs and source ranges. Matches are same-language name candidates; ambiguous definitions are omitted. See docs/reusable-functions.md for coverage and compatibility details.
+
+## Chat evidence contract
+
+`types/v1/chat.ts` matches the chat API: `answer`, `context_hint`, `sources`, and
+`limitations`. Each source supplies an ID plus `file_id`, `path`, `line_start`, and
+`line_end`. Open it through the shared `openSource` callback. Do not cast this
+payload to the unrelated PRD `Answer` contract. Retrieval reads complete verified
+files within the chosen scope, and reports bounded or unavailable coverage.

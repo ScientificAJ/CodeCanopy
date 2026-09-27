@@ -13,6 +13,7 @@ edge is unresolved and the reason is recorded.
 """
 from __future__ import annotations
 
+import asyncio
 import posixpath
 import re
 import uuid
@@ -217,7 +218,7 @@ def _build_graph_raw(
         edge_specifier_map: edge_id → original specifier string
         file_language_map:  file_id → language
     """
-    inventory = get_inventory(snapshot_id, limit=10000)
+    inventory = get_inventory(snapshot_id, limit=None)
     all_records = inventory.files
     path_set = {r.path for r in all_records if not r.excluded}
     record_by_path = {r.path: r for r in all_records if not r.excluded}
@@ -344,7 +345,7 @@ def compute_impact(
     Walks import edges in reverse: finds all files that transitively
     import the subject.  Returns entity_ids.  Capped at IMPACT_WALK_CAP.
     """
-    inventory = get_inventory(snapshot_id, limit=10000)
+    inventory = get_inventory(snapshot_id, limit=None)
     all_records = inventory.files
     path_to_eid = {r.path: entity_id(snapshot_id, r.path, 'file') for r in all_records}
 
@@ -384,7 +385,7 @@ def compute_impact(
 # Public entry point
 # ---------------------------------------------------------------------------
 
-async def build_dependencies(
+def _build_dependencies(
     snapshot_id: str,
     path: str | None,
     depth: int | None,
@@ -394,7 +395,7 @@ async def build_dependencies(
 
     # Validate path if given
     if path is not None:
-        inventory = get_inventory(snapshot_id, limit=10000)
+        inventory = get_inventory(snapshot_id, limit=None)
         all_paths = {r.path for r in inventory.files}
         folder_paths: set[str] = {'.'}
         for p in all_paths:
@@ -440,7 +441,7 @@ async def build_dependencies(
         )
 
     # Change impact
-    all_file_paths = {r.path for r in get_inventory(snapshot_id, limit=10000).files if not r.excluded}
+    all_file_paths = {r.path for r in get_inventory(snapshot_id, limit=None).files if not r.excluded}
     affected: list[str] = []
     truncated = False
 
@@ -478,3 +479,7 @@ async def build_dependencies(
         impact_subject_ids=affected,
         limitations=limitations,
     )
+
+
+async def build_dependencies(snapshot_id: str, path: str | None, depth: int | None) -> DependencyOverlay:
+    return await asyncio.to_thread(_build_dependencies, snapshot_id, path, depth)

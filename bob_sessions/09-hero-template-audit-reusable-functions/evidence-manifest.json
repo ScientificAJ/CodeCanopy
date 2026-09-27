@@ -1,0 +1,43 @@
+{
+  "format_version": 1,
+  "contributor": "Hero (confirmed by the user)",
+  "task_id": null,
+  "naming_note": "task11 is an archive label shared by five captures, not evidence of a distinct Bob task ID or five tasks.",
+  "screenshots": [
+    {
+      "file": "teamgrepo_task11_template_audit_summary.png",
+      "original_filename": "codex-clipboard-0f4b00e2-03e8-4a32-a519-d98dd73b465d.png",
+      "sha256": "3a68bb55c16538c25d9029eebcbeb9df8d85ae625aaacd734b3556f2855d1633",
+      "bytes": 255242,
+      "description": "Audit issue table and parallel-work instruction; unknown /agent command"
+    },
+    {
+      "file": "teamgrepo_task11_template_fixes_summary.png",
+      "original_filename": "codex-clipboard-97d752fc-edcd-4695-b30e-6779bda427c5.png",
+      "sha256": "20715d1d2ce4bf9e5e74c07355a66ad420d519e5f9f7e86c50b273326c1fb921",
+      "bytes": 321091,
+      "description": "Reported template fixes and historical 41/41 backend, 7/7 frontend results"
+    },
+    {
+      "file": "teamgrepo_task11_subagent_workflow_summary.png",
+      "original_filename": "codex-clipboard-3ec89818-9c25-42d1-aab6-2025aaed64a4.png",
+      "sha256": "742627f87ba01ce3765c762ee2fa4c94898c7078b1c75b40f3166d8c4f579682",
+      "bytes": 343092,
+      "description": "Role-separated work request and mixed task-list outcomes"
+    },
+    {
+      "file": "teamgrepo_task11_reusable_functions_summary.png",
+      "original_filename": "codex-clipboard-270bff10-55d5-4c6d-bc1e-a207db7fb52c.png",
+      "sha256": "c568b90018e348558df767b6cfe416eb711aefd7fca6d494133cb6747605caaa",
+      "bytes": 395313,
+      "description": "Reported analyzer, reuse API/UI implementation and frontend 11/11 result"
+    },
+    {
+      "file": "teamgrepo_task11_tests_and_usage_summary.png",
+      "original_filename": "codex-clipboard-78c11d92-5757-452b-ad79-cbf68ed3b279.png",
+      "sha256": "1c9c209031f3a8d81819ff58e27a552a78e0cbc3de0e7cc1aeee19f0f83ec8b8",
+      "bytes": 128890,
+      "description": "Reported test coverage and visible 19.96 coin / 158.5k context display"
+    }
+  ]
+}

@@ -98,6 +98,10 @@ from app.features.reusable_functions import (
 
 
 @router.get(
+    '/{project_id}/snapshots/{snapshot_id}/findings/reuse',
+    response_model=ReusableFunctionResult,
+)
+@router.get(
     '/{project_id}/snapshots/{snapshot_id}/reusable-functions',
     response_model=ReusableFunctionResult,
 )

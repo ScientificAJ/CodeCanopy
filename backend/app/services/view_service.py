@@ -112,8 +112,8 @@ def render_view(snapshot_id: str, request: MapRequest):
     graph = projection(snapshot_id, request, preferences)
     spec = compile_spec(graph)
     spec_bytes = (_json_safe(spec) + '\n').encode()
-    bridge = (REPO / 'backend/app/rendering/bridge.js').read_text()
-    license_notice = (REPO / 'vendor/archify/LICENSE').read_text()
+    bridge = (REPO / 'backend/app/rendering/bridge.js').read_text(encoding="utf-8")
+    license_notice = (REPO / 'vendor/archify/LICENSE').read_text(encoding="utf-8")
     manifest = {'schema_version': '1.1', 'snapshot': snapshot.model_dump(mode='json'), 'graph': graph.model_dump(mode='json'),
         'renderer_ids': {'n_' + entity.id: entity.id for entity in graph.entities}, 'preferences': preferences.model_dump(), 'archify_commit': ARCHIFY_COMMIT, 'source_included': False, 'deferred_capabilities': ['AI summaries', 'dependencies and impact', 'reuse', 'duplicates', 'unused code', 'Ask CodeCanopy', 'proposals and generated documents']}
     key = hashlib.sha256(b'codecanopy-wrapper-1.1.4' + spec_bytes + _json_safe(manifest).encode() + bridge.encode() + license_notice.encode()).hexdigest()
@@ -139,11 +139,13 @@ def render_view(snapshot_id: str, request: MapRequest):
         if delivered.returncode or not output.exists():
             raise WorkspaceError('RENDER_VALIDATION_FAILED', 'Archify rejected this view; no export was produced.', 422)
         receipt = json.loads(delivered.stdout)
-        original = output.read_text()
+        original_bytes = output.read_bytes()
+        original = original_bytes.decode('utf-8')
+        original_sha256 = hashlib.sha256(original_bytes).hexdigest()
         manifest['validation'] = {
             **receipt['validation'],
             'specification_sha256': hashlib.sha256(spec_bytes).hexdigest(),
-            'upstream_sha256': hashlib.sha256(original.encode()).hexdigest(),
+            'upstream_sha256': original_sha256,
         }
         # Never expose temporary server paths in the returned delivery receipt.
         public_receipt = {key: value for key, value in receipt.items() if key not in {'input', 'output'}}
@@ -156,9 +158,9 @@ def render_view(snapshot_id: str, request: MapRequest):
             '<style>html[data-embed="true"] .codecanopy-provenance{display:none}html[data-embed="true"] .diagram-container svg{height:calc(100vh - 20px);width:100%;min-height:0} .codecanopy-provenance{font:11px/1.45 system-ui,sans-serif;color:var(--text-muted);margin:0.25rem 0 0 1.75rem;max-width:75rem} @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style></body>', 1)
         result = {'schema_version': '1.1', 'view_id': key, 'graph': graph.model_dump(mode='json'),
             'html': html, 'receipt': public_receipt, 'archify_commit': ARCHIFY_COMMIT,
-            'upstream_sha256': hashlib.sha256(original.encode()).hexdigest(), 'html_sha256': hashlib.sha256(html.encode()).hexdigest()}
+            'upstream_sha256': original_sha256, 'html_sha256': hashlib.sha256(html.encode()).hexdigest()}
         _write_json(temporary / 'result.json', result)
-        (temporary / 'codecanopy.html').write_text(html)
+        (temporary / 'codecanopy.html').write_text(html, encoding='utf-8')
         # Bound per-snapshot artifact storage; regenerated views remain deterministic.
         with _cache_lock:
             for old in sorted((p for p in cached.parent.iterdir() if p.is_dir() and not p.name.startswith('.')), key=lambda p: p.stat().st_mtime)[:-7]:

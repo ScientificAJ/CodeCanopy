@@ -15,11 +15,8 @@ from app.api.v1.snapshots import snapshot_access
 from app.models.v1.slots import (
     SLOT_ASK,
     SLOT_DEPENDENCIES,
-    SLOT_DUPLICATES,
     SLOT_PROPOSALS,
-    SLOT_REUSE,
     SLOT_SUMMARIES,
-    SLOT_UNUSED,
     IntegrationSlotResponse,
 )
 
@@ -52,39 +49,6 @@ def get_summaries_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResp
 def get_dependencies_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:
     """Slot endpoint for the connections/change-impact feature."""
     return SLOT_DEPENDENCIES
-
-
-# INTEGRATION_SLOT: reuse.findings
-@router.get(
-    _SNAPSHOT_PATH + "/findings/reuse",
-    response_model=IntegrationSlotResponse,
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
-)
-def get_reuse_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:
-    """Slot endpoint for reusable/shared function discovery."""
-    return SLOT_REUSE
-
-
-# INTEGRATION_SLOT: duplicates.compare
-@router.get(
-    _SNAPSHOT_PATH + "/findings/duplicates",
-    response_model=IntegrationSlotResponse,
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
-)
-def get_duplicates_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:
-    """Slot endpoint for duplicate code detection."""
-    return SLOT_DUPLICATES
-
-
-# INTEGRATION_SLOT: unused.review
-@router.get(
-    _SNAPSHOT_PATH + "/findings/unused",
-    response_model=IntegrationSlotResponse,
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
-)
-def get_unused_slot(project_id: str, snapshot_id: str) -> IntegrationSlotResponse:
-    """Slot endpoint for unused-code review."""
-    return SLOT_UNUSED
 
 
 # INTEGRATION_SLOT: ask.workspace

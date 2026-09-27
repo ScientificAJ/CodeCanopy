@@ -15,12 +15,14 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import ImportPage from './pages/ImportPage'
 import { ProjectRoot, WorkspaceLayout } from './pages/workspace/WorkspaceLayout'
+import OverviewPage from './pages/workspace/OverviewPage'
 import MapPage from './pages/workspace/MapPage'
 import DependenciesPage from './pages/workspace/DependenciesPage'
 import OpportunitiesPage from './pages/workspace/OpportunitiesPage'
 import AskPage from './pages/workspace/AskPage'
 import { SlotMount } from './components/slots/SlotMount'
 import ProposalsPage from './pages/workspace/ProposalsPage'
+import './features/duplicate_detection'
 import './styles.css'
 
 export default function App() {
@@ -36,7 +38,7 @@ export default function App() {
         {/* Workspace — all routes under a snapshot */}
         <Route path="/p/:projectId/s/:snapshotId" element={<WorkspaceLayout />}>
           <Route index element={<Navigate to="overview" replace />} />
-          <Route path="overview" element={<MapPage />} />
+          <Route path="overview" element={<OverviewPage />} />
           <Route path="map" element={<MapPage />} />
           <Route path="dependencies" element={<DependenciesPage />} />
           <Route path="opportunities" element={<Navigate to="reuse" replace />} />

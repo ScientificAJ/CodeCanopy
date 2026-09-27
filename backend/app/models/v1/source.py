@@ -1,7 +1,6 @@
 """V1 source and capability models."""
 from __future__ import annotations
 
-from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -25,7 +24,7 @@ class SourceSlice(BaseModel):
     content_hash: str  # SHA-256 of *entire* file bytes (not just the slice)
 
 
-class CapabilityLevel(Enum):
+class CapabilityLevel(str):
     """Describes what CodeCanopy can do with a given file."""
     FULL = "full"
     TEXT_ONLY = "text_only"
@@ -40,7 +39,7 @@ class FileCapability(BaseModel):
     syntax_extraction: bool = False
     reference_resolution: bool = False
     summary_eligible: bool = False
-    level: str = CapabilityLevel.TEXT_ONLY.value
+    level: str = CapabilityLevel.TEXT_ONLY
     parser_name: str | None = None
     limitations: list[str] = Field(default_factory=list)
 

@@ -1,5 +1,5 @@
 /** One authenticated, abortable API client for every v1 feature. */
-import type { AnalysisRun, CapabilityReport, FilePage, GitHubImportRequest, Graph, GraphEntity, ImportAccepted, MapArtifact, Snapshot, SourceSlice, V1Project, ViewPreferences } from '../../types/v1'
+import type { AnalysisRun, CapabilityReport, DuplicateDetectionResult, FilePage, GitHubImportRequest, Graph, GraphEntity, ImportAccepted, MapArtifact, Snapshot, SourceSlice, UnusedDetectionResult, V1Project, ViewPreferences } from '../../types/v1'
 const base = `${import.meta.env.VITE_API_BASE_URL ?? `${window.location.protocol}//${window.location.hostname}:8000`}/api/v1`
 export class ApiError extends Error {
   constructor(public readonly status: number, message: string, public readonly code?: string) { super(message); this.name = 'ApiError' }
@@ -42,4 +42,6 @@ export const savePreferences = (p: string, s: string, body: ViewPreferences) => 
 export const renderMap = (p: string, s: string, focus: string, cursor = 0, signal?: AbortSignal) => request<MapArtifact>(snapshotPath(p, s) + '/map', json({ focus, cursor }, signal))
 import type { ReusableFunctionResult } from '../../types/codebase'
 export const getReusableFunctions = (p: string, s: string, minCallers = 1, signal?: AbortSignal) =>
-  request<ReusableFunctionResult>(`${snapshotPath(p, s)}/reusable-functions?min_callers=${minCallers}`, { signal })
+  request<ReusableFunctionResult>(`${snapshotPath(p, s)}/findings/reuse?min_callers=${minCallers}`, { signal })
+export const getDuplicateFindings = (p: string, s: string, signal?: AbortSignal) => request<DuplicateDetectionResult>(snapshotPath(p, s) + '/findings/duplicates', { signal })
+export const getUnusedFindings = (p: string, s: string, signal?: AbortSignal) => request<UnusedDetectionResult>(snapshotPath(p, s) + '/findings/unused', { signal })

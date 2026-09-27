@@ -9,7 +9,7 @@ import { SlotMount } from '../../components/slots/SlotMount'
 import type { V1Project } from '../../types/v1'
 import { usePanelFocus } from '../../hooks/usePanelFocus'
 import { Icon, type IconName } from '../../components/ui/Icon'
-const items: [string, string, IconName][] = [['overview','Overview','home'],['map','Map','map'],['dependencies','Dependencies','layers'],['opportunities/reuse','Reuse','code'],['opportunities/duplicates','Duplicates','layers'],['opportunities/unused','Unused','file'],['ask','Ask CodeCanopy','spark'],['proposals','Proposals','file'],['docs','Documentation','file']]
+const items: [string, string, IconName][] = [['overview','Overview','home'],['map','Architecture','map'],['dependencies','Dependencies','layers'],['opportunities/reuse','Reusable Code','code'],['opportunities/duplicates','Issues','layers'],['ask','AI Chat','spark'],['proposals','Proposals','file'],['docs','Documentation','file']]
 function Inner() {
   const {projectId = '', snapshotId = ''} = useParams(); const ws = useWorkspace(); const navigate = useNavigate()
   const [drawer, setDrawer] = useState<'navigation' | 'files' | 'context' | null>(null)
@@ -19,7 +19,7 @@ function Inner() {
   usePanelFocus(drawer, expandSource)
   const base = `/p/${projectId}/s/${snapshotId}`
   useEffect(() => {void ensureSession().then(() => ws.loadWorkspace(projectId, snapshotId))}, [projectId, snapshotId, ws.loadWorkspace])
-  useEffect(() => {let live = true; ensureSession().then(listProjects).then(items => {if (live) setProjects(items)}).catch(() => {}); return () => {live = false}}, [])
+  useEffect(() => {let live = true; ensureSession().then(listProjects).then(items => {if (live) setProjects(items)}).catch(() => {}); return () => {live = false}}, [projectId])
   useEffect(() => {
     function key(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {event.preventDefault(); setDrawer('files'); setTimeout(() => search.current?.focus(), 0)}
@@ -36,7 +36,7 @@ function Inner() {
     <div className="mobile-tools"><button className="btn" onClick={() => setDrawer('navigation')}><Icon name="menu"/>Navigate</button><button className="btn" onClick={() => setDrawer('files')}><Icon name="folder"/>Files</button><button className="btn" onClick={() => setDrawer('context')}><Icon name="code"/>Context</button></div>
     {drawer && <button className="drawer-scrim" aria-label="Close panel" onClick={() => setDrawer(null)}/>}
     <div className="workspace-grid">
-      <nav className={`nav-rail ${drawer === 'navigation' ? 'drawer-open' : ''}`} aria-label="Workspace navigation"><button className="drawer-close btn" onClick={() => setDrawer(null)}><Icon name="close"/>Close</button>{items.map(([path,label,icon]) => <NavLink key={path} to={`${base}/${path}`} className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setDrawer(null)}><Icon name={icon}/>{label}</NavLink>)}<div className="nav-bottom"><span className="nav-mascot"><img src="/codecanopy-logo.png" alt=""/></span><p>Understand any repo.<br/><strong>Find your next step.</strong></p></div></nav>
+      <nav className={`nav-rail ${drawer === 'navigation' ? 'drawer-open' : ''}`} aria-label="Workspace navigation"><button className="drawer-close btn" onClick={() => setDrawer(null)}><Icon name="close"/>Close</button>{items.map(([path,label,icon]) => <NavLink key={path} to={`${base}/${path}`} className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={() => setDrawer(null)}><Icon name={icon}/>{label}</NavLink>)}</nav>
       <div className="workspace-main">
         <section className="repo-header"><div><p className="eyebrow">REPOSITORY WORKSPACE</p><h1>{ws.projectName ?? (ws.loading ? 'Opening repository…' : 'Repository unavailable')}</h1>{ws.run?.status === 'partial' && <span className="badge partial">Partial import · {ws.run.diagnostics.length} diagnostics</span>}<p className="revision">{revision ? `Revision ${revision.slice(0, 12)} · read-only snapshot` : 'Loading snapshot identity…'}</p></div><div className="repo-stats"><div><strong>{ws.files.length}</strong><span>Files</span></div><div><strong>{languages}</strong><span>Languages</span></div><div><strong>{ws.capabilities?.parsed_count ?? '—'}</strong><span>Syntax parsed</span></div></div></section>
         {ws.error ? <main className="card" id="main-content"><h2>Unable to open this snapshot</h2><p role="alert">{ws.error}</p><Link className="btn primary" to="/">Return to import</Link></main> : <div className="workspace-panels">

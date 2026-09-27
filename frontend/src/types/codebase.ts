@@ -37,13 +37,18 @@ export interface Relationship {
 export interface ReusableGroup {
   function_name: string
   defined_in: string
+  defined_file_id: string
   defined_line_start: number
   defined_line_end: number
   called_from: string[]
+  call_sites: {file_id: string; path: string; line_start: number; line_end: number}[]
 }
 
 export interface ReusableFunctionResult {
   snapshot_id: string
   groups: ReusableGroup[]
   total_reusable: number
+  analyzed_files: number
+  ambiguous_names: number
+  limitations: string[]
 }

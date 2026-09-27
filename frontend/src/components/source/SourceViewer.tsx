@@ -8,7 +8,7 @@ export function SourceViewer({projectId,snapshotId,fileId,path,language,lineStar
   useEffect(() => {setStart(lineStart); setInput(String(lineStart))}, [lineStart,lineEnd])
   useEffect(() => {
     const control = new AbortController(); setLoading(true); setSlice(null); setError('')
-    getSource(projectId,snapshotId,fileId,start,lineEnd,200,control.signal).then(s => {if (!control.signal.aborted) {setSlice(s); setLoading(false)}}).catch(e => {if (!control.signal.aborted) {setError(e.message); setLoading(false)}})
+    getSource(projectId,snapshotId,fileId,start,start === lineStart ? lineEnd : undefined,200,control.signal).then(s => {if (!control.signal.aborted) {setSlice(s); setLoading(false)}}).catch(e => {if (!control.signal.aborted) {setError(e.message); setLoading(false)}})
     return () => control.abort()
   }, [projectId,snapshotId,fileId,start,lineStart,lineEnd])
   return <section className="source-viewer" aria-label={`Source: ${path}`}><div className="source-toolbar"><span className="badge">{language}</span><form onSubmit={e => {e.preventDefault(); const n = Number(input); if (Number.isInteger(n) && n >= 1 && (!slice || n <= slice.total_lines)) {setStart(n); setError('')} else setError('Choose a line number within this file.')}}><label htmlFor="source-line">Line</label><input id="source-line" type="number" min="1" max={slice?.total_lines || undefined} value={input} onChange={e => setInput(e.target.value)}/><button className="btn small" type="submit">Go</button></form></div>

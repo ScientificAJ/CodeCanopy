@@ -4,3 +4,5 @@
  * No renderer, shell or shared source-viewer edits are needed.
  */
 import './reusable_functions/register'
+import './ask/register'
+export {}

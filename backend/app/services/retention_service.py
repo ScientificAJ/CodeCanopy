@@ -1,7 +1,6 @@
 """Delete expired source and render data; keep brief tombstones for honest 410s."""
 from datetime import datetime, timedelta, timezone
-import shutil
-from app.services.snapshot_service import _v1_root, _read_json
+from app.services.snapshot_service import _v1_root, _read_json, remove_tree
 
 
 def purge_expired():
@@ -17,11 +16,11 @@ def purge_expired():
                         if child.name == 'snapshot.json':
                             continue
                         if child.is_dir():
-                            shutil.rmtree(child, ignore_errors=True)
+                            remove_tree(child, ignore_errors=True)
                         else:
                             child.unlink(missing_ok=True)
                 if expiry + timedelta(days=1) <= now:
-                    shutil.rmtree(path, ignore_errors=True)
+                    remove_tree(path, ignore_errors=True)
                     (root / f"project_{data['project_id']}.json").unlink(missing_ok=True)
             elif path.name.startswith('run_') and path.suffix == '.json':
                 data = _read_json(path)

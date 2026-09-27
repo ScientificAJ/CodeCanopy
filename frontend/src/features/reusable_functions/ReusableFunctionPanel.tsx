@@ -1,47 +1,26 @@
 import type { SlotProps } from '../../contexts/SlotRegistry'
-import type { ReusableFunctionResult, ReusableGroup } from '../../types/codebase'
+import type { ReusableFunctionResult } from '../../types/codebase'
 
-export function ReusableFunctionPanel(props: SlotProps<ReusableFunctionResult>) {
-  const { request, files, openSource } = props
-
-  function jumpTo(path: string, line: number) {
-    const record = files.find(f => f.path === path)
-    if (record) openSource(record.id, { start: line, end: line })
-  }
-
-  if (request.status === 'loading') return <p className="pad" role="status">Scanning for reusable functions…</p>
+export function ReusableFunctionPanel({request, openSource}: SlotProps<ReusableFunctionResult>) {
+  if (request.status === 'loading') return <p className="pad" role="status">Scanning for reuse candidates…</p>
   if (request.status === 'error') return <p className="alert error" role="alert">{request.message}</p>
   if (request.status !== 'ready') return null
-
   const result = request.data
-  if (!result.total_reusable) return <p className="pad">No reusable functions detected across multiple files.</p>
-
-  return (
-    <section aria-label="Reusable functions">
-      <p className="eyebrow">{result.total_reusable} REUSABLE FUNCTION{result.total_reusable !== 1 ? 'S' : ''} FOUND</p>
-      {result.groups.map(group => (
-        <GroupRow key={`${group.defined_in}:${group.function_name}`} group={group} jumpTo={jumpTo} />
-      ))}
-    </section>
-  )
-}
-
-function GroupRow({ group, jumpTo }: { group: ReusableGroup; jumpTo: (path: string, line: number) => void }) {
-  return (
-    <div className="reuse-group">
-      <div className="reuse-group__header">
-        <code>{group.function_name}</code>
-        <button className="btn small" onClick={() => jumpTo(group.defined_in, group.defined_line_start)}>
-          {group.defined_in}:{group.defined_line_start}
-        </button>
-      </div>
-      <ul className="reuse-group__callers">
-        {group.called_from.map(path => (
-          <li key={path}>
-            <button className="btn subtle" onClick={() => jumpTo(path, 1)}>{path}</button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
+  return <section className="finding-view" aria-label="Reuse candidates">
+    <header className="finding-heading"><div><h2>Possible cross-file reuse</h2>
+      <p>Call-name matches are candidates for review, not confirmed dependencies.</p></div>
+      <span className="badge">{result.total_reusable} candidates</span></header>
+    <p>{result.analyzed_files} files assessed · {result.ambiguous_names} ambiguous names omitted</p>
+    {!result.total_reusable && <p>{result.analyzed_files ? 'No cross-file reuse candidates found in the assessed files.' : 'No files have call-site evidence. Import a supported repository to run this analysis.'}</p>}
+    <div className="finding-list">{result.groups.map(group => <article className="finding-row" key={`${group.defined_file_id}:${group.defined_line_start}`}>
+      <div className="finding-row__title"><strong>{group.function_name}</strong><span className="badge">{group.called_from.length} caller files</span></div>
+      <button className="finding-source" onClick={() => openSource(group.defined_file_id, {start: group.defined_line_start, end: group.defined_line_end})}>
+        {group.defined_in}:{group.defined_line_start}
+      </button>
+      <ul>{group.call_sites.map((call, i) => <li key={`${call.file_id}:${call.line_start}:${i}`}>
+        <button className="finding-source" onClick={() => openSource(call.file_id, {start: call.line_start, end: call.line_end})}>{call.path}:{call.line_start}</button>
+      </li>)}</ul>
+    </article>)}</div>
+    <details className="finding-limitations"><summary>Coverage and limitations</summary><ul>{result.limitations.map(item => <li key={item}>{item}</li>)}</ul></details>
+  </section>
 }

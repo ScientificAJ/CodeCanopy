@@ -6,11 +6,13 @@ import json
 import os
 import re
 import shutil
+import stat
 import tempfile
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from app.models.codebase import File
 from app.models.v1.snapshot import FilePage, FileRecord, Project, Snapshot, SnapshotSource, SourceKind
 from app.models.v1.source import CapabilityReport, FileCapability, SourceSlice
 from app.services.inventory_service import build_inventory, decode_text
@@ -29,6 +31,22 @@ def _v1_root() -> Path:
     root = Path(os.environ.get('CODECANOPY_SNAPSHOTS_DIR', str(Path(tempfile.gettempdir()) / 'codecanopy' / 'snapshots'))).expanduser().resolve()
     root.mkdir(parents=True, exist_ok=True)
     return root
+
+
+def _retry_readonly_removal(function, path, error_info) -> None:
+    try:
+        os.chmod(path, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+        function(path)
+    except OSError:
+        raise error_info[1]
+
+
+def remove_tree(path: Path, *, ignore_errors: bool = False) -> None:
+    try:
+        shutil.rmtree(path, onerror=_retry_readonly_removal)
+    except OSError:
+        if not ignore_errors:
+            raise
 
 
 def _read_json(path: Path):
@@ -121,11 +139,11 @@ def create_snapshot_from_project(project_id: str, project_dir: Path, archive_dig
     except Exception:
         # The project metadata is the publication boundary. A failed publish must
         # not leave a detached source directory after staging has been renamed.
-        shutil.rmtree(root / snapshot_id, ignore_errors=True)
+        remove_tree(root / snapshot_id, ignore_errors=True)
         raise
     finally:
         if staging.exists():
-            shutil.rmtree(staging)
+            remove_tree(staging)
 
 
 def create_snapshot_from_github(owner: str, repo: str, resolved_commit: str, display_ref: str,
@@ -160,6 +178,12 @@ def get_file_record(snapshot_id: str, file_id: str) -> FileRecord:
     raise SnapshotNotFoundError('File not found in this snapshot.')
 
 
+def get_syntax_records(snapshot_id: str) -> dict[str, File]:
+    get_snapshot(snapshot_id)
+    parsed = _read_json(_v1_root() / snapshot_id / 'syntax.json')
+    return {file_id: File.model_validate(record) for file_id, record in parsed.items()}
+
+
 def get_project_snapshots(project_id: str, workspace_id: str | None = None) -> list[Snapshot]:
     project = get_project(project_id, workspace_id)
     return [get_snapshot(sid) for sid in project.snapshot_ids]
@@ -172,19 +196,25 @@ def build_capability_report(snapshot_id: str) -> CapabilityReport:
     files = []
     for rec in records:
         syntax = rec.id in parsed
+        parser_name = parsed[rec.id].get('parser') if syntax else None
         level = 'excluded' if rec.excluded else 'binary' if not rec.is_text else 'full' if syntax else 'text_only'
         limitations = [d['message'] for d in diagnostics if d['file_path'] == rec.path]
         if rec.excluded:
             limitations.append(rec.exclusion_reason)
-        elif rec.is_text:
-            limitations.append('Semantic references, AI summaries and findings are not assessed in this slice.')
+        elif rec.is_text and not syntax:
+            limitations.append('This file has no successful configured syntax extraction; function findings do not include it.')
         files.append(FileCapability(file_id=rec.id, path=rec.path, language=rec.language, level=level,
                                     syntax_extraction=syntax, reference_resolution=False, summary_eligible=False,
-                                    parser_name='python-ast' if syntax else None, limitations=limitations))
+                                    parser_name=parser_name, limitations=limitations))
     return CapabilityReport(snapshot_id=snapshot_id, files=files,
         parsed_count=sum(f.syntax_extraction for f in files), text_only_count=sum(f.level == 'text_only' for f in files),
         binary_count=sum(f.level == 'binary' for f in files), excluded_count=sum(f.level == 'excluded' for f in files),
-        limitations=['Python syntax extraction is bounded to 1 MiB per file. Other safe text is browsable. No semantic dependency analysis or AI is run.'])
+        limitations=[
+            'Syntax extraction is bounded to 1 MiB per file.',
+            'Function findings support Python, JavaScript, TypeScript/TSX, Go, Rust, Java, Kotlin, C/C++, C#, Ruby, PHP, Bash and SQL. Other languages remain text-only.',
+            'Call references are name-based and cannot resolve imports, dynamic dispatch, reflection or framework registration.',
+            'AI semantic duplicate scoring runs only when a backend provider is configured.',
+        ])
 
 
 def read_source_lines(snapshot_id: str, file_id: str, line_start: int = 1, line_end: int | None = None, max_lines: int = 500) -> SourceSlice:
@@ -228,4 +258,4 @@ def delete_project(project_id: str, workspace_id: str) -> None:
     project = get_project(project_id, workspace_id)
     (_v1_root() / f'project_{project_id}.json').unlink()
     for snapshot_id in project.snapshot_ids:
-        shutil.rmtree(_v1_root() / checked_id(snapshot_id), ignore_errors=True)
+        remove_tree(_v1_root() / checked_id(snapshot_id), ignore_errors=True)

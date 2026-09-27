@@ -1,6 +1,4 @@
 """Tests for JS, Java, and Python analyzers — call_sites + function extraction."""
-import pytest
-
 from app.analyzers.python_analyzer import PythonAnalyzer
 from app.analyzers.js_analyzer import JSAnalyzer
 from app.analyzers.java_analyzer import JavaAnalyzer
@@ -15,9 +13,7 @@ def test_python_analyzer_extracts_call_sites():
     result = PythonAnalyzer().analyze(source, "test.py")
     fn_names = [f.name for f in result.functions]
     assert "bar" in fn_names
-    # PythonAnalyzer does not yet emit call_sites (not extended in this PR);
-    # assert call_sites list exists (default empty)
-    assert isinstance(result.call_sites, list)
+    assert [(call.callee_name, call.line_start) for call in result.call_sites] == [("foo", 2)]
 
 
 def test_python_analyzer_extracts_function_names():
@@ -56,7 +52,7 @@ def test_js_analyzer_handles_arrow_function():
 def test_js_analyzer_typescript_extension():
     source = "export function parse(s: string): number { return parseInt(s); }\n"
     result = JSAnalyzer().analyze(source, "parse.ts")
-    assert result.language == "javascript"
+    assert result.language == "typescript"
     fn_names = [f.name for f in result.functions]
     assert "parse" in fn_names
 
@@ -83,3 +79,24 @@ def test_java_analyzer_extracts_import():
     source = "import java.util.List;\npublic class X { public void go() {} }\n"
     result = JavaAnalyzer().analyze(source, "X.java")
     assert "java.util.List" in result.imports
+
+
+def test_java_custom_return_type_and_method_range():
+    source = 'class A {\n    Custom make() {\n        return build();\n    }\n}\n'
+    result = JavaAnalyzer().analyze(source, 'A.java')
+    assert [(fn.name, fn.line_start, fn.line_end) for fn in result.functions] == [('make', 2, 4)]
+    assert [(call.callee_name, call.line_start) for call in result.call_sites] == [('build', 3)]
+
+
+def test_typescript_multiline_arrow_calls_and_imports():
+    source = 'import {helper} from "./utils";\nconst run = (\n  input: string\n): number => {\n  return helper(input);\n};\n'
+    result = JSAnalyzer().analyze(source, 'app.ts')
+    assert result.imports == ['./utils']
+    assert [(fn.name, fn.line_start, fn.line_end) for fn in result.functions] == [('run', 2, 6)]
+    assert [(call.callee_name, call.line_start) for call in result.call_sites] == [('helper', 5)]
+
+
+def test_python_preserves_source_order_for_nested_imports():
+    source = 'def outer():\n    import first\nimport second\n'
+    result = PythonAnalyzer().analyze(source, 'a.py')
+    assert result.imports == ['first', 'second']

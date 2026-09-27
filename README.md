@@ -51,19 +51,25 @@ to an absolute Node executable if necessary. No installation inside
    upload a ZIP. GitHub refs resolve to a full immutable commit before download.
 2. Wait for the import run. It can be cancelled; warnings produce a partial
    result with per-file diagnostics, not fabricated success.
-3. Search the tree (Ctrl/Cmd+K), expand folders, and select a file. Double-click
+3. Start on the factual overview, then open the architecture map or suggested
+   README/manifests. Search the tree (Ctrl/Cmd+K), expand folders, and select a file. Double-click
    a folder or use its map-list arrow to drill down. Map selection and source
    inspection share canonical snapshot-scoped IDs.
-4. Use Customize view to change labels, order, theme or virtual groups. These
-   preferences never modify imported source paths or bytes.
+4. Use Customize view to change labels, order, theme and map density. Create
+   virtual groups from the complete inventory, rename/recolor them, and add or
+   remove individual members. These preferences never modify source bytes.
 5. Export HTML for the current map chapter. The export contains the graph,
    provenance and view preferences, plus Archify's offline interactions. Source
    contents are **not included**. It is a structural view, not an AI report or
    dependency analysis.
 
-Each map chapter shows its focus entity and at most three children for
-readability. Sibling paging, folder drilldown, the searchable full tree and the
-accessible map list reach the remaining inventory. No invented architectural
+Automatic map density shows up to eight children on a wide canvas and three
+on a narrow canvas; Customize view also offers explicit density choices.
+Sibling paging, folder drilldown, the searchable full tree and the accessible
+map list reach the remaining inventory. Browser Back restores focus, page,
+selection, source evidence lines and camera; returning via Architecture resumes
+the last view in this browser session. Recent imports are available on the
+import page, alongside the storage policy and optional GitHub revision selector. No invented architectural
 roles or semantic edges are added.
 
 ## Storage and bounds

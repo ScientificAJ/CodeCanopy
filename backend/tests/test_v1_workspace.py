@@ -192,8 +192,10 @@ def test_archify_export_and_view_isolation(client):
     result = client.post(path + '/map', json={})
     assert result.status_code == 200, result.text
     artifact = result.json()
-    assert len(artifact['graph']['entities']) == 4
-    assert artifact['graph']['next_cursor'] == 3
+    assert len(artifact['graph']['entities']) == 5
+    assert artifact['graph']['next_cursor'] is None
+    compact = client.post(path + '/map', json={'page_size':3}).json()
+    assert len(compact['graph']['entities']) == 4 and compact['graph']['next_cursor'] == 3
     assert 'Archify.view' in artifact['html'] and 'codecanopy-manifest' in artifact['html']
     assert hashlib.sha256(artifact['html'].encode()).hexdigest() == artifact['html_sha256']
     assert client.post(path + '/map', json={}).json()['html_sha256'] == artifact['html_sha256']
@@ -220,3 +222,26 @@ def test_v1_rejects_unsafe_zip(client, path):
         time.sleep(.01)
     assert result['status'] == 'failed'
     assert result['result_snapshot_id'] is None
+
+
+def test_group_edit_colors_density_and_pagination_preserve_source(client):
+    path, _, _ = import_files(client, {f'src/file{i:03}.txt': f'content {i}' for i in range(20)})
+    inventory = client.get(path + '/files').json()
+    ids = [f['id'] for f in inventory['files']]
+    preferences = client.get(path + '/view').json()
+    preferences.update(density='expanded', groups=[{'id':'group_reading','label':'Reading','members':ids[:3],'color':'blue'}])
+    assert client.patch(path + '/view', json=preferences).status_code == 200
+    preferences['groups'][0].update(label='Upload review', color='violet', members=ids[1:3])
+    response = client.patch(path + '/view', json=preferences)
+    assert response.status_code == 200 and response.json()['groups'][0]['members'] == ids[1:3]
+    graph = client.post(path + '/map', json={'focus':'group_reading'}).json()['graph']
+    assert graph['entities'][0]['label'] == 'Upload review'
+    assert graph['entities'][0]['metadata']['group_color'] == 'violet'
+    first = client.post(path + '/map', json={'focus':'src','page_size':8}).json()['graph']
+    second = client.post(path + '/map', json={'focus':'src','cursor':8,'page_size':8}).json()['graph']
+    assert first['child_total'] == 20 and first['next_cursor'] == 8 and second['next_cursor'] == 16
+    assert not ({e['id'] for e in first['entities'][1:]} & {e['id'] for e in second['entities'][1:]})
+    assert client.get(path + '/files').json() == inventory
+    preferences['groups'][0]['color'] = 'url(javascript:bad)'
+    assert client.patch(path + '/view', json=preferences).status_code == 422
+    assert client.post(path + '/map', json={'page_size':100000}).status_code == 422

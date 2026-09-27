@@ -251,12 +251,13 @@ export interface AnalysisRun {
   result_snapshot_id?: string
 }
 
-export interface VirtualGroup { id: string; label: string; members: string[] }
+export interface VirtualGroup { id: string; label: string; members: string[]; color?: 'lime' | 'blue' | 'violet' | 'amber' }
 export interface ViewPreferences {
   schema_version: '1.1'
   labels: Record<string, string>
   groups: VirtualGroup[]
   theme: 'light' | 'dark'
+  density?: 'auto' | 'comfortable' | 'expanded'
   order: 'folders-first' | 'alphabetical'
   focus: string
 }

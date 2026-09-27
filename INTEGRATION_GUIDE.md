@@ -54,6 +54,22 @@ or an empty successful analysis.
   and support cancellation. Keep all feature HTTP calls here or in a cohesive
   adapter importing `request`; never embed provider secrets in React.
 
+## Structural view navigation and preferences
+
+Map routes persist `focus`, `page`, `node` and optional evidence `start`/`end`
+query parameters. Navigation state retains a per-history-entry camera key;
+snapshot-scoped session storage holds the last route and bounded camera history.
+Use `openSource` for evidence navigation so canonical file IDs and line ranges
+remain synchronized with the source panel. Import now lands on a factual
+`/overview`; `/map` remains the interactive Archify view.
+
+The additive v1.1 preference fields are `density` (`auto`, `comfortable`,
+`expanded`) and group `color` (`lime`, `blue`, `violet`, `amber`). Older persisted
+preferences default to automatic density and lime groups. The map request
+accepts `page_size` of 3 or 8 (default 8), in addition to focus/cursor. The UI
+chooses 3 for an automatic canvas narrower than 640 CSS pixels, otherwise 8.
+Group members are validated against the complete immutable inventory.
+
 ## Registering your implementation
 
 1. Add your module beneath `frontend/src/features/<feature>/`.

@@ -1,5 +1,6 @@
 """Pinned Archify adapter. Fail closed on validation; never serve a stale render."""
 from __future__ import annotations
+import math
 import hashlib
 import json
 import os
@@ -49,7 +50,7 @@ def projection(snapshot_id: str, request: MapRequest, preferences: ViewPreferenc
     group = next((g for g in preferences.groups if g.id == request.focus), None)
     graph = build_structural_graph(snapshot_id, max_entities=4, focus=None if group else request.focus)
     if group:
-        root = GraphEntity(id=group.id, kind=EntityKind.VIRTUAL_GROUP, label=group.label, child_count=len(group.members), metadata={'view_only': True})
+        root = GraphEntity(id=group.id, kind=EntityKind.VIRTUAL_GROUP, label=group.label, child_count=len(group.members), metadata={'view_only': True, 'group_color': group.color})
         children = [e for e in entities if e.id in group.members]
     else:
         root = graph.entities[0]
@@ -57,7 +58,7 @@ def projection(snapshot_id: str, request: MapRequest, preferences: ViewPreferenc
     children.sort(key=lambda e: ((e.kind == EntityKind.FILE) if preferences.order == 'folders-first' else False, e.label.casefold(), e.id))
     if request.cursor > len(children):
         raise WorkspaceError('INVALID_CURSOR', 'Map cursor exceeds this view.', 422)
-    visible = children[request.cursor:request.cursor + 3]
+    visible = children[request.cursor:request.cursor + request.page_size]
     graph.entities = [root, *visible]
     graph.relations = [GraphRelation(id=entity_id(snapshot_id, f'{root.id}:{e.id}', 'groups' if group else 'contains'), source_id=root.id, target_id=e.id,
         kind=RelationKind.GROUPS if group else RelationKind.CONTAINS,
@@ -65,7 +66,7 @@ def projection(snapshot_id: str, request: MapRequest, preferences: ViewPreferenc
     graph.focus_path = request.focus
     graph.cursor = request.cursor
     graph.child_total = len(children)
-    graph.next_cursor = request.cursor + 3 if request.cursor + 3 < len(children) else None
+    graph.next_cursor = request.cursor + request.page_size if request.cursor + request.page_size < len(children) else None
     graph.coverage.returned_entities = len(graph.entities)
     graph.coverage.truncated = len(visible) < len(children)
     for entity in graph.entities:
@@ -79,26 +80,42 @@ def projection(snapshot_id: str, request: MapRequest, preferences: ViewPreferenc
 def compile_spec(graph):
     """Small containment chapters; complete inventory remains in the tree.
 
-    Root and up to three siblings keep labels readable in the embedded viewer.
+    Up to eight siblings use a validated radial overview; smaller chapters retain the compact hierarchy.
     The middle label offset is the diagnosed repair from the pinned showcase
     validator (without it, the automatic label overlaps the parent card).
     """
     nodes = []
     children = graph.entities[1:]
+    expanded = len(children) > 3
+    slots = [0, 4, 2, 6, 1, 5, 3, 7]
     for index, entity in enumerate(graph.entities):
-        x = 200 if index == 0 or len(children) == 1 else 20 + (index - 1) * (360 if len(children) == 2 else 180)
+        if expanded:
+            angle = slots[index - 1] * math.pi / 4 if index else 0
+            x = 320 + round(290 * math.cos(angle), 2) if index else 320
+            y = 170 + round(140 * math.sin(angle), 2) if index else 170
+        else:
+            x = 200 if index == 0 or len(children) == 1 else 20 + (index - 1) * (360 if len(children) == 2 else 180)
+            y = (100 if not children else 20) if index == 0 else 160
         nodes.append({'id': 'n_' + entity.id, 'type': 'external',
             'label': entity.label if len(entity.label) <= 24 else entity.label[:21] + '…',
             'sublabel': 'View-only group' if entity.kind == EntityKind.VIRTUAL_GROUP else entity.kind.value.capitalize(),
-            'pos': [x, (100 if not children else 20) if index == 0 else 160], 'size': [150, 60]})
+            'pos': [x, y], 'size': [160 if expanded else 150, 60]})
     connections = []
     for i, edge in enumerate(graph.relations):
-        item = {'id': 'r_' + hashlib.sha256(edge.id.encode()).hexdigest()[:32], 'from': 'n_' + edge.source_id, 'to': 'n_' + edge.target_id, 'label': 'member' if edge.kind == RelationKind.GROUPS else 'contains'}
-        if nodes[i + 1]['pos'][0] == 200:
-            item['labelDy'] = 45
+        item = {'id': 'r_' + hashlib.sha256(edge.id.encode()).hexdigest()[:32], 'from': 'n_' + edge.source_id, 'to': 'n_' + edge.target_id}
+        if expanded:
+            # Every arrow is parent containment/group membership, stated in the
+            # view disclosure and manifest. Repeating labels obscures the radial
+            # overview; the full relationship remains in the accessible list.
+            if nodes[i + 1]['pos'][0] == 320 and nodes[i + 1]['pos'][1] < 170:
+                item.update(fromSide='top', toSide='bottom')
+        else:
+            item['label'] = 'member' if edge.kind == RelationKind.GROUPS else 'contains'
+            if nodes[i + 1]['pos'][0] == 200:
+                item['labelDy'] = 45
         connections.append(item)
     return {'schema_version': 1, 'diagram_type': 'architecture',
-        'meta': {'title': 'Repository structure', 'quality_profile': 'showcase', 'animation': 'none', 'viewBox': [550, 260], 'legend': {'mode': 'hidden'}},
+        'meta': {'title': 'Repository structure', 'quality_profile': 'showcase', 'animation': 'none', 'viewBox': [800, 400] if expanded else [550, 260], 'legend': {'mode': 'hidden'}},
         'components': nodes, 'connections': connections}
 
 
@@ -115,7 +132,7 @@ def render_view(snapshot_id: str, request: MapRequest):
     bridge = (REPO / 'backend/app/rendering/bridge.js').read_text(encoding="utf-8")
     license_notice = (REPO / 'vendor/archify/LICENSE').read_text(encoding="utf-8")
     manifest = {'schema_version': '1.1', 'snapshot': snapshot.model_dump(mode='json'), 'graph': graph.model_dump(mode='json'),
-        'renderer_ids': {'n_' + entity.id: entity.id for entity in graph.entities}, 'preferences': preferences.model_dump(), 'archify_commit': ARCHIFY_COMMIT, 'source_included': False, 'deferred_capabilities': ['AI summaries', 'dependencies and impact', 'reuse', 'duplicates', 'unused code', 'Ask CodeCanopy', 'proposals and generated documents']}
+        'renderer_ids': {'n_' + entity.id: entity.id for entity in graph.entities}, 'preferences': preferences.model_dump(), 'archify_commit': ARCHIFY_COMMIT, 'source_included': False, 'deferred_capabilities': ['AI summaries', 'proposals and generated documents'], 'export_scope': 'This structural view only; analysis results and source excerpts are not included.'}
     key = hashlib.sha256(b'codecanopy-wrapper-1.1.4' + spec_bytes + _json_safe(manifest).encode() + bridge.encode() + license_notice.encode()).hexdigest()
     manifest['view_id'] = key
     cached = _v1_root() / snapshot_id / 'renders' / key

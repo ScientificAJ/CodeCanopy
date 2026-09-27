@@ -1,2 +1,18 @@
-import MapPage from './MapPage'
-export default function OverviewPage() {return <MapPage/>}
+import { Link, useNavigate } from 'react-router-dom'
+import { useWorkspace, selectionFor } from '../../contexts/WorkspaceContext'
+import type { GraphEntity } from '../../types/v1'
+export default function OverviewPage() {
+  const ws=useWorkspace();const navigate=useNavigate();const base=`/p/${ws.projectId}/s/${ws.snapshot?.id}`
+  const root=ws.entities.find(e=>e.kind==='repository');const folders=ws.entities.filter(e=>e.parent_id===root?.id&&e.kind==='folder')
+  const readable=ws.files.filter(f=>f.is_text&&!f.excluded)
+  const starts=readable.filter(f=>/(^|\/)(readme(?:\.[^/]+)?|package\.json|pyproject\.toml|requirements\.txt|cargo\.toml|go\.mod|pom\.xml|dockerfile)$/i.test(f.path)).sort((a,b)=>Number(!/^readme/i.test(a.name))-Number(!/^readme/i.test(b.name))||a.path.split('/').length-b.path.split('/').length||a.path.localeCompare(b.path)).slice(0,6)
+  const languages=Object.entries(readable.reduce<Record<string,number>>((all,f)=>({...all,[f.language]:(all[f.language]??0)+1}),{})).sort((a,b)=>b[1]-a[1])
+  function open(entity:GraphEntity) {ws.selectEntity(selectionFor(entity));navigate(base+'/map?'+new URLSearchParams({focus:entity.kind==='folder'?entity.path??'.':ws.entities.find(e=>e.id===entity.parent_id)?.path??'.',node:entity.id,page:'0'}))}
+  return <section className="overview-page card"><p className="eyebrow">YOUR REPOSITORY, AT A GLANCE</p><h2>Start with the structure.</h2><p>This snapshot contains <strong>{ws.files.length} files</strong> across <strong>{folders.length} top-level folders</strong>. {readable.length} files have readable source. These are observed facts from the imported revision.</p>
+    <div className="overview-actions"><Link className="btn primary" to={base+'/map'}>Explore architecture</Link><Link className="btn" to={base+'/dependencies'}>Inspect connections</Link></div>
+    {ws.files.length===0&&<p role="status" className="alert">This repository has no inventoried files. Import another repository to explore its structure.</p>}
+    <section><h3>Suggested reading</h3><p className="muted">Documentation and manifests found in this snapshot—not AI-generated recommendations.</p><div className="overview-reading">{starts.map(file=><button key={file.id} onClick={()=>{const e=ws.entities.find(e=>e.id===file.id);if(e)open(e)}}><strong>{file.path}</strong><span>{/^readme/i.test(file.name)?'Repository documentation':'Project configuration and declared dependencies'}</span></button>)}{!starts.length&&<p>No README or common project manifest was found. Start with the folder map or search the file tree.</p>}</div></section>
+    <section><h3>Top-level folders</h3><div className="overview-folders">{folders.map(folder=><button key={folder.id} onClick={()=>open(folder)}><strong>{ws.preferences.labels[folder.id]??folder.label}</strong><span>{folder.child_count} direct children →</span></button>)}{!folders.length&&<p>Files are at the repository root. <Link to={base+'/map'}>Open the root map</Link>.</p>}</div></section>
+    <details className="overview-coverage"><summary>Languages and analysis coverage</summary><ul>{languages.map(([name,count])=><li key={name}>{name}: {count} readable files</li>)}</ul><p>{ws.capabilities?.parsed_count??0} files have syntax data; {ws.capabilities?.excluded_count??0} are excluded and {ws.capabilities?.binary_count??0} have binary or unsupported encoding. Syntax support does not imply full semantic understanding.</p><p>Imported {ws.snapshot&&new Date(ws.snapshot.created_at).toLocaleString()}. Source expires {ws.snapshot?.expires_at?new Date(ws.snapshot.expires_at).toLocaleString():'according to server retention'}.</p></details>
+  </section>
+}

@@ -8,9 +8,10 @@ test('live public GitHub import resolves an immutable revision', async ({ page }
   const evidence = resolve('../bob_sessions/browser-evidence')
   mkdirSync(evidence, { recursive: true })
   await page.goto('/')
-  await page.getByLabel('Public repository URL', { exact: true }).fill('https://github.com/ScientificAJ/CodeCanopy')
+  await page.getByLabel('GitHub repository URL', { exact: true }).fill('https://github.com/ScientificAJ/CodeCanopy')
   await page.getByRole('button', { name: 'Explore repository', exact: true }).click()
   await page.waitForURL(/\/overview$/, { timeout: 150000 })
+  await page.getByRole('link', {name:'Explore architecture',exact:true}).click()
   await expect(page.getByRole('button', { name: 'Export HTML', exact: true })).toBeEnabled({ timeout: 40000 })
   const match = new URL(page.url()).pathname.match(/^\/p\/([^/]+)\/s\/([^/]+)/)!
   const response = await page.request.get(`http://127.0.0.1:8000/api/v1/projects/${match[1]}/snapshots/${match[2]}`)

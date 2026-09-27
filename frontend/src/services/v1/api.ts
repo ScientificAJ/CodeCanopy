@@ -39,7 +39,7 @@ export const getSource = (p: string, s: string, file: string, start = 1, end?: n
 export const getGraph = (p: string, s: string, max = 12, signal?: AbortSignal) => request<Graph>(`${snapshotPath(p, s)}/graph?max_entities=${max}`, { signal })
 export const getPreferences = (p: string, s: string, signal?: AbortSignal) => request<ViewPreferences>(snapshotPath(p, s) + '/view', { signal })
 export const savePreferences = (p: string, s: string, body: ViewPreferences) => request<ViewPreferences>(snapshotPath(p, s) + '/view', {...json(body), method: 'PATCH'})
-export const renderMap = (p: string, s: string, focus: string, cursor = 0, signal?: AbortSignal) => request<MapArtifact>(snapshotPath(p, s) + '/map', json({ focus, cursor }, signal))
+export const renderMap = (p: string, s: string, focus: string, cursor = 0, signal?: AbortSignal, pageSize: 3 | 8 = 8) => request<MapArtifact>(snapshotPath(p, s) + '/map', json({ focus, cursor, page_size: pageSize }, signal))
 import type { ReusableFunctionResult } from '../../types/codebase'
 export const getReusableFunctions = (p: string, s: string, minCallers = 1, signal?: AbortSignal) =>
   request<ReusableFunctionResult>(`${snapshotPath(p, s)}/findings/reuse?min_callers=${minCallers}`, { signal })

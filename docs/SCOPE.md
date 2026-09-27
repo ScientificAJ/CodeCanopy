@@ -17,7 +17,7 @@ repository to CodeCanopy.
 
 Ordinary implementation decisions: single API process; filesystem persistence;
 24-hour source lifetime; 1.1 extensions to the supplied design contracts;
-three siblings per diagram chapter for readable embedded labels; every full
+adaptive chapters of three or eight siblings for readable embedded labels; every full
 inventory path remains reachable through tree paging/search. Folder membership
 and user-group membership are the only produced relations. The renderer's
 `external` primitive is a neutral drawing shape, not a claim that a file is an
@@ -28,3 +28,17 @@ the preserved Python syntax extractor, no team accounts, no distributed worker
 queue, no source contents in HTML exports. Browser workspaces made under the
 old product name are not migrated. No paid inference, deployment, permission
 changes, source rewrites or imported-code execution are part of this task.
+
+## Shared UI completion (2026-09-27)
+
+The import page exposes ZIP upload, optional GitHub revisions, recent imports,
+and retention/exclusion disclosures. A factual overview links documentation,
+manifests, folders and dependency analysis. Map history preserves focus, page,
+selected source evidence and camera; groups support names, colors and individual
+member edits. The source snapshot is unchanged by all view preferences.
+
+The deferred row above records the original foundation scope. Subsequent team
+work connected dependency/call analysis, reuse, duplicate and potentially-unused
+findings, and repository questions. This completion does not add AI file/folder
+summaries, proposals or generated documents. See the current integration guide
+and verification record for connected features and their limits.

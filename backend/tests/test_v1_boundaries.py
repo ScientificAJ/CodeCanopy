@@ -105,7 +105,7 @@ def test_failed_render_never_returns_last_good_html(client, monkeypatch):
     assert response.status_code == 422 and 'html' not in response.json()
 
 
-@pytest.mark.parametrize('count',[0,1,2,3])
+@pytest.mark.parametrize('count',range(9))
 def test_every_compiler_chapter_size_is_valid(client, count):
     path, _, _ = import_files(client, {f'src/file{i}.txt':'text' for i in range(max(1,count))})
     if count == 0:

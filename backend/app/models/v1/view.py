@@ -7,6 +7,7 @@ class VirtualGroup(BaseModel):
     model_config = ConfigDict(extra='forbid')
     id: str = Field(pattern=r'^group_[a-zA-Z0-9_-]{1,60}$')
     label: str = Field(min_length=1, max_length=60)
+    color: Literal['lime', 'blue', 'violet', 'amber'] = 'lime'
     members: list[str] = Field(max_length=500)
 
 
@@ -17,10 +18,12 @@ class ViewPreferences(BaseModel):
     groups: list[VirtualGroup] = Field(default_factory=list, max_length=30)
     theme: Literal['light', 'dark'] = 'light'
     order: Literal['folders-first', 'alphabetical'] = 'folders-first'
+    density: Literal['auto', 'comfortable', 'expanded'] = 'auto'
     focus: str = Field(default='.', max_length=1024)
 
 
 class MapRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
     focus: str = Field(default='.', max_length=1024)
+    page_size: Literal[3, 8] = 8
     cursor: int = Field(default=0, ge=0, le=10000)

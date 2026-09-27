@@ -45,6 +45,7 @@ app.include_router(api_router, prefix="/api")
 import uuid
 import os
 import secrets
+import time
 from fastapi import Request
 from app.services import cloud_storage
 from fastapi.responses import JSONResponse
@@ -61,6 +62,7 @@ async def workspace_error_handler(request: Request, error: WorkspaceError):
 
 @app.middleware('http')
 async def local_workspace_boundary(request: Request, call_next):
+    started = time.perf_counter()
     if cloud_storage.enabled() and request.url.path.startswith('/api/projects'):
         return JSONResponse(status_code=404, content={'detail': 'Not found'})
     if request.url.path.startswith('/api/v1'):
@@ -69,6 +71,10 @@ async def local_workspace_boundary(request: Request, call_next):
         if origin and origin not in allowed:
             return JSONResponse(status_code=403, content={'error': {'code': 'ORIGIN_DENIED', 'message': 'Workspace origin is not allowed.', 'retryable': False, 'request_id': uuid.uuid4().hex, 'details': {}}})
     response = await call_next(request)
+    if os.environ.get('VERCEL'):
+        timing = f'app;dur={(time.perf_counter() - started) * 1000:.1f}'
+        previous = response.headers.get('Server-Timing')
+        response.headers['Server-Timing'] = f'{previous}, {timing}' if previous else timing
     if request.url.path.startswith('/api/v1'):
         response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'

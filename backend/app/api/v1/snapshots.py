@@ -1,10 +1,12 @@
 """Authorized project, inventory, source and structural graph routes."""
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 
 from app.api.v1.session import workspace_session
 from app.models.v1.graph import Graph
 from app.models.v1.snapshot import FilePage, Project, Snapshot
 from app.models.v1.source import CapabilityReport, SourceSlice
+from app.models.v1.bootstrap import WorkspaceBootstrap
+from app.services.v1_errors import WorkspaceError
 from app.services.graph_service import build_structural_graph
 from app.services.snapshot_service import (
     authorized_snapshot, build_capability_report, get_inventory, get_project,
@@ -67,6 +69,27 @@ def graph(snap: Snapshot = Depends(snapshot_access), max_entities: int = Query(2
 
 from app.models.v1.view import ViewPreferences, MapRequest
 from app.services.view_service import get_preferences, save_preferences, render_view
+
+MAX_BOOTSTRAP_BYTES = 4 * 1024 * 1024
+
+
+@router.get('/{project_id}/snapshots/{snapshot_id}/bootstrap', response_model=WorkspaceBootstrap)
+def workspace_bootstrap(snap: Snapshot = Depends(snapshot_access)):
+    """Authorize once for initial loading, preserving fresh origin checks.
+
+    Oversized workspaces use individual pageable resources rather than losing
+    inventory or exceeding the hosted response budget.
+    """
+    from app.services.graph_service import inventory_entities
+    payload = WorkspaceBootstrap(
+        project=get_project(snap.project_id), snapshot=snap,
+        files=get_inventory(snap.id, limit=None), entities=inventory_entities(snap.id),
+        capabilities=build_capability_report(snap.id), preferences=get_preferences(snap.id),
+    )
+    encoded = payload.model_dump_json().encode('utf-8')
+    if len(encoded) > MAX_BOOTSTRAP_BYTES:
+        raise WorkspaceError('BOOTSTRAP_TOO_LARGE', 'Load this workspace using its paged resources.', 413)
+    return Response(encoded, media_type='application/json')
 
 
 @router.get('/{project_id}/snapshots/{snapshot_id}/view', response_model=ViewPreferences)

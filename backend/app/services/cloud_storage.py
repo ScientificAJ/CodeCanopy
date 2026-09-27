@@ -7,6 +7,7 @@ No provider token or private Blob URL is returned to the browser.
 from __future__ import annotations
 
 import hashlib
+import atexit
 import io
 import json
 import os
@@ -16,6 +17,8 @@ import tempfile
 import threading
 import zipfile
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
+from itertools import islice
 from urllib.parse import urlparse
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
@@ -26,6 +29,8 @@ _PREFIX = 'grepo/v1/'
 _ID = re.compile(r'^[a-f0-9]{32}$')
 _WORKSPACE = re.compile(r'^[a-f0-9]{64}$')
 _hydration_locks = [threading.Lock() for _ in range(32)]
+_client_lock = threading.Lock()
+_blob_client = None
 MAX_BUNDLE_BYTES = 350 * 1024 * 1024
 MAX_UPLOAD_BYTES = 1024 * 1024 * 1024
 MAX_EXPANDED_BYTES = 350 * 1024 * 1024
@@ -42,11 +47,20 @@ def enabled() -> bool:
 
 
 def _sdk():
+    """Keep HTTP connections warm without caching mutable ownership records."""
+    global _blob_client
     try:
-        from vercel import blob
-        return blob
+        from vercel.blob import BlobClient
     except ImportError:
         raise WorkspaceError('STORAGE_UNAVAILABLE', 'Durable workspace storage is unavailable.', 503) from None
+    with _client_lock:
+        if _blob_client is None:
+            # Module-level SDK helpers create/close an HTTP client on every call.
+            # The explicit client pools thread-safe HTTP connections across
+            # requests served by the same hosted function instance.
+            _blob_client = BlobClient()
+            atexit.register(_blob_client.close)
+        return _blob_client
 
 
 def _id(value: str) -> str:
@@ -147,13 +161,13 @@ def load_project(workspace: str, project_id: str) -> dict | None:
 def list_projects(workspace: str) -> list[dict]:
     prefix = f'{_PREFIX}workspaces/{_workspace(workspace)}/projects/'
     result = []
-    for item in _list(prefix):
-        project_id = item.pathname.removeprefix(prefix).removesuffix('.json')
-        if not _ID.fullmatch(project_id):
-            continue
-        value = load_project(workspace, project_id)
-        if value is not None:
-            result.append(value)
+    project_ids = (item.pathname.removeprefix(prefix).removesuffix('.json') for item in _list(prefix))
+    # Bound concurrency and queued work; keep every ownership check fresh.
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        while batch := list(islice(project_ids, 24)):
+            values = executor.map(lambda pid: load_project(workspace, pid),
+                                  (pid for pid in batch if _ID.fullmatch(pid)))
+            result.extend(value for value in values if value is not None)
     return result
 
 
